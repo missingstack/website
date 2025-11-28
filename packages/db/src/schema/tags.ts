@@ -1,0 +1,34 @@
+/**
+ * Tags Schema
+ *
+ * Tags provide additional classification for tools.
+ * Different tag types help organize tags by purpose.
+ */
+
+import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { badgeVariantEnum, tagTypeEnum } from "./enums";
+
+// Tags table
+export const tags = pgTable(
+	"tags",
+	{
+		id: text("id").primaryKey(),
+		slug: text("slug").notNull().unique(),
+		name: text("name").notNull(),
+		type: tagTypeEnum("type").notNull(),
+		color: badgeVariantEnum("color").default("default"),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("tags_slug_idx").on(table.slug),
+		index("tags_type_idx").on(table.type),
+	],
+);
+
+export type Tag = typeof tags.$inferSelect;
+export type NewTag = typeof tags.$inferInsert;
