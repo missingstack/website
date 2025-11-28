@@ -1,0 +1,28 @@
+{
+	"name": "@missingstack/api",
+	"type": "module",
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"devDependencies": {
+		"@missingstack/config": "workspace:*"
+	},
+	"peerDependencies": {
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"@trpc/server": "catalog:",
+		"@trpc/client": "catalog:",
+		"dotenv": "catalog:",
+		"zod": "catalog:",
+		"@missingstack/db": "workspace:*"
+	}
+}
