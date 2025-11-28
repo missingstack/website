@@ -1,4 +1,8 @@
 import type {
+	QueryOptions,
+	ToolCollection,
+	ToolData,
+	ToolDataLite,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 	ToolsServiceInterface,
@@ -6,11 +10,12 @@ import type {
 
 const DEFAULT_LIMIT = 8;
 const MAX_LIMIT = 50;
+const MAX_PRESET_LIMIT = 100;
 
 export class ToolsService implements ToolsServiceInterface {
 	constructor(private readonly repository: ToolRepositoryInterface) {}
 
-	async getAllTools(options: ToolQueryOptions = {}) {
+	async getAll(options: ToolQueryOptions = {}): Promise<ToolCollection> {
 		// Sanitize and validate options
 		const sanitizedOptions: ToolQueryOptions = {
 			...options,
@@ -40,11 +45,64 @@ export class ToolsService implements ToolsServiceInterface {
 			search: options.search?.trim() || undefined,
 		};
 
-		return this.repository.getAllTools(sanitizedOptions);
+		return this.repository.getAll(sanitizedOptions);
+	}
+
+	async getByCategory(
+		categoryId: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.repository.getByCategory(categoryId, options);
+	}
+
+	async getByTag(
+		tagId: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.repository.getByTag(tagId, options);
+	}
+
+	async search(
+		query: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		const trimmedQuery = query.trim();
+		if (!trimmedQuery) {
+			return { items: [], nextCursor: null, hasMore: false };
+		}
+		return this.repository.search(trimmedQuery, options);
+	}
+
+	async getById(id: string): Promise<ToolData | null> {
+		return this.repository.getById(id);
+	}
+
+	async getBySlug(slug: string): Promise<ToolData | null> {
+		return this.repository.getBySlug(slug);
+	}
+
+	async getFeatured(limit?: number): Promise<ToolDataLite[]> {
+		const clampedLimit = clampPresetLimit(limit);
+		return this.repository.getFeatured(clampedLimit);
+	}
+
+	async getRecent(limit?: number): Promise<ToolDataLite[]> {
+		const clampedLimit = clampPresetLimit(limit);
+		return this.repository.getRecent(clampedLimit);
+	}
+
+	async getPopular(limit?: number): Promise<ToolDataLite[]> {
+		const clampedLimit = clampPresetLimit(limit);
+		return this.repository.getPopular(clampedLimit);
 	}
 }
 
-function clampLimit(limit?: number) {
+function clampLimit(limit?: number): number {
 	if (!limit) return DEFAULT_LIMIT;
 	return Math.min(Math.max(limit, 1), MAX_LIMIT);
+}
+
+function clampPresetLimit(limit?: number): number {
+	if (!limit) return 10;
+	return Math.min(Math.max(limit, 1), MAX_PRESET_LIMIT);
 }

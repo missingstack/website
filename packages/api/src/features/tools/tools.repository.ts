@@ -21,7 +21,10 @@ import {
 } from "@missingstack/db/schema/tools";
 
 import type {
+	QueryOptions,
 	ToolCollection,
+	ToolData,
+	ToolDataLite,
 	ToolEntity,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
@@ -489,7 +492,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		this.queryExecutor = new QueryExecutor(db);
 	}
 
-	async getAllTools(options: ToolQueryOptions): Promise<ToolCollection> {
+	async getAll(options: ToolQueryOptions = {}): Promise<ToolCollection> {
 		const limit = options.limit ?? 8;
 		const sortBy = options.sortBy ?? "newest";
 		const sortOrder = options.sortOrder ?? "desc";
@@ -504,6 +507,196 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		const filters = this.filterBuilder.buildAllFilters(options);
 
 		return this.queryExecutor.execute(filters, context, cursor, limit);
+	}
+
+	async getByCategory(
+		categoryId: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.getAll({
+			...options,
+			categoryIds: [categoryId],
+		});
+	}
+
+	async getByTag(
+		tagId: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.getAll({
+			...options,
+			tagIds: [tagId],
+		});
+	}
+
+	async search(
+		query: string,
+		options: QueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.getAll({
+			...options,
+			search: query,
+			sortBy: options.sortBy ?? "relevance",
+		});
+	}
+
+	async getById(id: string): Promise<ToolData | null> {
+		const [tool] = await this.db
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				featured: tools.featured,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+			})
+			.from(tools)
+			.where(eq(tools.id, id))
+			.limit(1);
+
+		if (!tool) return null;
+
+		// Load relations
+		const [categoryIds, tagIds, platforms] = await Promise.all([
+			this.db
+				.select({ categoryId: toolsCategories.categoryId })
+				.from(toolsCategories)
+				.where(eq(toolsCategories.toolId, id)),
+			this.db
+				.select({ tagId: toolsTags.tagId })
+				.from(toolsTags)
+				.where(eq(toolsTags.toolId, id)),
+			this.db
+				.select({ platform: toolsPlatforms.platform })
+				.from(toolsPlatforms)
+				.where(eq(toolsPlatforms.toolId, id)),
+		]);
+
+		return {
+			...tool,
+			categoryIds: categoryIds.map((c) => c.categoryId),
+			tagIds: tagIds.map((t) => t.tagId),
+			platforms: platforms.map((p) => p.platform),
+		};
+	}
+
+	async getBySlug(slug: string): Promise<ToolData | null> {
+		const [tool] = await this.db
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				featured: tools.featured,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+			})
+			.from(tools)
+			.where(eq(tools.slug, slug))
+			.limit(1);
+
+		if (!tool) return null;
+
+		// Load relations
+		const [categoryIds, tagIds, platforms] = await Promise.all([
+			this.db
+				.select({ categoryId: toolsCategories.categoryId })
+				.from(toolsCategories)
+				.where(eq(toolsCategories.toolId, tool.id)),
+			this.db
+				.select({ tagId: toolsTags.tagId })
+				.from(toolsTags)
+				.where(eq(toolsTags.toolId, tool.id)),
+			this.db
+				.select({ platform: toolsPlatforms.platform })
+				.from(toolsPlatforms)
+				.where(eq(toolsPlatforms.toolId, tool.id)),
+		]);
+
+		return {
+			...tool,
+			categoryIds: categoryIds.map((c) => c.categoryId),
+			tagIds: tagIds.map((t) => t.tagId),
+			platforms: platforms.map((p) => p.platform),
+		};
+	}
+
+	async getFeatured(limit = 10): Promise<ToolDataLite[]> {
+		const rows = await this.db
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				featured: tools.featured,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+			})
+			.from(tools)
+			.where(eq(tools.featured, true))
+			.orderBy(desc(tools.createdAt), desc(tools.id))
+			.limit(limit);
+
+		return rows;
+	}
+
+	async getRecent(limit = 10): Promise<ToolDataLite[]> {
+		const rows = await this.db
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				featured: tools.featured,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+			})
+			.from(tools)
+			.orderBy(desc(tools.createdAt), desc(tools.id))
+			.limit(limit);
+
+		return rows;
+	}
+
+	async getPopular(limit = 10): Promise<ToolDataLite[]> {
+		// Popular is based on featured + creation date
+		// In a real app, this might use view counts or other metrics
+		const rows = await this.db
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				featured: tools.featured,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+			})
+			.from(tools)
+			.orderBy(desc(tools.featured), desc(tools.createdAt), desc(tools.id))
+			.limit(limit);
+
+		return rows;
 	}
 
 	async withTransaction<T>(

@@ -17,9 +17,9 @@ export default function Home() {
 		isLoading,
 		error,
 	} = useInfiniteQuery({
-		queryKey: trpc.tools.getAllTools.queryKey(baseOptions),
+		queryKey: trpc.tools.getAll.queryKey(baseOptions),
 		queryFn: ({ pageParam }) => {
-			return trpcClient.tools.getAllTools.query({
+			return trpcClient.tools.getAll.query({
 				...baseOptions,
 				cursor: pageParam as string | null | undefined,
 			});
