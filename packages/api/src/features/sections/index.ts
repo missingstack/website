@@ -1,22 +1,30 @@
-import { publicProcedure, router } from "@missingstack/api/index";
-import { z } from "zod";
-import { sectionSchema, sectionsListSchema } from "./sections.schema";
+import { services } from "@missingstack/api/context";
+import type { Elysia } from "elysia";
+import { t } from "elysia";
 
-export const sectionsRouter = router({
-	getAll: publicProcedure.output(sectionsListSchema).query(async ({ ctx }) => {
-		return ctx.dependencies.sectionsService.getAll();
-	}),
+export type {
+	Section,
+	SectionRepositoryInterface,
+	SectionsServiceInterface,
+} from "./sections.types";
 
-	getById: publicProcedure
-		.input(z.object({ id: z.string() }))
-		.output(sectionSchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.sectionsService.getById(input.id);
-		}),
-
-	getEnabled: publicProcedure
-		.output(sectionsListSchema)
-		.query(async ({ ctx }) => {
-			return ctx.dependencies.sectionsService.getEnabled();
-		}),
-});
+export function createSectionsRouter(app: Elysia) {
+	return app.group("/sections", (app) =>
+		app
+			.get("/", async () => {
+				return services.sectionService.getAll();
+			})
+			.get(
+				"/:id",
+				async ({ params: { id } }) => {
+					return services.sectionService.getById(id);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
+			)
+			.get("/enabled", async () => {
+				return services.sectionService.getEnabled();
+			}),
+	);
+}

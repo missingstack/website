@@ -1,83 +1,185 @@
-import { publicProcedure, router } from "@missingstack/api/index";
-import { z } from "zod";
-import {
-	getByCategorySchema,
-	getByTagSchema,
-	getPresetSchema,
-	searchSchema,
-	toolCollectionSchema,
-	toolDataSchema,
-	toolQueryOptionsSchema,
-	toolSchema,
+import { services } from "@missingstack/api/context";
+import type { Elysia } from "elysia";
+import { t } from "elysia";
+
+export type { Tool } from "@missingstack/db/schema/tools";
+
+import { type ToolQueryOptions, toolQueryOptionsSchema } from "./tools.schema";
+
+export type {
+	ToolCollection,
+	ToolData,
+	ToolQueryOptions,
 } from "./tools.schema";
 
-export const toolsRouter = router({
-	// List queries
-	getAll: publicProcedure
-		.input(toolQueryOptionsSchema.optional())
-		.output(toolCollectionSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getAll(input ?? {});
-		}),
+export type {
+	ToolRepositoryInterface,
+	ToolsServiceInterface,
+} from "./tools.types";
 
-	getByCategory: publicProcedure
-		.input(getByCategorySchema)
-		.output(toolCollectionSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getByCategory(
-				input.categoryId,
-				input.options,
-			);
-		}),
+/**
+ * Parse raw query string from URL to preserve array parameters
+ * Handles cases like pricing=Free&pricing=Freemium
+ */
+function parseRawQuery(url: string | URL): Record<string, string | string[]> {
+	const parsedUrl = typeof url === "string" ? new URL(url) : url;
+	const params: Record<string, string | string[]> = {};
 
-	getByTag: publicProcedure
-		.input(getByTagSchema)
-		.output(toolCollectionSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getByTag(input.tagId, input.options);
-		}),
+	parsedUrl.searchParams.forEach((value, key) => {
+		const existing = params[key];
+		if (existing === undefined) {
+			params[key] = value;
+		} else if (Array.isArray(existing)) {
+			existing.push(value);
+		} else {
+			params[key] = [existing, value];
+		}
+	});
 
-	search: publicProcedure
-		.input(searchSchema)
-		.output(toolCollectionSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.search(input.query, input.options);
-		}),
+	return params;
+}
 
-	// Single item queries
-	getById: publicProcedure
-		.input(z.object({ id: z.string() }))
-		.output(toolDataSchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getById(input.id);
-		}),
+/**
+ * Parse and validate query parameters into ToolQueryOptions
+ * Uses toolQueryOptionsSchema (which extends baseQueryOptionsSchema)
+ */
+function parseQueryOptions(
+	params: Record<string, unknown>,
+): ToolQueryOptions | undefined {
+	const options: Record<string, unknown> = {};
+	if (params.limit) options.limit = params.limit;
+	if (params.cursor) options.cursor = params.cursor;
+	if (params.sortBy) options.sortBy = params.sortBy;
+	if (params.sortOrder) options.sortOrder = params.sortOrder;
 
-	getBySlug: publicProcedure
-		.input(z.object({ slug: z.string() }))
-		.output(toolDataSchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getBySlug(input.slug);
-		}),
+	// Relations
+	if (params.includeRelations)
+		options.includeRelations = params.includeRelations;
 
-	// Preset queries
-	getFeatured: publicProcedure
-		.input(getPresetSchema.optional())
-		.output(z.array(toolSchema))
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getFeatured(input?.limit);
-		}),
+	// Tool-specific filters - support both frontend and backend formats
+	if (params.categoryIds) {
+		options.categoryIds = Array.isArray(params.categoryIds)
+			? params.categoryIds
+			: [params.categoryIds];
+	}
+	if (params.tagIds) {
+		options.tagIds = Array.isArray(params.tagIds)
+			? params.tagIds
+			: [params.tagIds];
+	}
+	if (params.platforms) {
+		options.platforms = Array.isArray(params.platforms)
+			? params.platforms
+			: [params.platforms];
+	}
+	if (params.pricing) {
+		options.pricing = Array.isArray(params.pricing)
+			? params.pricing
+			: [params.pricing];
+	}
+	if (params.featured) options.featured = params.featured;
+	if (params.search) options.search = params.search;
 
-	getRecent: publicProcedure
-		.input(getPresetSchema.optional())
-		.output(z.array(toolSchema))
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getRecent(input?.limit);
-		}),
+	// Validate and parse with schema, return undefined if empty or invalid
+	const result = toolQueryOptionsSchema.safeParse(options);
+	if (!result.success) return undefined;
+	return result.data;
+}
 
-	getPopular: publicProcedure
-		.input(getPresetSchema.optional())
-		.output(z.array(toolSchema))
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.toolsService.getPopular(input?.limit);
-		}),
-});
+export function createToolsRouter(app: Elysia) {
+	return app.group("/tools", (app) =>
+		app
+			.get("/", async ({ request }) => {
+				const rawQueryOptions = parseRawQuery(request.url);
+				const options = parseQueryOptions(rawQueryOptions);
+				return services.toolService.getAll(options);
+			})
+			.get(
+				"/category/:categoryId",
+				async ({ params: { categoryId }, request }) => {
+					const rawQueryOptions = parseRawQuery(request.url);
+					const options = parseQueryOptions(rawQueryOptions);
+					return services.toolService.getByCategory(categoryId, options);
+				},
+				{
+					params: t.Object({ categoryId: t.String() }),
+				},
+			)
+			.get(
+				"/tag/:tagId",
+				async ({ params: { tagId }, request }) => {
+					const rawQueryOptions = parseRawQuery(request.url);
+					const options = parseQueryOptions(rawQueryOptions);
+					return services.toolService.getByTag(tagId, options);
+				},
+				{
+					params: t.Object({ tagId: t.String() }),
+				},
+			)
+			.get(
+				"/search",
+				async ({ query, request }) => {
+					const rawQueryOptions = parseRawQuery(request.url);
+					const options = parseQueryOptions(rawQueryOptions);
+					return services.toolService.search(query.search, options);
+				},
+				{
+					query: t.Object({ search: t.String() }),
+				},
+			)
+			.get(
+				"/:id",
+				async ({ params: { id } }) => {
+					return services.toolService.getById(id);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
+			)
+			.get(
+				"/slug/:slug",
+				async ({ params: { slug } }) => {
+					return services.toolService.getBySlug(slug);
+				},
+				{
+					params: t.Object({ slug: t.String() }),
+				},
+			)
+			.get(
+				"/featured",
+				async ({ query }) => {
+					const limit = query?.limit
+						? Number.parseInt(query.limit, 10)
+						: undefined;
+					return services.toolService.getFeatured(limit);
+				},
+				{
+					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			)
+			.get(
+				"/recent",
+				async ({ query }) => {
+					const limit = query?.limit
+						? Number.parseInt(query.limit, 10)
+						: undefined;
+					return services.toolService.getRecent(limit);
+				},
+				{
+					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			)
+			.get(
+				"/popular",
+				async ({ query }) => {
+					const limit = query?.limit
+						? Number.parseInt(query.limit, 10)
+						: undefined;
+					return services.toolService.getPopular(limit);
+				},
+				{
+					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			),
+	);
+}

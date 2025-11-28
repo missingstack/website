@@ -1,8 +1,16 @@
-import { publicProcedure, router } from "@missingstack/api/index";
-import { statsSchema } from "./stats.schema";
+import { services } from "@missingstack/api/context";
+import type { Elysia } from "elysia";
 
-export const statsRouter = router({
-	getStats: publicProcedure.output(statsSchema).query(async ({ ctx }) => {
-		return ctx.dependencies.statsService.getStats();
-	}),
-});
+export type { Stats } from "./stats.schema";
+export type {
+	StatsRepositoryInterface,
+	StatsServiceInterface,
+} from "./stats.types";
+
+export function createStatsRouter(app: Elysia) {
+	return app.group("/stats", (app) =>
+		app.get("/", async () => {
+			return services.statsService.getStats();
+		}),
+	);
+}

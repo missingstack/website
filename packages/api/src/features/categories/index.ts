@@ -1,43 +1,51 @@
-import { publicProcedure, router } from "@missingstack/api/index";
-import { z } from "zod";
-import {
-	categoriesListSchema,
-	categoriesWithCountsListSchema,
-	categorySchema,
-	getTopCategoriesSchema,
-} from "./categories.schema";
+import { services } from "@missingstack/api/context";
+import type { Elysia } from "elysia";
+import { t } from "elysia";
 
-export const categoriesRouter = router({
-	getAll: publicProcedure
-		.output(categoriesListSchema)
-		.query(async ({ ctx }) => {
-			return ctx.dependencies.categoriesService.getAll();
-		}),
+export type { Category } from "@missingstack/db/schema/categories";
+export type {
+	CategoriesServiceInterface,
+	CategoryRepositoryInterface,
+} from "./categories.types";
 
-	getById: publicProcedure
-		.input(z.object({ id: z.string() }))
-		.output(categorySchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.categoriesService.getById(input.id);
-		}),
-
-	getBySlug: publicProcedure
-		.input(z.object({ slug: z.string() }))
-		.output(categorySchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.categoriesService.getBySlug(input.slug);
-		}),
-
-	getAllWithCounts: publicProcedure
-		.output(categoriesWithCountsListSchema)
-		.query(async ({ ctx }) => {
-			return ctx.dependencies.categoriesService.getAllWithCounts();
-		}),
-
-	getTopCategories: publicProcedure
-		.input(getTopCategoriesSchema.optional())
-		.output(categoriesWithCountsListSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.categoriesService.getTopCategories(input?.limit);
-		}),
-});
+export function createCategoriesRouter(app: Elysia) {
+	return app.group("/categories", (app) =>
+		app
+			.get("/", async () => {
+				return services.categoryService.getAll();
+			})
+			.get(
+				"/:id",
+				async ({ params: { id } }) => {
+					return services.categoryService.getById(id);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
+			)
+			.get(
+				"/slug/:slug",
+				async ({ params: { slug } }) => {
+					return services.categoryService.getBySlug(slug);
+				},
+				{
+					params: t.Object({ slug: t.String() }),
+				},
+			)
+			.get("/with-counts", async () => {
+				return services.categoryService.getAllWithCounts();
+			})
+			.get(
+				"/top",
+				async ({ query }) => {
+					const limit = query?.limit
+						? Number.parseInt(query.limit, 10)
+						: undefined;
+					return services.categoryService.getTopCategories(limit);
+				},
+				{
+					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			),
+	);
+}

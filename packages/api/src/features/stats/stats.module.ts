@@ -3,15 +3,7 @@ import { DrizzleStatsRepository } from "./stats.repository";
 import { StatsService } from "./stats.service";
 import type { StatsServiceInterface } from "./stats.types";
 
-export type StatsModule = {
-	statsService: StatsServiceInterface;
-};
-
-export function createStatsModule(database: Database): StatsModule {
+export function createStatsService(database: Database): StatsServiceInterface {
 	const repository = new DrizzleStatsRepository(database);
-	const statsService = new StatsService(repository);
-
-	return {
-		statsService,
-	};
+	return new StatsService(repository);
 }

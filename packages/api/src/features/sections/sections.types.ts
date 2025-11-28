@@ -1,33 +1,15 @@
-import type {
-	IconColor,
-	SectionFilter,
-	SectionLayout,
-	SectionType,
-} from "@missingstack/db/schema/enums";
+import type { Section } from "./sections.config";
 
-export interface SectionData {
-	id: string;
-	type: SectionType;
-	filter: SectionFilter | null;
-	categoryId: string | null;
-	title: string;
-	description: string | null;
-	icon: string;
-	iconColor: IconColor | null;
-	limit: number | null;
-	layout: SectionLayout | null;
-	enabled: boolean | null;
-	weight: number | null;
-}
+export type { Section };
 
 export interface SectionRepositoryInterface {
-	getAll(): Promise<SectionData[]>;
-	getById(id: string): Promise<SectionData | null>;
-	getEnabled(): Promise<SectionData[]>;
+	getAll(): Promise<Section[]>;
+	getById(id: string): Promise<Section | null>;
+	getEnabled(): Promise<Section[]>;
 }
 
 export interface SectionsServiceInterface {
-	getAll(): Promise<SectionData[]>;
-	getById(id: string): Promise<SectionData | null>;
-	getEnabled(): Promise<SectionData[]>;
+	getAll(): Promise<Section[]>;
+	getById(id: string): Promise<Section | null>;
+	getEnabled(): Promise<Section[]>;
 }

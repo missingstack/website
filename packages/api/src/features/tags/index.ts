@@ -1,30 +1,58 @@
-import { publicProcedure, router } from "@missingstack/api/index";
-import { z } from "zod";
-import { getTagsByTypeSchema, tagSchema, tagsListSchema } from "./tags.schema";
+import { services } from "@missingstack/api/context";
+import { tagTypeEnum } from "@missingstack/db/schema/enums";
+import type { Elysia } from "elysia";
+import { t } from "elysia";
 
-export const tagsRouter = router({
-	getAll: publicProcedure.output(tagsListSchema).query(async ({ ctx }) => {
-		return ctx.dependencies.tagsService.getAll();
-	}),
+export type { Tag } from "@missingstack/db/schema/tags";
+export type {
+	TagRepositoryInterface,
+	TagsServiceInterface,
+} from "./tags.types";
 
-	getById: publicProcedure
-		.input(z.object({ id: z.string() }))
-		.output(tagSchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.tagsService.getById(input.id);
-		}),
+const tagTypeEnumValues = tagTypeEnum.enumValues;
 
-	getBySlug: publicProcedure
-		.input(z.object({ slug: z.string() }))
-		.output(tagSchema.nullable())
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.tagsService.getBySlug(input.slug);
-		}),
+export function createTagsRouter(app: Elysia) {
+	return app.group("/tags", (app) =>
+		app
+			.get("/", async () => {
+				return services.tagService.getAll();
+			})
+			.get(
+				"/:id",
+				async ({ params: { id } }) => {
+					return services.tagService.getById(id);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
+			)
+			.get(
+				"/slug/:slug",
+				async ({ params: { slug } }) => {
+					return services.tagService.getBySlug(slug);
+				},
+				{
+					params: t.Object({ slug: t.String() }),
+				},
+			)
+			.get(
+				"/type/:type",
+				async ({ params: { type } }) => {
+					if (
+						!tagTypeEnumValues.includes(
+							type as (typeof tagTypeEnumValues)[number],
+						)
+					) {
+						throw new Error(`Invalid tag type: ${type}`);
+					}
 
-	getByType: publicProcedure
-		.input(getTagsByTypeSchema)
-		.output(tagsListSchema)
-		.query(async ({ ctx, input }) => {
-			return ctx.dependencies.tagsService.getByType(input.type);
-		}),
-});
+					return services.tagService.getByType(
+						type as (typeof tagTypeEnumValues)[number],
+					);
+				},
+				{
+					params: t.Object({ type: t.String() }),
+				},
+			),
+	);
+}

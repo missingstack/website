@@ -1,8 +1,7 @@
+import type { Tool } from "@missingstack/api/types";
 import type {
-	QueryOptions,
 	ToolCollection,
 	ToolData,
-	ToolDataLite,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 	ToolsServiceInterface,
@@ -50,21 +49,21 @@ export class ToolsService implements ToolsServiceInterface {
 
 	async getByCategory(
 		categoryId: string,
-		options: QueryOptions = {},
+		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.repository.getByCategory(categoryId, options);
 	}
 
 	async getByTag(
 		tagId: string,
-		options: QueryOptions = {},
+		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.repository.getByTag(tagId, options);
 	}
 
 	async search(
 		query: string,
-		options: QueryOptions = {},
+		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		const trimmedQuery = query.trim();
 		if (!trimmedQuery) {
@@ -81,17 +80,17 @@ export class ToolsService implements ToolsServiceInterface {
 		return this.repository.getBySlug(slug);
 	}
 
-	async getFeatured(limit?: number): Promise<ToolDataLite[]> {
+	async getFeatured(limit?: number): Promise<Tool[]> {
 		const clampedLimit = clampPresetLimit(limit);
 		return this.repository.getFeatured(clampedLimit);
 	}
 
-	async getRecent(limit?: number): Promise<ToolDataLite[]> {
+	async getRecent(limit?: number): Promise<Tool[]> {
 		const clampedLimit = clampPresetLimit(limit);
 		return this.repository.getRecent(clampedLimit);
 	}
 
-	async getPopular(limit?: number): Promise<ToolDataLite[]> {
+	async getPopular(limit?: number): Promise<Tool[]> {
 		const clampedLimit = clampPresetLimit(limit);
 		return this.repository.getPopular(clampedLimit);
 	}

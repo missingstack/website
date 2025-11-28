@@ -1,5 +1,5 @@
 import type {
-	SectionData,
+	Section,
 	SectionRepositoryInterface,
 	SectionsServiceInterface,
 } from "./sections.types";
@@ -7,15 +7,15 @@ import type {
 export class SectionsService implements SectionsServiceInterface {
 	constructor(private readonly repository: SectionRepositoryInterface) {}
 
-	async getAll(): Promise<SectionData[]> {
+	async getAll(): Promise<Section[]> {
 		return this.repository.getAll();
 	}
 
-	async getById(id: string): Promise<SectionData | null> {
+	async getById(id: string): Promise<Section | null> {
 		return this.repository.getById(id);
 	}
 
-	async getEnabled(): Promise<SectionData[]> {
+	async getEnabled(): Promise<Section[]> {
 		return this.repository.getEnabled();
 	}
 }

@@ -1,6 +1,6 @@
-# missingstack
+# Missingstack
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Self, TRPC, and more.
+A modern TypeScript stack that combines Next.js, Elysia, and more.
 
 ## Features
 
@@ -8,7 +8,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Next.js** - Full-stack React framework
 - **TailwindCSS** - Utility-first CSS for rapid UI development
 - **shadcn/ui** - Reusable UI components
-- **tRPC** - End-to-end type-safe APIs
+- **Elysia** - Fast and friendly Bun web framework with end-to-end type safety
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
 - **Turborepo** - Optimized monorepo build system
@@ -41,7 +41,7 @@ Then, run the development server:
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see your fullstack application.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see your fullstack application.
 
 
 

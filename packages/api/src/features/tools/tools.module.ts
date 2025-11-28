@@ -3,15 +3,7 @@ import { DrizzleToolRepository } from "./tools.repository";
 import { ToolsService } from "./tools.service";
 import type { ToolsServiceInterface } from "./tools.types";
 
-export type ToolModule = {
-	toolsService: ToolsServiceInterface;
-};
-
-export function createToolModule(database: Database): ToolModule {
+export function createToolService(database: Database): ToolsServiceInterface {
 	const repository = new DrizzleToolRepository(database);
-	const toolsService = new ToolsService(repository);
-
-	return {
-		toolsService,
-	};
+	return new ToolsService(repository);
 }

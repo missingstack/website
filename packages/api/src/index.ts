@@ -1,6 +1,29 @@
-import { initTRPC } from "@trpc/server";
-import type { Context } from "./context";
+import { openapi } from "@elysiajs/openapi";
+import { services } from "@missingstack/api/context";
+import { createCategoriesRouter } from "@missingstack/api/features/categories";
+import { createSectionsRouter } from "@missingstack/api/features/sections";
+import { createStatsRouter } from "@missingstack/api/features/stats";
+import { createTagsRouter } from "@missingstack/api/features/tags";
+import { createToolsRouter } from "@missingstack/api/features/tools";
+import { Elysia } from "elysia";
 
-export const t = initTRPC.context<Context>().create();
-export const router = t.router;
-export const publicProcedure = t.procedure;
+import type { ServiceInterface } from "./context";
+
+export function createApp(dependencies: ServiceInterface) {
+	return new Elysia({ prefix: "/api/v1" })
+		.state("dependencies", dependencies)
+		.derive(({ store }) => ({
+			dependencies: store.dependencies as ServiceInterface,
+		}));
+}
+
+export const app = createApp(services)
+	.use(openapi())
+	.get("/health", () => "OK")
+	.use(createToolsRouter)
+	.use(createCategoriesRouter)
+	.use(createTagsRouter)
+	.use(createSectionsRouter)
+	.use(createStatsRouter);
+
+export type app = typeof app;

@@ -3,15 +3,7 @@ import { DrizzleTagRepository } from "./tags.repository";
 import { TagsService } from "./tags.service";
 import type { TagsServiceInterface } from "./tags.types";
 
-export type TagModule = {
-	tagsService: TagsServiceInterface;
-};
-
-export function createTagModule(database: Database): TagModule {
+export function createTagService(database: Database): TagsServiceInterface {
 	const repository = new DrizzleTagRepository(database);
-	const tagsService = new TagsService(repository);
-
-	return {
-		tagsService,
-	};
+	return new TagsService(repository);
 }

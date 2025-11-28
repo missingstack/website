@@ -1,8 +1,7 @@
+import type { Category } from "@missingstack/db/schema/categories";
 import type {
 	CategoriesServiceInterface,
-	CategoryData,
 	CategoryRepositoryInterface,
-	CategoryWithCount,
 } from "./categories.types";
 
 const DEFAULT_TOP_LIMIT = 10;
@@ -11,23 +10,23 @@ const MAX_TOP_LIMIT = 100;
 export class CategoriesService implements CategoriesServiceInterface {
 	constructor(private readonly repository: CategoryRepositoryInterface) {}
 
-	async getAll(): Promise<CategoryData[]> {
+	async getAll(): Promise<Category[]> {
 		return this.repository.getAll();
 	}
 
-	async getById(id: string): Promise<CategoryData | null> {
+	async getById(id: string): Promise<Category | null> {
 		return this.repository.getById(id);
 	}
 
-	async getBySlug(slug: string): Promise<CategoryData | null> {
+	async getBySlug(slug: string): Promise<Category | null> {
 		return this.repository.getBySlug(slug);
 	}
 
-	async getAllWithCounts(): Promise<CategoryWithCount[]> {
+	async getAllWithCounts(): Promise<Category[]> {
 		return this.repository.getAllWithCounts();
 	}
 
-	async getTopCategories(limit?: number): Promise<CategoryWithCount[]> {
+	async getTopCategories(limit?: number): Promise<Category[]> {
 		const clampedLimit = clampLimit(limit);
 		return this.repository.getTopCategories(clampedLimit);
 	}

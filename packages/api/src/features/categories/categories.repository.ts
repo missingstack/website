@@ -1,46 +1,23 @@
 import type { Database } from "@missingstack/db";
 import { asc, desc, eq } from "@missingstack/db/drizzle-orm";
-import { categories } from "@missingstack/db/schema/categories";
-
-import type {
-	CategoryData,
-	CategoryRepositoryInterface,
-	CategoryWithCount,
-} from "./categories.types";
-
-type QueryableDb = Pick<Database, "select">;
+import { type Category, categories } from "@missingstack/db/schema/categories";
+import type { CategoryRepositoryInterface } from "./categories.types";
 
 export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
-	constructor(private readonly db: QueryableDb) {}
+	constructor(private readonly db: Database) {}
 
-	async getAll(): Promise<CategoryData[]> {
+	async getAll(): Promise<Category[]> {
 		const rows = await this.db
-			.select({
-				id: categories.id,
-				slug: categories.slug,
-				name: categories.name,
-				description: categories.description,
-				icon: categories.icon,
-				parentId: categories.parentId,
-				weight: categories.weight,
-			})
+			.select()
 			.from(categories)
 			.orderBy(asc(categories.weight), asc(categories.name));
 
 		return rows;
 	}
 
-	async getById(id: string): Promise<CategoryData | null> {
+	async getById(id: string): Promise<Category | null> {
 		const [row] = await this.db
-			.select({
-				id: categories.id,
-				slug: categories.slug,
-				name: categories.name,
-				description: categories.description,
-				icon: categories.icon,
-				parentId: categories.parentId,
-				weight: categories.weight,
-			})
+			.select()
 			.from(categories)
 			.where(eq(categories.id, id))
 			.limit(1);
@@ -48,17 +25,9 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 		return row ?? null;
 	}
 
-	async getBySlug(slug: string): Promise<CategoryData | null> {
+	async getBySlug(slug: string): Promise<Category | null> {
 		const [row] = await this.db
-			.select({
-				id: categories.id,
-				slug: categories.slug,
-				name: categories.name,
-				description: categories.description,
-				icon: categories.icon,
-				parentId: categories.parentId,
-				weight: categories.weight,
-			})
+			.select()
 			.from(categories)
 			.where(eq(categories.slug, slug))
 			.limit(1);
@@ -66,36 +35,18 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 		return row ?? null;
 	}
 
-	async getAllWithCounts(): Promise<CategoryWithCount[]> {
+	async getAllWithCounts(): Promise<Category[]> {
 		const rows = await this.db
-			.select({
-				id: categories.id,
-				slug: categories.slug,
-				name: categories.name,
-				description: categories.description,
-				icon: categories.icon,
-				parentId: categories.parentId,
-				weight: categories.weight,
-				toolCount: categories.toolCount,
-			})
+			.select()
 			.from(categories)
 			.orderBy(desc(categories.toolCount), asc(categories.name));
 
 		return rows;
 	}
 
-	async getTopCategories(limit = 10): Promise<CategoryWithCount[]> {
+	async getTopCategories(limit = 10): Promise<Category[]> {
 		const rows = await this.db
-			.select({
-				id: categories.id,
-				slug: categories.slug,
-				name: categories.name,
-				description: categories.description,
-				icon: categories.icon,
-				parentId: categories.parentId,
-				weight: categories.weight,
-				toolCount: categories.toolCount,
-			})
+			.select()
 			.from(categories)
 			.orderBy(desc(categories.toolCount), asc(categories.name))
 			.limit(limit);

@@ -1,3 +1,4 @@
+import type { BaseQueryOptions } from "@missingstack/api/types";
 import type { Database } from "@missingstack/db";
 import {
 	type SQL,
@@ -7,6 +8,7 @@ import {
 	eq,
 	exists,
 	gt,
+	ilike,
 	inArray,
 	lt,
 	or,
@@ -14,18 +16,15 @@ import {
 } from "@missingstack/db/drizzle-orm";
 import type { Platform, PricingModel } from "@missingstack/db/schema/enums";
 import {
+	type Tool,
 	tools,
 	toolsCategories,
 	toolsPlatforms,
 	toolsTags,
 } from "@missingstack/db/schema/tools";
-
 import type {
-	QueryOptions,
 	ToolCollection,
 	ToolData,
-	ToolDataLite,
-	ToolEntity,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 } from "./tools.types";
@@ -166,8 +165,21 @@ class FilterBuilder {
 		const searchQuery = search.trim();
 		if (!searchQuery) return null;
 
+		// For longer queries, generate tsvector on-the-fly from text fields
+		// This ensures search works even if search_vector column is NULL
+		// Also include ILIKE pattern matching as fallback for better coverage
 		const tsQuery = sql`plainto_tsquery('english', ${searchQuery})`;
-		return sql`${tools.searchVector} @@ ${tsQuery}`;
+		const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
+		const pattern = `%${searchQuery}%`;
+
+		return (
+			or(
+				sql`${generatedVector} @@ ${tsQuery}`,
+				ilike(tools.name, pattern),
+				ilike(tools.tagline, pattern),
+				ilike(tools.description, pattern),
+			) ?? null
+		);
 	}
 
 	buildAllFilters(options: ToolQueryOptions): SQL<unknown>[] {
@@ -207,7 +219,8 @@ class SortBuilder {
 					return [desc(tools.createdAt), desc(tools.id)];
 				}
 				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
-				const rankExpr = sql<number>`ts_rank(${tools.searchVector}, ${tsQuery})`;
+				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
+				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 				return [desc(rankExpr), desc(tools.id)];
 			}
 
@@ -293,7 +306,8 @@ class SortBuilder {
 				}
 
 				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
-				const rankExpr = sql<number>`ts_rank(${tools.searchVector}, ${tsQuery})`;
+				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
+				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 
 				return (
 					or(
@@ -391,7 +405,8 @@ class QueryExecutor {
 		limit: number,
 	): Promise<ToolCollection> {
 		const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
-		const rankExpr = sql<number>`ts_rank(${tools.searchVector}, ${tsQuery})`;
+		const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
+		const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 
 		const rows = await this.db
 			.select({
@@ -405,8 +420,8 @@ class QueryExecutor {
 
 		const hasMore = rows.length > limit;
 		const limitedRows = hasMore ? rows.slice(0, limit) : rows;
-		const items: ToolEntity[] = limitedRows.map(
-			({ rank: _, ...item }) => item as ToolEntity,
+		const items: Tool[] = limitedRows.map(
+			({ rank: _, ...item }) => item as Tool,
 		);
 
 		const lastItem =
@@ -459,9 +474,7 @@ class QueryExecutor {
 			.limit(limit + 1);
 
 		const hasMore = rows.length > limit;
-		const items: ToolEntity[] = (
-			hasMore ? rows.slice(0, limit) : rows
-		) as ToolEntity[];
+		const items: Tool[] = (hasMore ? rows.slice(0, limit) : rows) as Tool[];
 
 		const lastItem =
 			hasMore && items.length > 0 ? items[items.length - 1] : null;
@@ -511,7 +524,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async getByCategory(
 		categoryId: string,
-		options: QueryOptions = {},
+		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.getAll({
 			...options,
@@ -521,7 +534,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async getByTag(
 		tagId: string,
-		options: QueryOptions = {},
+		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.getAll({
 			...options,
@@ -531,7 +544,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async search(
 		query: string,
-		options: QueryOptions = {},
+		options: BaseQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.getAll({
 			...options,
@@ -542,19 +555,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async getById(id: string): Promise<ToolData | null> {
 		const [tool] = await this.db
-			.select({
-				id: tools.id,
-				slug: tools.slug,
-				name: tools.name,
-				tagline: tools.tagline,
-				description: tools.description,
-				logo: tools.logo,
-				website: tools.website,
-				pricing: tools.pricing,
-				featured: tools.featured,
-				createdAt: tools.createdAt,
-				updatedAt: tools.updatedAt,
-			})
+			.select()
 			.from(tools)
 			.where(eq(tools.id, id))
 			.limit(1);
@@ -587,19 +588,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async getBySlug(slug: string): Promise<ToolData | null> {
 		const [tool] = await this.db
-			.select({
-				id: tools.id,
-				slug: tools.slug,
-				name: tools.name,
-				tagline: tools.tagline,
-				description: tools.description,
-				logo: tools.logo,
-				website: tools.website,
-				pricing: tools.pricing,
-				featured: tools.featured,
-				createdAt: tools.createdAt,
-				updatedAt: tools.updatedAt,
-			})
+			.select()
 			.from(tools)
 			.where(eq(tools.slug, slug))
 			.limit(1);
@@ -630,21 +619,9 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		};
 	}
 
-	async getFeatured(limit = 10): Promise<ToolDataLite[]> {
+	async getFeatured(limit = 10): Promise<Tool[]> {
 		const rows = await this.db
-			.select({
-				id: tools.id,
-				slug: tools.slug,
-				name: tools.name,
-				tagline: tools.tagline,
-				description: tools.description,
-				logo: tools.logo,
-				website: tools.website,
-				pricing: tools.pricing,
-				featured: tools.featured,
-				createdAt: tools.createdAt,
-				updatedAt: tools.updatedAt,
-			})
+			.select()
 			.from(tools)
 			.where(eq(tools.featured, true))
 			.orderBy(desc(tools.createdAt), desc(tools.id))
@@ -653,21 +630,9 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		return rows;
 	}
 
-	async getRecent(limit = 10): Promise<ToolDataLite[]> {
+	async getRecent(limit = 10): Promise<Tool[]> {
 		const rows = await this.db
-			.select({
-				id: tools.id,
-				slug: tools.slug,
-				name: tools.name,
-				tagline: tools.tagline,
-				description: tools.description,
-				logo: tools.logo,
-				website: tools.website,
-				pricing: tools.pricing,
-				featured: tools.featured,
-				createdAt: tools.createdAt,
-				updatedAt: tools.updatedAt,
-			})
+			.select()
 			.from(tools)
 			.orderBy(desc(tools.createdAt), desc(tools.id))
 			.limit(limit);
@@ -675,23 +640,11 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		return rows;
 	}
 
-	async getPopular(limit = 10): Promise<ToolDataLite[]> {
+	async getPopular(limit = 10): Promise<Tool[]> {
 		// Popular is based on featured + creation date
 		// In a real app, this might use view counts or other metrics
 		const rows = await this.db
-			.select({
-				id: tools.id,
-				slug: tools.slug,
-				name: tools.name,
-				tagline: tools.tagline,
-				description: tools.description,
-				logo: tools.logo,
-				website: tools.website,
-				pricing: tools.pricing,
-				featured: tools.featured,
-				createdAt: tools.createdAt,
-				updatedAt: tools.updatedAt,
-			})
+			.select()
 			.from(tools)
 			.orderBy(desc(tools.featured), desc(tools.createdAt), desc(tools.id))
 			.limit(limit);

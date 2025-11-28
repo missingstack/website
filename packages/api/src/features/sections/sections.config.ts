@@ -4,9 +4,29 @@
  * Static configuration for homepage sections.
  * This is code-defined and doesn't require a database table.
  */
-import type { SectionData } from "./sections.types";
+import type {
+	IconColor,
+	SectionFilter,
+	SectionLayout,
+	SectionType,
+} from "@missingstack/db/schema/enums";
 
-export const sections: SectionData[] = [
+export type Section = {
+	id: string;
+	type: SectionType;
+	filter: SectionFilter | null;
+	categoryId: string | null;
+	title: string;
+	description: string | null;
+	icon: string;
+	iconColor: IconColor | null;
+	limit: number | null;
+	layout: SectionLayout | null;
+	enabled: boolean | null;
+	weight: number | null;
+};
+
+export const sections: Section[] = [
 	{
 		id: "newest",
 		type: "filter",
@@ -135,8 +155,8 @@ export const sections: SectionData[] = [
 	},
 ];
 
-export function getEnabledSections(): SectionData[] {
+export function getEnabledSections(): Section[] {
 	return sections
-		.filter((s) => s.enabled)
-		.sort((a, b) => (a.weight ?? 0) - (b.weight ?? 0));
+		.filter((s: Section) => s.enabled)
+		.sort((a: Section, b: Section) => (a.weight ?? 0) - (b.weight ?? 0));
 }

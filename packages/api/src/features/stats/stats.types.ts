@@ -1,9 +1,5 @@
-export interface Stats {
-	totalTools: number;
-	totalCategories: number;
-	totalTags: number;
-	featuredTools: number;
-}
+import type { Stats } from "./stats.schema";
+export type { Stats };
 
 export interface StatsRepositoryInterface {
 	getStats(): Promise<Stats>;
