@@ -19,10 +19,11 @@
 		"typescript": "catalog:"
 	},
 	"dependencies": {
+		"@missingstack/db": "workspace:*",
 		"@trpc/server": "catalog:",
 		"@trpc/client": "catalog:",
 		"dotenv": "catalog:",
 		"zod": "catalog:",
-		"@missingstack/db": "workspace:*"
+		"drizzle-orm": "^0.44.2"
 	}
 }
