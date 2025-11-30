@@ -1,13 +1,17 @@
 import { services } from "@missingstack/api/context";
+import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
+import Link from "next/link";
 import { Suspense } from "react";
 import { DiscoverContent } from "~/components/discover/discover-content";
 import { Footer } from "~/components/home/footer";
 import { Header } from "~/components/home/header";
 import { ToolCardSkeleton } from "~/components/home/tool-card";
+import { StructuredData } from "~/components/structured-data";
 import { Container } from "~/components/ui/container";
 import { Skeleton } from "~/components/ui/skeleton";
 import { PLATFORM_OPTIONS, PRICING_OPTIONS } from "~/lib/search-params";
+import { breadcrumb, generateSEOMetadata, itemList } from "~/lib/seo";
 
 async function getCategoriesWithCounts() {
 	"use cache";
@@ -33,12 +37,31 @@ async function getStats() {
 	return services.statsService.getStats();
 }
 
+async function getFeaturedTools() {
+	"use cache";
+	cacheLife("days");
+	cacheTag("tools");
+
+	return services.toolService.getFeatured(12);
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+	const stats = await getStats();
+
+	return generateSEOMetadata({
+		title: "Discover Tools - Search & Filter",
+		description: `Discover and search through ${stats.totalTools}+ curated tools across ${stats.totalCategories} categories. Filter by category, pricing, platform, and more to find the perfect tools for your needs.`,
+		url: "/discover",
+	});
+}
+
 export default async function DiscoverPage() {
 	// Fetch static data that doesn't depend on search params
-	const [categories, tags, stats] = await Promise.all([
+	const [categories, tags, stats, featuredTools] = await Promise.all([
 		getCategoriesWithCounts(),
 		getTags(),
 		getStats(),
+		getFeaturedTools(),
 	]);
 
 	// Create lookup maps for filter labels
@@ -54,6 +77,22 @@ export default async function DiscoverPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col bg-background">
+			<StructuredData
+				data={breadcrumb([
+					{ name: "Home", url: "/" },
+					{ name: "Discover", url: "/discover" },
+				])}
+			/>
+			<StructuredData
+				data={itemList({
+					name: "Discoverable Tools",
+					description: `Explore ${stats.totalTools}+ curated tools. Search and filter by category, pricing, platform, and tags.`,
+					items: featuredTools.slice(0, 12).map((tool) => ({
+						name: tool.name,
+						url: `/tools/${tool.slug}`,
+					})),
+				})}
+			/>
 			<Header />
 
 			<main className="flex-1 py-8 sm:py-12">
@@ -61,11 +100,19 @@ export default async function DiscoverPage() {
 					<div className="flex flex-col justify-between gap-4 sm:gap-6 lg:flex-row lg:items-end">
 						<div>
 							<h1 className="mb-2 font-serif text-3xl text-primary leading-tight sm:mb-3 sm:text-4xl md:text-5xl">
-								Discover Tools
+								Discover & Search Tools
 							</h1>
 							<p className="max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
-								Explore {stats.totalTools}+ curated tools across{" "}
-								{stats.totalCategories} categories.
+								Browse our{" "}
+								<Link
+									href="/"
+									className="font-medium text-primary underline transition-colors hover:text-primary/80"
+								>
+									curated directory
+								</Link>{" "}
+								to discover {stats.totalTools}+ tools across{" "}
+								{stats.totalCategories} categories. Filter by category, pricing,
+								platform, and more.
 							</p>
 						</div>
 					</div>

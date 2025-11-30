@@ -7,6 +7,7 @@ async function getSections() {
 	"use cache";
 	cacheLife("days");
 	cacheTag("sections");
+	cacheTag("homepage-sections");
 
 	return services.sectionService.getEnabled();
 }
@@ -15,6 +16,8 @@ async function getPopularTools(limit: number) {
 	"use cache";
 	cacheLife("days");
 	cacheTag("tools");
+	cacheTag("popular-tools");
+	cacheTag("homepage-tools");
 
 	return services.toolService.getPopular(limit);
 }
@@ -23,6 +26,8 @@ async function getRecentTools(limit: number) {
 	"use cache";
 	cacheLife("days");
 	cacheTag("tools");
+	cacheTag("recent-tools");
+	cacheTag("homepage-tools");
 
 	return services.toolService.getRecent(limit);
 }
@@ -31,6 +36,8 @@ async function getFeaturedTools(limit: number) {
 	"use cache";
 	cacheLife("days");
 	cacheTag("tools");
+	cacheTag("featured-tools");
+	cacheTag("homepage-tools");
 
 	return services.toolService.getFeatured(limit);
 }
@@ -38,7 +45,9 @@ async function getFeaturedTools(limit: number) {
 async function getToolsByCategory(categoryId: string, limit: number) {
 	"use cache";
 	cacheLife("days");
-	cacheTag("tools", `category-${categoryId}`);
+	cacheTag("tools");
+	cacheTag(`category-${categoryId}`);
+	cacheTag("homepage-tools");
 
 	const result = await services.toolService.getByCategory(categoryId, {
 		limit: limit,

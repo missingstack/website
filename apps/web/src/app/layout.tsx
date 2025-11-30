@@ -1,6 +1,5 @@
 import "../index.css";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import Providers from "~/components/providers";
 import { config } from "~/lib/site-config";
@@ -19,19 +18,14 @@ export const metadata: Metadata = {
 		title: config.title,
 		description: config.description,
 		url: config.url,
-		locale: "en_US",
+		siteName: config.title,
+		locale: config.locale,
 		type: "website",
 	},
-	robots: {
-		index: true,
-		follow: true,
-		googleBot: {
-			index: true,
-			follow: true,
-			"max-video-preview": -1,
-			"max-image-preview": "large",
-			"max-snippet": -1,
-		},
+	twitter: {
+		card: "summary_large_image",
+		title: config.title,
+		description: config.description,
 	},
 };
 
@@ -47,9 +41,8 @@ export default function RootLayout({
 					<div className="grid h-svh w-screen grid-rows-[auto_1fr]">
 						{children}
 					</div>
-					<Analytics />
-					<SpeedInsights />
 				</Providers>
+				<Analytics />
 			</body>
 		</html>
 	);

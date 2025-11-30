@@ -1,26 +1,28 @@
 import { services } from "@missingstack/api/context";
-import { Github, Linkedin, Twitter } from "lucide-react";
-import { cacheLife } from "next/cache";
+import { Linkedin, Twitter } from "lucide-react";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 import { Separator } from "~/components/ui/separator";
 
 const RESOURCES = [
-	{ name: "Submit a Tool", href: "/submit" as const },
+	{ name: "Submit a Tool", href: "/" as const },
 	{ name: "Discover", href: "/discover" as const },
 	{ name: "Categories", href: "/categories" as const },
 ];
 
-export async function getTopCategories() {
+export async function getAllCategoriesWithCounts() {
 	"use cache";
 	cacheLife("days");
+	cacheTag("categories");
 
-	const data = await services.categoryService.getTopCategories(6);
+	const data = await services.categoryService.getAllWithCounts();
 	return data || [];
 }
 
 export async function getFeaturedTools() {
 	"use cache";
 	cacheLife("days");
+	cacheTag("tools");
 
 	const data = await services.toolService.getFeatured(6);
 	return data || [];
@@ -28,9 +30,14 @@ export async function getFeaturedTools() {
 
 export async function Footer() {
 	const [categories, featuredTools] = await Promise.all([
-		getTopCategories(),
+		getAllCategoriesWithCounts(),
 		getFeaturedTools(),
 	]);
+
+	// Filter categories with tools and sort by tool count
+	const categoriesWithTools = categories
+		.filter((c) => c.toolCount > 0)
+		.sort((a, b) => b.toolCount - a.toolCount);
 
 	return (
 		<footer className="bg-primary text-white">
@@ -55,7 +62,7 @@ export async function Footer() {
 						</p>
 						<div className="flex gap-2">
 							<a
-								href="https://twitter.com/missingstack"
+								href="https://twitter.com/@MissingstackHQ"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-white/10 p-2.5 text-white/70 transition-all duration-200 hover:scale-110 hover:bg-white/20 hover:text-white active:scale-95"
@@ -64,16 +71,7 @@ export async function Footer() {
 								<Twitter size={18} />
 							</a>
 							<a
-								href="https://github.com/missingstack"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-white/10 p-2.5 text-white/70 transition-all duration-200 hover:scale-110 hover:bg-white/20 hover:text-white active:scale-95"
-								aria-label="View our GitHub"
-							>
-								<Github size={18} />
-							</a>
-							<a
-								href="https://linkedin.com/company/missingstack"
+								href="https://linkedin.com/company/missingstudio"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-white/10 p-2.5 text-white/70 transition-all duration-200 hover:scale-110 hover:bg-white/20 hover:text-white active:scale-95"
@@ -89,7 +87,7 @@ export async function Footer() {
 							Categories
 						</h4>
 						<ul className="space-y-2.5 sm:space-y-3">
-							{categories.map((cat) => (
+							{categoriesWithTools.map((cat) => (
 								<li key={cat.id}>
 									<Link
 										href={`/categories/${cat.slug}`}

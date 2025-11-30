@@ -1,11 +1,28 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "~/components/home/footer";
 import { Header } from "~/components/home/header";
+import { StructuredData } from "~/components/structured-data";
+import { breadcrumb, generateSEOMetadata } from "~/lib/seo";
+
+export const metadata: Metadata = generateSEOMetadata({
+	title: "Terms of Service",
+	description:
+		"Read our Terms of Service to understand the terms and conditions for using Missing Stack. Last updated January 2024.",
+	url: "/terms",
+	noindex: true,
+});
 
 export default function TermsPage() {
 	return (
 		<div className="flex min-h-screen flex-col bg-background">
+			<StructuredData
+				data={breadcrumb([
+					{ name: "Home", url: "/" },
+					{ name: "Terms of Service", url: "/terms" },
+				])}
+			/>
 			<Header />
 
 			<main className="flex-1 py-8 sm:py-12">
@@ -23,9 +40,12 @@ export default function TermsPage() {
 					</h1>
 
 					<div className="prose prose-neutral max-w-none">
-						<p className="mb-6 text-muted-foreground text-sm sm:mb-8 sm:text-base lg:text-lg">
+						<time
+							dateTime="2024-01-01"
+							className="mb-6 block text-muted-foreground text-sm sm:mb-8 sm:text-base lg:text-lg"
+						>
 							Last updated: January 2024
-						</p>
+						</time>
 
 						<section className="mb-6 sm:mb-8">
 							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">

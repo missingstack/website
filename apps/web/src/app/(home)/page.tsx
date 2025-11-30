@@ -1,3 +1,6 @@
+import { services } from "@missingstack/api/context";
+import type { Metadata } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { Suspense } from "react";
 import { CTASection } from "~/components/home/cta-section";
 import { Footer } from "~/components/home/footer";
@@ -6,12 +9,64 @@ import { HeroSection } from "~/components/home/hero-section";
 import { HomepageSections } from "~/components/home/homepage-sections";
 import { NewsletterSection } from "~/components/home/newsletter-section";
 import { ToolCardSkeleton } from "~/components/home/tool-card";
+import { StructuredData } from "~/components/structured-data";
 import { Container } from "~/components/ui/container";
 import { Skeleton } from "~/components/ui/skeleton";
+import {
+	breadcrumb,
+	generateSEOMetadata,
+	itemList,
+	organization,
+	website,
+} from "~/lib/seo";
 
-export default function Home() {
+async function getStats() {
+	"use cache";
+	cacheLife("days");
+	cacheTag("stats");
+
+	return services.statsService.getStats();
+}
+
+async function getFeaturedTools() {
+	"use cache";
+	cacheLife("days");
+	cacheTag("tools");
+
+	return services.toolService.getFeatured(12);
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+	const stats = await getStats();
+
+	return generateSEOMetadata({
+		title: "A curated directory of awesome tools",
+		description: `Discover ${stats.totalTools}+ curated tools across ${stats.totalCategories} categories. Build your modern product stack with the best AI tools, SaaS tools, and developer tools. Updated daily.`,
+		url: "/",
+	});
+}
+
+export default async function Home() {
+	const [featuredTools, stats] = await Promise.all([
+		getFeaturedTools(),
+		getStats(),
+	]);
+
 	return (
 		<div className="flex min-h-screen flex-col bg-background">
+			<StructuredData data={website()} />
+			<StructuredData data={organization()} />
+			<StructuredData data={breadcrumb([{ name: "Home", url: "/" }])} />
+			<StructuredData
+				data={itemList({
+					name: "Featured Tools",
+					description: `Discover ${stats.totalTools}+ curated tools. Featured tools hand-picked by our team.`,
+					items: featuredTools.slice(0, 12).map((tool) => ({
+						name: tool.name,
+						url: `/tools/${tool.slug}`,
+					})),
+				})}
+			/>
 			<Header />
 			<HeroSection />
 			<main className="flex-1">

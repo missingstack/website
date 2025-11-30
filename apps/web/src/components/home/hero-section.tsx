@@ -41,10 +41,10 @@ export async function HeroSection() {
 
 					<div className="mx-auto mb-8 max-w-4xl text-center sm:mb-12">
 						<h1 className="mb-4 font-serif text-3xl text-primary leading-[1.1] tracking-tight sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
-							Discover the tools to
+							Discover tools
 							<br />
 							<span className="text-muted-foreground/80 italic">
-								build what's next
+								to build what's next
 							</span>
 						</h1>
 

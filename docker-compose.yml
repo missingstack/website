@@ -1,0 +1,27 @@
+x-server-env: &server_env
+  PORT: 3001
+  DATABASE_URL: postgresql://missingstack:missingstack@db:5432/missingstack
+  BETTER_AUTH_SECRET: dev-secret-change-me
+  BETTER_AUTH_URL: http://localhost:3001
+  CORS_ORIGIN: http://localhost:3000
+  NODE_ENV: production
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: missingstack
+      POSTGRES_PASSWORD: missingstack
+      POSTGRES_DB: missingstack
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U missingstack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

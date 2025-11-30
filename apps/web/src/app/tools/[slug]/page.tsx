@@ -12,6 +12,7 @@ import {
 	Share2,
 	Smartphone,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,13 +21,50 @@ import { Suspense } from "react";
 import { Footer } from "~/components/home/footer";
 import { Header } from "~/components/home/header";
 import { ToolCard } from "~/components/home/tool-card";
+import { StructuredData } from "~/components/structured-data";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import {
+	breadcrumb,
+	faqPage,
+	generateSEOMetadata,
+	softwareApplication,
+} from "~/lib/seo";
 
 interface ToolPageProps {
 	params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+	params,
+}: ToolPageProps): Promise<Metadata> {
+	const { slug } = await params;
+	const tool = await getToolBySlug(slug);
+
+	if (!tool) {
+		return generateSEOMetadata({
+			title: "Tool Not Found",
+			description: "The requested tool could not be found.",
+			noindex: true,
+		});
+	}
+
+	// Create concise description under 155 characters
+	const baseDescription = tool.tagline || tool.description.slice(0, 100);
+	const description =
+		baseDescription.length > 150
+			? `${baseDescription.slice(0, 147)}...`
+			: baseDescription;
+
+	return generateSEOMetadata({
+		title: `${tool.name} - ${tool.tagline}`,
+		description,
+		image: tool.logo,
+		url: `/tools/${slug}`,
+		type: "article",
+	});
 }
 
 const platformIcons: Record<
@@ -120,8 +158,43 @@ async function ToolPageContent({
 		"Team management",
 	];
 
+	const breadcrumbItems = [
+		{ name: "Home", url: "/" },
+		...validCategories.map((cat) => ({
+			name: cat.name,
+			url: `/categories/${cat.slug}`,
+		})),
+		{ name: tool.name, url: `/tools/${tool.slug}` },
+	];
+
 	return (
 		<>
+			<StructuredData data={breadcrumb(breadcrumbItems)} />
+			<StructuredData
+				data={softwareApplication({
+					name: tool.name,
+					description: `${tool.description} ${tool.tagline}`,
+					url: tool.website || `/tools/${tool.slug}`,
+					category: validCategories[0]?.name,
+					platforms: tool.platforms,
+				})}
+			/>
+			<StructuredData
+				data={faqPage([
+					{
+						question: `What is ${tool.name}?`,
+						answer: tool.description,
+					},
+					{
+						question: `How much does ${tool.name} cost?`,
+						answer: `${tool.name} is a ${tool.pricing} tool.`,
+					},
+					{
+						question: `What platforms does ${tool.name} support?`,
+						answer: `${tool.name} is available on ${tool.platforms.join(", ")}.`,
+					},
+				])}
+			/>
 			<div className="mx-auto mb-4 max-w-7xl px-4 sm:mb-6 sm:px-6">
 				<nav className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs sm:gap-2 sm:text-sm">
 					<Link
@@ -130,16 +203,9 @@ async function ToolPageContent({
 					>
 						Home
 					</Link>
-					<ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-					<Link
-						href="/discover"
-						className="transition-colors duration-200 hover:text-primary"
-					>
-						Discover
-					</Link>
-					<ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
 					{validCategories.length > 0 && (
 						<>
+							<ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
 							{validCategories.map((cat, index) => (
 								<span key={cat.id}>
 									{index > 0 && (
@@ -166,7 +232,7 @@ async function ToolPageContent({
 						<div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-border/50 bg-secondary/50 shadow-lg transition-transform duration-300 hover:scale-105 sm:h-24 sm:w-24 md:h-32 md:w-32 md:rounded-3xl">
 							<Image
 								src={tool.logo}
-								alt={`${tool.name} logo`}
+								alt={`${tool.name} - ${validCategories[0]?.name || "Tool"} tool logo`}
 								fill
 								className="object-cover"
 								sizes="128px"
@@ -179,6 +245,12 @@ async function ToolPageContent({
 							<div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-3 sm:gap-3">
 								<h1 className="font-serif text-2xl text-primary leading-tight sm:text-3xl md:text-4xl lg:text-5xl">
 									{tool.name}
+									{validCategories.length > 0 && (
+										<span className="text-muted-foreground/70">
+											{" "}
+											- {validCategories[0]?.name} Tool
+										</span>
+									)}
 								</h1>
 							</div>
 
@@ -224,7 +296,9 @@ async function ToolPageContent({
 									asChild
 								>
 									<a
-										href={tool.website || "#"}
+										href={
+											tool.website ? `${tool.website}?ref=missingstack` : "#"
+										}
 										target="_blank"
 										rel="noopener noreferrer"
 									>
@@ -259,14 +333,42 @@ async function ToolPageContent({
 				<div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3">
 					<div className="space-y-6 sm:space-y-8 lg:col-span-2">
 						<section className="rounded-xl border border-border/50 bg-white p-5 transition-shadow duration-300 hover:shadow-md sm:rounded-2xl sm:p-6 lg:p-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
-								About {tool.name}
-							</h2>
+							<div className="mb-3 flex items-center justify-between sm:mb-4">
+								<h2 className="font-serif text-primary text-xl sm:text-2xl">
+									About {tool.name}
+								</h2>
+								{tool.updatedAt && (
+									<time
+										dateTime={tool.updatedAt.toISOString()}
+										className="text-muted-foreground text-xs sm:text-sm"
+									>
+										Last updated:{" "}
+										{tool.updatedAt.toLocaleDateString("en-US", {
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+										})}
+									</time>
+								)}
+							</div>
 							<p className="mb-4 text-muted-foreground text-sm leading-relaxed sm:mb-6 sm:text-base">
 								{tool.description} This tool has been trusted by thousands of
 								teams worldwide and continues to be one of the most popular
 								choices in its category. Whether you're a solo developer or part
 								of a large enterprise team, {tool.name} scales with your needs.
+								{validCategories.length > 0 && (
+									<>
+										{" "}
+										Looking for more{" "}
+										<Link
+											href={`/categories/${validCategories[0]?.slug}`}
+											className="font-medium text-primary underline transition-colors hover:text-primary/80"
+										>
+											{validCategories[0]?.name} tools
+										</Link>
+										?
+									</>
+								)}
 							</p>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
 								With continuous updates and a responsive support team,{" "}

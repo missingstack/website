@@ -14,7 +14,7 @@ const inter = Inter({
 
 export const config = {
 	url: "https://missingstack.com",
-	title: "Missing Stack",
+	title: "Missing stack",
 	description:
 		"A curated directory of the tools for developers, builders and entrepreneurs. Build your modern product stack with awesome tools",
 	locale: "en_US",

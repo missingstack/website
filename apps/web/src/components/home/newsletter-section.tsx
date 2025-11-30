@@ -124,8 +124,7 @@ export function NewsletterSection() {
 								</>
 							) : (
 								<>
-									<span className="hidden sm:inline">Subscribe</span>
-									<span className="sm:hidden">Sub</span>
+									<span>Subscribe</span>
 									<ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 sm:h-4 sm:w-4" />
 								</>
 							)}

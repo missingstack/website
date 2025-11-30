@@ -51,25 +51,11 @@ export function CTASection() {
 								asChild
 							>
 								<a
-									href="https://twitter.com/missingstack"
+									href="https://twitter.com/@MissingstackHQ"
 									target="_blank"
 									rel="noopener noreferrer"
 								>
 									Follow on X
-								</a>
-							</Button>
-							<Button
-								size="lg"
-								variant="outline"
-								className="gap-2 rounded-full border-white/30 bg-transparent px-6 text-white transition-all duration-300 hover:scale-105 hover:border-white/50 hover:bg-white/10 active:scale-95 sm:px-8"
-								asChild
-							>
-								<a
-									href="https://github.com/missingstack"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									Star on GitHub
 								</a>
 							</Button>
 						</div>

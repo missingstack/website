@@ -79,6 +79,12 @@
 			},
 			"complexity": {
 				"noStaticOnlyClass": "off"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "off"
+			},
+			"performance": {
+				"noImgElement": "off"
 			}
 		}
 	},
