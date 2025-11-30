@@ -44,7 +44,9 @@ export default function RootLayout({
 		<html lang="en" className="light" style={{ colorScheme: "light" }}>
 			<body className={`${playfair.variable} ${inter.variable} antialiased`}>
 				<Providers>
-					<div className="grid h-svh grid-rows-[auto_1fr]">{children}</div>
+					<div className="grid h-svh w-screen grid-rows-[auto_1fr]">
+						{children}
+					</div>
 					<Analytics />
 					<SpeedInsights />
 				</Providers>

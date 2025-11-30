@@ -10,7 +10,7 @@ function Container({ className, size = "default", ...props }: ContainerProps) {
 		<div
 			data-slot="container"
 			className={cn(
-				"mx-auto w-full px-4 sm:px-6",
+				"mx-auto w-full px-4 sm:px-6 lg:px-8",
 				size === "sm" && "max-w-3xl",
 				size === "default" && "max-w-7xl",
 				size === "lg" && "max-w-[1400px]",
