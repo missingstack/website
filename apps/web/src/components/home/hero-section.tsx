@@ -1,4 +1,4 @@
-import { dependencies } from "@missingstack/api/context";
+import { services } from "@missingstack/api/context";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
@@ -11,7 +11,7 @@ async function getStats() {
 	cacheLife("days");
 	cacheTag("stats");
 
-	return dependencies.statsService.getStats();
+	return services.statsService.getStats();
 }
 
 export async function HeroSection() {
@@ -30,7 +30,7 @@ export async function HeroSection() {
 					<div className="mb-8 flex justify-center">
 						<Badge variant="secondary" className="gap-2 px-4 py-2">
 							<Sparkles className="h-3.5 w-3.5 text-yellow-500" />
-							{stats.totalTools}+ tools curated
+							{stats.totalTools} tools curated
 						</Badge>
 					</div>
 

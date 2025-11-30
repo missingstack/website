@@ -1,13 +1,13 @@
 "use client";
 
-import type { CategoryWithCount } from "@missingstack/api/features/categories/categories.types";
+import type { Category } from "@missingstack/api/types";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getIcon } from "~/lib/icons";
 
 interface CategoryNavigationProps {
-	categories: CategoryWithCount[];
+	categories: Category[];
 }
 
 export function CategoryNavigation({ categories }: CategoryNavigationProps) {
@@ -22,7 +22,7 @@ export function CategoryNavigation({ categories }: CategoryNavigationProps) {
 				return (
 					<Link
 						key={cat.id}
-						href="/"
+						href={`/categories/${cat.slug}`}
 						className={`group flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 font-medium text-sm transition-colors ${
 							isActive
 								? "bg-primary text-white shadow-md hover:bg-primary/90"
@@ -48,7 +48,7 @@ export function CategoryNavigation({ categories }: CategoryNavigationProps) {
 				);
 			})}
 			<Link
-				href="/"
+				href="/categories"
 				className="flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 font-medium text-primary text-sm transition-colors hover:bg-primary/5"
 			>
 				View All

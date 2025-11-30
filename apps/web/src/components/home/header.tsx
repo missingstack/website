@@ -1,4 +1,4 @@
-import { dependencies } from "@missingstack/api/context";
+import { services } from "@missingstack/api/context";
 import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -8,16 +8,12 @@ export async function getCategoriesWithCounts() {
 	"use cache";
 	cacheLife("days");
 
-	const data = await dependencies.categoriesService.getTopCategories(6);
+	const data = await services.categoryService.getTopCategories(6);
 	return data || [];
 }
 
 export async function Header() {
-	const [categories] = await Promise.all([getCategoriesWithCounts()]);
-
-	// Show top 6 categories with tools
-	// Filter to only show categories that have tools
-	const topCategories = categories.filter((c) => c.toolCount > 0).slice(0, 6);
+	const categories = await getCategoriesWithCounts();
 
 	return (
 		<header className="sticky top-0 z-50 w-full border-border/50 border-b bg-white/80 backdrop-blur-lg">
@@ -39,7 +35,7 @@ export async function Header() {
 					</div>
 				</div>
 
-				<CategoryNavigation categories={topCategories} />
+				<CategoryNavigation categories={categories} />
 			</div>
 		</header>
 	);
