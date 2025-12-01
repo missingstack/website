@@ -74,8 +74,6 @@ export function DiscoverContent({
 		if (filters.categoryIds.length > 0) query.categoryIds = filters.categoryIds;
 		if (filters.pricing.length > 0)
 			query.pricing = filters.pricing as PricingModel[];
-		if (filters.platforms.length > 0)
-			query.platforms = filters.platforms as ToolQueryOptions["platforms"];
 		if (filters.tagIds.length > 0) query.tagIds = filters.tagIds;
 		if (pageParam) query.cursor = pageParam;
 

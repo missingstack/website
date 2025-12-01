@@ -42,14 +42,20 @@ async function getFeaturedTools(limit: number) {
 	return services.toolService.getFeatured(limit);
 }
 
-async function getToolsByCategory(categoryId: string, limit: number) {
+async function getToolsByCategory(categorySlug: string, limit: number) {
 	"use cache";
 	cacheLife("days");
 	cacheTag("tools");
-	cacheTag(`category-${categoryId}`);
+	cacheTag(`category-${categorySlug}`);
 	cacheTag("homepage-tools");
 
-	const result = await services.toolService.getByCategory(categoryId, {
+	// Resolve category slug to category ID
+	const category = await services.categoryService.getBySlug(categorySlug);
+	if (!category) {
+		return [];
+	}
+
+	const result = await services.toolService.getByCategory(category.id, {
 		limit: limit,
 		sortBy: "newest",
 		includeRelations: false,

@@ -5,24 +5,20 @@
  * Different tag types help organize tags by purpose.
  */
 
-import { index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { index, pgTable, text } from "drizzle-orm/pg-core";
+import { timestampFields, uuidPrimaryKey } from "./base";
 import { badgeVariantEnum, tagTypeEnum } from "./enums";
 
 // Tags table
 export const tags = pgTable(
 	"tags",
 	{
-		id: text("id").primaryKey(),
+		...uuidPrimaryKey,
 		slug: text("slug").notNull().unique(),
 		name: text("name").notNull(),
 		type: tagTypeEnum("type").notNull(),
 		color: badgeVariantEnum("color").default("default"),
-		createdAt: timestamp("created_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
+		...timestampFields,
 	},
 	(table) => [
 		index("tags_slug_idx").on(table.slug),

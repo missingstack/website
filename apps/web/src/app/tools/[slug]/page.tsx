@@ -4,13 +4,9 @@ import {
 	Bookmark,
 	Check,
 	ChevronRight,
-	Chrome,
-	Code2,
 	ExternalLink,
 	Globe,
-	Monitor,
 	Share2,
-	Smartphone,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
@@ -66,20 +62,6 @@ export async function generateMetadata({
 		type: "article",
 	});
 }
-
-const platformIcons: Record<
-	string,
-	React.ComponentType<{ className?: string }>
-> = {
-	Web: Globe,
-	Mac: Monitor,
-	Windows: Monitor,
-	Linux: Monitor,
-	iOS: Smartphone,
-	Android: Smartphone,
-	Extension: Chrome,
-	API: Code2,
-};
 
 function getBadgeVariant(
 	pricing: string,
@@ -176,7 +158,6 @@ async function ToolPageContent({
 					description: `${tool.description} ${tool.tagline}`,
 					url: tool.website || `/tools/${tool.slug}`,
 					category: validCategories[0]?.name,
-					platforms: tool.platforms,
 				})}
 			/>
 			<StructuredData
@@ -188,10 +169,6 @@ async function ToolPageContent({
 					{
 						question: `How much does ${tool.name} cost?`,
 						answer: `${tool.name} is a ${tool.pricing} tool.`,
-					},
-					{
-						question: `What platforms does ${tool.name} support?`,
-						answer: `${tool.name} is available on ${tool.platforms.join(", ")}.`,
 					},
 				])}
 			/>
@@ -269,15 +246,6 @@ async function ToolPageContent({
 								>
 									{tool.pricing}
 								</Badge>
-								{tool.platforms.slice(0, 3).map((platform) => (
-									<Badge
-										key={platform}
-										variant="secondary"
-										className="text-xs sm:text-sm"
-									>
-										{platform}
-									</Badge>
-								))}
 								{validCategories.map((cat) => (
 									<Badge
 										key={cat.id}
@@ -453,20 +421,6 @@ async function ToolPageContent({
 									<span className="mb-2 block text-[10px] text-muted-foreground uppercase tracking-wider sm:text-xs">
 										Available on
 									</span>
-									<div className="flex flex-wrap gap-1.5 sm:gap-2">
-										{tool.platforms.map((platform) => {
-											const Icon = platformIcons[platform] || Globe;
-											return (
-												<div
-													key={platform}
-													className="flex items-center gap-1 rounded-md bg-secondary/50 px-2 py-1 text-xs transition-all duration-200 hover:scale-105 sm:gap-1.5 sm:rounded-lg sm:px-3 sm:py-1.5 sm:text-sm"
-												>
-													<Icon className="h-3 w-3 text-muted-foreground sm:h-4 sm:w-4" />
-													<span>{platform}</span>
-												</div>
-											);
-										})}
-									</div>
 								</div>
 							</div>
 						</div>

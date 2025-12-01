@@ -62,15 +62,6 @@ export function ToolCard({ tool }: ToolCardProps) {
 					>
 						{tool.pricing}
 					</Badge>
-					{tool.platforms?.slice(0, 1).map((platform) => (
-						<Badge
-							key={platform}
-							variant="secondary"
-							className="text-[10px] sm:text-xs"
-						>
-							{platform}
-						</Badge>
-					))}
 				</div>
 
 				<div className="flex shrink-0 translate-x-2 transform items-center justify-center opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">

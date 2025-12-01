@@ -1,0 +1,79 @@
+[
+	{
+		"slug": "developer-tools",
+		"name": "Developer Tools",
+		"description": "Code editors, debugging, API tools, backend services, deployment",
+		"icon": "Code2",
+		"weight": 0
+	},
+	{
+		"slug": "database",
+		"name": "Data & Databases",
+		"description": "Databases, data storage, ETL/ELT, analytics, metric stores",
+		"icon": "Database",
+		"weight": 2
+	},
+	{
+		"slug": "security",
+		"name": "Security",
+		"description": "Cybersecurity, VPN, auth, password managers, KYC",
+		"icon": "ShieldCheck",
+		"weight": 3
+	},
+	{
+		"slug": "automation",
+		"name": "Automation",
+		"description": "Workflow automation, RPA, internal tools, reverse ETL",
+		"icon": "Workflow",
+		"weight": 4
+	},
+	{
+		"slug": "communication",
+		"name": "Communication",
+		"description": "Team communication, video, voice chat, remote desktop",
+		"icon": "MessagesSquare",
+		"weight": 8
+	},
+	{
+		"slug": "business-tools",
+		"name": "Business Tools",
+		"description": "CRM, ERP, finance, accounting, customer engagement",
+		"icon": "Briefcase",
+		"weight": 9
+	},
+	{
+		"slug": "content-web",
+		"name": "Content & Web",
+		"description": "CMS, blogging tools, form builders, web platforms",
+		"icon": "Globe",
+		"weight": 11
+	},
+	{
+		"slug": "analytics-observability",
+		"name": "Analytics & Observability",
+		"description": "Product analytics, BI, logs, monitoring, metrics",
+		"icon": "BarChart3",
+		"weight": 13
+	},
+	{
+		"slug": "community-social",
+		"name": "Community & Social",
+		"description": "Social media, community platforms, discussion tools",
+		"icon": "Users",
+		"weight": 14
+	},
+	{
+		"slug": "infrastructure-cloud",
+		"name": "Infrastructure & Cloud",
+		"description": "Cloud platforms, hosting, infrastructure, DevOps, containers",
+		"icon": "Cloud",
+		"weight": 1
+	},
+	{
+		"slug": "product-management",
+		"name": "Product Management",
+		"description": "Product analytics, feature flags, user feedback, roadmaps",
+		"icon": "Target",
+		"weight": 12
+	}
+]

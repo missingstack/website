@@ -32,10 +32,6 @@ export class ToolsService implements ToolsServiceInterface {
 				options.tagIds && options.tagIds.length > 0
 					? options.tagIds
 					: undefined,
-			platforms:
-				options.platforms && options.platforms.length > 0
-					? options.platforms
-					: undefined,
 			pricing:
 				options.pricing && options.pricing.length > 0
 					? options.pricing

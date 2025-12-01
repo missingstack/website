@@ -179,14 +179,6 @@ export function ConfigurableSection({
 										<Badge variant={tool.pricing === "Free" ? "green" : "blue"}>
 											{tool.pricing}
 										</Badge>
-										{"platforms" in tool &&
-											(tool as ToolData).platforms
-												.slice(0, 2)
-												.map((platform: string) => (
-													<Badge key={platform} variant="secondary">
-														{platform}
-													</Badge>
-												))}
 									</div>
 									<div className="flex translate-x-2 transform items-center gap-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
 										<span className="font-medium text-muted-foreground text-xs group-hover:text-primary">
@@ -244,18 +236,6 @@ export function ConfigurableSection({
 										>
 											{tool.pricing}
 										</Badge>
-										{"platforms" in tool &&
-											(tool as ToolData).platforms
-												.slice(0, 1)
-												.map((platform: string) => (
-													<Badge
-														key={platform}
-														variant="secondary"
-														className="text-xs"
-													>
-														{platform}
-													</Badge>
-												))}
 									</div>
 									<div className="flex translate-x-2 transform items-center gap-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
 										<span className="font-medium text-muted-foreground text-xs group-hover:text-primary">

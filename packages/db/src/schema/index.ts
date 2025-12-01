@@ -26,8 +26,6 @@ import {
 	tools,
 	toolsCategories,
 	toolsCategoriesRelations,
-	toolsPlatforms,
-	toolsPlatformsRelations,
 	toolsRelations,
 	toolsTags,
 	toolsTagsRelations,
@@ -50,14 +48,12 @@ export const schema = {
 	tools,
 	toolsCategories,
 	toolsTags,
-	toolsPlatforms,
 
 	// Relations
 	categoriesRelations,
 	toolsRelations,
 	toolsCategoriesRelations,
 	toolsTagsRelations,
-	toolsPlatformsRelations,
 };
 
 export default schema;

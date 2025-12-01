@@ -169,7 +169,7 @@ export async function GET(req: NextRequest): Promise<Response | ImageResponse> {
 						textAlign: "center",
 						lineHeight: "1.1",
 						letterSpacing: "-0.04em",
-						maxWidth: "1000px",
+						maxWidth: "600px",
 						marginBottom: description ? "24px" : "0",
 						wordWrap: "break-word",
 						overflowWrap: "break-word",

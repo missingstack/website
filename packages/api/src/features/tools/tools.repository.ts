@@ -14,12 +14,11 @@ import {
 	or,
 	sql,
 } from "@missingstack/db/drizzle-orm";
-import type { Platform, PricingModel } from "@missingstack/db/schema/enums";
+import type { PricingModel } from "@missingstack/db/schema/enums";
 import {
 	type Tool,
 	tools,
 	toolsCategories,
-	toolsPlatforms,
 	toolsTags,
 } from "@missingstack/db/schema/tools";
 import type {
@@ -145,21 +144,6 @@ class FilterBuilder {
 		);
 	}
 
-	buildPlatformFilter(platforms?: Platform[]): SQL<unknown> | null {
-		if (!platforms || platforms.length === 0) return null;
-		return exists(
-			this.db
-				.select()
-				.from(toolsPlatforms)
-				.where(
-					and(
-						eq(toolsPlatforms.toolId, tools.id),
-						inArray(toolsPlatforms.platform, platforms),
-					),
-				),
-		);
-	}
-
 	buildSearchFilter(search?: string): SQL<unknown> | null {
 		if (!search) return null;
 		const searchQuery = search.trim();
@@ -188,7 +172,6 @@ class FilterBuilder {
 			this.buildPricingFilter(options.pricing),
 			this.buildCategoryFilter(options.categoryIds),
 			this.buildTagFilter(options.tagIds),
-			this.buildPlatformFilter(options.platforms),
 			this.buildSearchFilter(options.search),
 		].filter((condition): condition is SQL<unknown> => condition !== null);
 	}
@@ -563,7 +546,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		if (!tool) return null;
 
 		// Load relations
-		const [categoryIds, tagIds, platforms] = await Promise.all([
+		const [categoryIds, tagIds] = await Promise.all([
 			this.db
 				.select({ categoryId: toolsCategories.categoryId })
 				.from(toolsCategories)
@@ -572,17 +555,12 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 				.select({ tagId: toolsTags.tagId })
 				.from(toolsTags)
 				.where(eq(toolsTags.toolId, id)),
-			this.db
-				.select({ platform: toolsPlatforms.platform })
-				.from(toolsPlatforms)
-				.where(eq(toolsPlatforms.toolId, id)),
 		]);
 
 		return {
 			...tool,
 			categoryIds: categoryIds.map((c) => c.categoryId),
 			tagIds: tagIds.map((t) => t.tagId),
-			platforms: platforms.map((p) => p.platform),
 		};
 	}
 
@@ -596,7 +574,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		if (!tool) return null;
 
 		// Load relations
-		const [categoryIds, tagIds, platforms] = await Promise.all([
+		const [categoryIds, tagIds] = await Promise.all([
 			this.db
 				.select({ categoryId: toolsCategories.categoryId })
 				.from(toolsCategories)
@@ -605,17 +583,12 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 				.select({ tagId: toolsTags.tagId })
 				.from(toolsTags)
 				.where(eq(toolsTags.toolId, tool.id)),
-			this.db
-				.select({ platform: toolsPlatforms.platform })
-				.from(toolsPlatforms)
-				.where(eq(toolsPlatforms.toolId, tool.id)),
 		]);
 
 		return {
 			...tool,
 			categoryIds: categoryIds.map((c) => c.categoryId),
 			tagIds: tagIds.map((t) => t.tagId),
-			platforms: platforms.map((p) => p.platform),
 		};
 	}
 

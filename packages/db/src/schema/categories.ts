@@ -11,28 +11,31 @@
 
 import { relations } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	index,
+	integer,
+	pgTable,
+	text,
+	uuid,
+	varchar,
+} from "drizzle-orm/pg-core";
+import { timestampFields, uuidPrimaryKey } from "./base";
 
 // Categories table
 export const categories = pgTable(
 	"categories",
 	{
-		id: text("id").primaryKey(),
-		slug: text("slug").notNull().unique(),
-		name: text("name").notNull(),
+		...uuidPrimaryKey,
+		slug: varchar("slug", { length: 120 }).notNull().unique(),
+		name: varchar("name", { length: 160 }).notNull(),
 		description: text("description"),
-		icon: text("icon").notNull(), // Lucide icon name
-		parentId: text("parent_id").references((): AnyPgColumn => categories.id),
+		icon: varchar("icon", { length: 100 }).notNull(), // Lucide icon name
+		parentId: uuid("parent_id").references((): AnyPgColumn => categories.id),
 		weight: integer("weight").default(0),
 		// Denormalized tool count - updated via trigger or application code
 		// Eliminates expensive COUNT subqueries on reads
 		toolCount: integer("tool_count").default(0).notNull(),
-		createdAt: timestamp("created_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
+		...timestampFields,
 	},
 	(table) => [
 		index("categories_slug_idx").on(table.slug),

@@ -7,12 +7,12 @@ CREATE TYPE "public"."section_layout" AS ENUM('grid', 'large', 'carousel');--> s
 CREATE TYPE "public"."section_type" AS ENUM('filter', 'category');--> statement-breakpoint
 CREATE TYPE "public"."tag_type" AS ENUM('pricing', 'platform', 'compliance', 'deployment', 'stage', 'feature');--> statement-breakpoint
 CREATE TABLE "categories" (
-	"id" text PRIMARY KEY NOT NULL,
-	"slug" text NOT NULL,
-	"name" text NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" varchar(120) NOT NULL,
+	"name" varchar(160) NOT NULL,
 	"description" text,
-	"icon" text NOT NULL,
-	"parent_id" text,
+	"icon" varchar(100) NOT NULL,
+	"parent_id" uuid,
 	"weight" integer DEFAULT 0,
 	"tool_count" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE "categories" (
 );
 --> statement-breakpoint
 CREATE TABLE "tags" (
-	"id" text PRIMARY KEY NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" text NOT NULL,
 	"name" text NOT NULL,
 	"type" "tag_type" NOT NULL,
@@ -32,13 +32,13 @@ CREATE TABLE "tags" (
 );
 --> statement-breakpoint
 CREATE TABLE "tools" (
-	"id" text PRIMARY KEY NOT NULL,
-	"slug" text NOT NULL,
-	"name" text NOT NULL,
-	"tagline" text NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"slug" varchar(120) NOT NULL,
+	"name" varchar(160) NOT NULL,
+	"tagline" varchar(256),
 	"description" text NOT NULL,
-	"logo" text NOT NULL,
-	"website" text,
+	"logo" varchar(256) NOT NULL,
+	"website" varchar(256),
 	"pricing" "pricing_model" NOT NULL,
 	"featured" boolean DEFAULT false,
 	"search_vector" "tsvector",
@@ -48,27 +48,20 @@ CREATE TABLE "tools" (
 );
 --> statement-breakpoint
 CREATE TABLE "tools_categories" (
-	"tool_id" text NOT NULL,
-	"category_id" text NOT NULL,
+	"tool_id" uuid NOT NULL,
+	"category_id" uuid NOT NULL,
 	CONSTRAINT "tools_categories_tool_id_category_id_pk" PRIMARY KEY("tool_id","category_id")
 );
 --> statement-breakpoint
-CREATE TABLE "tools_platforms" (
-	"tool_id" text NOT NULL,
-	"platform" "platform" NOT NULL,
-	CONSTRAINT "tools_platforms_tool_id_platform_pk" PRIMARY KEY("tool_id","platform")
-);
---> statement-breakpoint
 CREATE TABLE "tools_tags" (
-	"tool_id" text NOT NULL,
-	"tag_id" text NOT NULL,
+	"tool_id" uuid NOT NULL,
+	"tag_id" uuid NOT NULL,
 	CONSTRAINT "tools_tags_tool_id_tag_id_pk" PRIMARY KEY("tool_id","tag_id")
 );
 --> statement-breakpoint
 ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_id_categories_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tools_categories" ADD CONSTRAINT "tools_categories_tool_id_tools_id_fk" FOREIGN KEY ("tool_id") REFERENCES "public"."tools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tools_categories" ADD CONSTRAINT "tools_categories_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tools_platforms" ADD CONSTRAINT "tools_platforms_tool_id_tools_id_fk" FOREIGN KEY ("tool_id") REFERENCES "public"."tools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tools_tags" ADD CONSTRAINT "tools_tags_tool_id_tools_id_fk" FOREIGN KEY ("tool_id") REFERENCES "public"."tools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "tools_tags" ADD CONSTRAINT "tools_tags_tag_id_tags_id_fk" FOREIGN KEY ("tag_id") REFERENCES "public"."tags"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "categories_slug_idx" ON "categories" USING btree ("slug");--> statement-breakpoint
@@ -85,7 +78,5 @@ CREATE INDEX "tools_featured_pricing_idx" ON "tools" USING btree ("featured","pr
 CREATE INDEX "tools_search_idx" ON "tools" USING gin ("search_vector");--> statement-breakpoint
 CREATE INDEX "tools_categories_tool_idx" ON "tools_categories" USING btree ("tool_id");--> statement-breakpoint
 CREATE INDEX "tools_categories_category_idx" ON "tools_categories" USING btree ("category_id");--> statement-breakpoint
-CREATE INDEX "tools_platforms_tool_idx" ON "tools_platforms" USING btree ("tool_id");--> statement-breakpoint
-CREATE INDEX "tools_platforms_platform_idx" ON "tools_platforms" USING btree ("platform");--> statement-breakpoint
 CREATE INDEX "tools_tags_tool_idx" ON "tools_tags" USING btree ("tool_id");--> statement-breakpoint
 CREATE INDEX "tools_tags_tag_idx" ON "tools_tags" USING btree ("tag_id");

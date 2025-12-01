@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
 	const stats = await getStats();
 
 	return generateSEOMetadata({
-		title: "A curated directory of awesome tools",
+		title: "Discover tools to build what's next",
 		description: `Discover ${stats.totalTools}+ curated tools across ${stats.totalCategories} categories. Build your modern product stack with the best AI tools, SaaS tools, and developer tools. Updated daily.`,
 		url: "/",
 	});

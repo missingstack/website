@@ -67,11 +67,6 @@ function parseQueryOptions(
 			? params.tagIds
 			: [params.tagIds];
 	}
-	if (params.platforms) {
-		options.platforms = Array.isArray(params.platforms)
-			? params.platforms
-			: [params.platforms];
-	}
 	if (params.pricing) {
 		options.pricing = Array.isArray(params.pricing)
 			? params.pricing

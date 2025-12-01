@@ -18,10 +18,12 @@ import {
 	pgTable,
 	primaryKey,
 	text,
-	timestamp,
+	uuid,
+	varchar,
 } from "drizzle-orm/pg-core";
+import { timestampFields, uuidPrimaryKey } from "./base";
 import { categories } from "./categories";
-import { platformEnum, pricingEnum } from "./enums";
+import { pricingEnum } from "./enums";
 import { tags } from "./tags";
 
 // Custom type for PostgreSQL tsvector (full-text search)
@@ -35,23 +37,18 @@ const tsvector = customType<{ data: string }>({
 export const tools = pgTable(
 	"tools",
 	{
-		id: text("id").primaryKey(),
-		slug: text("slug").notNull().unique(),
-		name: text("name").notNull(),
-		tagline: text("tagline").notNull(),
+		...uuidPrimaryKey,
+		slug: varchar("slug", { length: 120 }).notNull().unique(),
+		name: varchar("name", { length: 160 }).notNull(),
+		tagline: varchar("tagline", { length: 256 }),
 		description: text("description").notNull(),
-		logo: text("logo").notNull(),
-		website: text("website"),
+		logo: varchar("logo", { length: 256 }).notNull(),
+		website: varchar("website", { length: 256 }),
 		pricing: pricingEnum("pricing").notNull(),
 		featured: boolean("featured").default(false),
 		// Full-text search vector - auto-generated from name, tagline, description
 		searchVector: tsvector("search_vector"),
-		createdAt: timestamp("created_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { withTimezone: true })
-			.defaultNow()
-			.notNull(),
+		...timestampFields,
 	},
 	(table) => [
 		// Single column indexes
@@ -70,10 +67,10 @@ export const tools = pgTable(
 export const toolsCategories = pgTable(
 	"tools_categories",
 	{
-		toolId: text("tool_id")
+		toolId: uuid("tool_id")
 			.notNull()
 			.references(() => tools.id, { onDelete: "cascade" }),
-		categoryId: text("category_id")
+		categoryId: uuid("category_id")
 			.notNull()
 			.references(() => categories.id, { onDelete: "cascade" }),
 	},
@@ -88,10 +85,10 @@ export const toolsCategories = pgTable(
 export const toolsTags = pgTable(
 	"tools_tags",
 	{
-		toolId: text("tool_id")
+		toolId: uuid("tool_id")
 			.notNull()
 			.references(() => tools.id, { onDelete: "cascade" }),
-		tagId: text("tag_id")
+		tagId: uuid("tag_id")
 			.notNull()
 			.references(() => tags.id, { onDelete: "cascade" }),
 	},
@@ -102,27 +99,10 @@ export const toolsTags = pgTable(
 	],
 );
 
-// Junction table: tools <-> platforms (many-to-many with enum)
-export const toolsPlatforms = pgTable(
-	"tools_platforms",
-	{
-		toolId: text("tool_id")
-			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
-		platform: platformEnum("platform").notNull(),
-	},
-	(table) => [
-		primaryKey({ columns: [table.toolId, table.platform] }),
-		index("tools_platforms_tool_idx").on(table.toolId),
-		index("tools_platforms_platform_idx").on(table.platform),
-	],
-);
-
 // Tools relations
 export const toolsRelations = relations(tools, ({ many }) => ({
 	categories: many(toolsCategories),
 	tags: many(toolsTags),
-	platforms: many(toolsPlatforms),
 }));
 
 // Junction table relations
@@ -151,15 +131,7 @@ export const toolsTagsRelations = relations(toolsTags, ({ one }) => ({
 	}),
 }));
 
-export const toolsPlatformsRelations = relations(toolsPlatforms, ({ one }) => ({
-	tool: one(tools, {
-		fields: [toolsPlatforms.toolId],
-		references: [tools.id],
-	}),
-}));
-
 export type Tool = typeof tools.$inferSelect;
 export type NewTool = typeof tools.$inferInsert;
 export type ToolCategory = typeof toolsCategories.$inferSelect;
 export type ToolTag = typeof toolsTags.$inferSelect;
-export type ToolPlatform = typeof toolsPlatforms.$inferSelect;

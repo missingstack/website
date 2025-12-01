@@ -6,6 +6,10 @@ import { config } from "~/lib/site-config";
 
 const { playfair, inter } = config.fonts;
 
+const ogImageUrl = new URL("/api/og", config.url);
+ogImageUrl.searchParams.set("title", config.title);
+ogImageUrl.searchParams.set("description", config.description);
+
 export const metadata: Metadata = {
 	metadataBase: new URL(config.url),
 	alternates: { canonical: "/" },
@@ -21,11 +25,20 @@ export const metadata: Metadata = {
 		siteName: config.title,
 		locale: config.locale,
 		type: "website",
+		images: [
+			{
+				url: ogImageUrl.toString(),
+				width: 1200,
+				height: 630,
+				alt: config.title,
+			},
+		],
 	},
 	twitter: {
 		card: "summary_large_image",
 		title: config.title,
 		description: config.description,
+		images: [ogImageUrl.toString()],
 	},
 };
 

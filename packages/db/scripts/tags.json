@@ -1,0 +1,146 @@
+[
+	{
+		"slug": "free",
+		"name": "Free",
+		"type": "pricing",
+		"color": "green"
+	},
+	{
+		"slug": "freemium",
+		"name": "Freemium",
+		"type": "pricing",
+		"color": "blue"
+	},
+	{
+		"slug": "paid",
+		"name": "Paid",
+		"type": "pricing",
+		"color": "gold"
+	},
+	{
+		"slug": "open-source",
+		"name": "Open Source",
+		"type": "pricing",
+		"color": "purple"
+	},
+	{
+		"slug": "enterprise",
+		"name": "Enterprise",
+		"type": "compliance",
+		"color": "gold"
+	},
+	{
+		"slug": "self-hosted",
+		"name": "Self-hosted",
+		"type": "deployment",
+		"color": "default"
+	},
+	{
+		"slug": "privacy-first",
+		"name": "Privacy-first",
+		"type": "compliance",
+		"color": "green"
+	},
+	{
+		"slug": "api-available",
+		"name": "API Available",
+		"type": "feature",
+		"color": "blue"
+	},
+	{
+		"slug": "ai-powered",
+		"name": "AI Powered",
+		"type": "feature",
+		"color": "purple"
+	},
+	{
+		"slug": "early-stage",
+		"name": "Early Stage",
+		"type": "stage",
+		"color": "secondary"
+	},
+	{
+		"slug": "real-time",
+		"name": "Real-Time",
+		"type": "feature",
+		"color": "blue"
+	},
+	{
+		"slug": "saas",
+		"name": "SaaS",
+		"type": "deployment",
+		"color": "blue"
+	},
+	{
+		"slug": "automation",
+		"name": "Automation",
+		"type": "feature",
+		"color": "purple"
+	},
+	{
+		"slug": "paas",
+		"name": "PaaS",
+		"type": "deployment",
+		"color": "blue"
+	},
+	{
+		"slug": "secure",
+		"name": "Secure",
+		"type": "compliance",
+		"color": "green"
+	},
+	{
+		"slug": "dashboards",
+		"name": "Dashboards",
+		"type": "feature",
+		"color": "blue"
+	},
+	{
+		"slug": "cloud",
+		"name": "Cloud",
+		"type": "deployment",
+		"color": "blue"
+	},
+	{
+		"slug": "iam",
+		"name": "IAM",
+		"type": "feature",
+		"color": "purple"
+	},
+	{
+		"slug": "auth",
+		"name": "Auth",
+		"type": "feature",
+		"color": "purple"
+	},
+	{
+		"slug": "privacy",
+		"name": "Privacy",
+		"type": "compliance",
+		"color": "green"
+	},
+	{
+		"slug": "product-analytics",
+		"name": "Product Analytics",
+		"type": "feature",
+		"color": "blue"
+	},
+	{
+		"slug": "apm",
+		"name": "APM",
+		"type": "feature",
+		"color": "blue"
+	},
+	{
+		"slug": "headless-cms",
+		"name": "Headless CMS",
+		"type": "feature",
+		"color": "purple"
+	},
+	{
+		"slug": "workflows",
+		"name": "Workflows",
+		"type": "feature",
+		"color": "purple"
+	}
+]

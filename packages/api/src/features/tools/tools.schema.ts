@@ -1,16 +1,14 @@
 import { baseQueryOptionsSchema } from "@missingstack/api/shared";
-import { platformEnum, pricingEnum } from "@missingstack/db/schema/enums";
+import { pricingEnum } from "@missingstack/db/schema/enums";
 import type { Tool } from "@missingstack/db/schema/tools";
 import { z } from "zod";
 
-const platformEnumValues = platformEnum.enumValues;
 const pricingEnumValues = pricingEnum.enumValues;
 
 // Tool with relations
 export type ToolData = Tool & {
 	categoryIds: string[];
 	tagIds: string[];
-	platforms: string[];
 };
 
 export type ToolCollection = {
@@ -24,7 +22,6 @@ export const toolQueryOptionsSchema = baseQueryOptionsSchema
 	.extend({
 		categoryIds: z.array(z.string()).optional(),
 		tagIds: z.array(z.string()).optional(),
-		platforms: z.array(z.enum(platformEnumValues)).optional(),
 		pricing: z.array(z.enum(pricingEnumValues)).optional(),
 		featured: z.boolean().optional(),
 		search: z.string().optional(),

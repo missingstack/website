@@ -51,7 +51,7 @@ async function getCategoriesData() {
 	cacheLife("days");
 
 	const [allCategories, allTags] = await Promise.all([
-		services.categoryService.getTopCategories(6),
+		services.categoryService.getAllWithCounts(),
 		services.tagService.getAll(),
 	]);
 
