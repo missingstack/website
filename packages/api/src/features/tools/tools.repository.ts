@@ -15,6 +15,7 @@ import {
 	sql,
 } from "@missingstack/db/drizzle-orm";
 import type { PricingModel } from "@missingstack/db/schema/enums";
+import { toolSponsorships } from "@missingstack/db/schema/tool-sponsorships";
 import {
 	type Tool,
 	tools,
@@ -187,10 +188,16 @@ class SortBuilder {
 				return [orderFn(tools.name), orderFn(tools.id)];
 
 			case "newest":
-				return [orderFn(tools.createdAt), orderFn(tools.id)];
+				return [
+					desc(tools.sponsorshipPriority), // Prioritize sponsored tools
+					desc(tools.isSponsored), // Sponsored tools first
+					orderFn(tools.createdAt),
+					orderFn(tools.id),
+				];
 
 			case "popular":
 				return [
+					desc(tools.sponsorshipPriority),
 					orderFn(tools.featured),
 					orderFn(tools.createdAt),
 					orderFn(tools.id),
@@ -199,16 +206,31 @@ class SortBuilder {
 			case "relevance": {
 				if (!context.searchQuery) {
 					// Fallback to newest if no search query
-					return [desc(tools.createdAt), desc(tools.id)];
+					return [
+						desc(tools.sponsorshipPriority),
+						desc(tools.isSponsored),
+						desc(tools.createdAt),
+						desc(tools.id),
+					];
 				}
 				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
 				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
-				return [desc(rankExpr), desc(tools.id)];
+				return [
+					desc(tools.sponsorshipPriority),
+					desc(tools.isSponsored),
+					desc(rankExpr),
+					desc(tools.id),
+				];
 			}
 
 			default:
-				return [desc(tools.createdAt), desc(tools.id)];
+				return [
+					desc(tools.sponsorshipPriority),
+					desc(tools.isSponsored),
+					desc(tools.createdAt),
+					desc(tools.id),
+				];
 		}
 	}
 
@@ -343,6 +365,10 @@ class QueryExecutor {
 			website: tools.website,
 			pricing: tools.pricing,
 			featured: tools.featured,
+			affiliateUrl: tools.affiliateUrl,
+			sponsorshipPriority: tools.sponsorshipPriority,
+			isSponsored: tools.isSponsored,
+			monetizationEnabled: tools.monetizationEnabled,
 			createdAt: tools.createdAt,
 			updatedAt: tools.updatedAt,
 		};
@@ -379,6 +405,10 @@ class QueryExecutor {
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
 			featured: typeof tools.featured;
+			affiliateUrl: typeof tools.affiliateUrl;
+			sponsorshipPriority: typeof tools.sponsorshipPriority;
+			isSponsored: typeof tools.isSponsored;
+			monetizationEnabled: typeof tools.monetizationEnabled;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
 		},
@@ -441,6 +471,10 @@ class QueryExecutor {
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
 			featured: typeof tools.featured;
+			affiliateUrl: typeof tools.affiliateUrl;
+			sponsorshipPriority: typeof tools.sponsorshipPriority;
+			isSponsored: typeof tools.isSponsored;
+			monetizationEnabled: typeof tools.monetizationEnabled;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
 		},
@@ -593,14 +627,68 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 	}
 
 	async getFeatured(limit = 10): Promise<Tool[]> {
-		const rows = await this.db
-			.select()
+		const now = new Date();
+
+		// Get tools with active sponsorships first (prioritized)
+		const sponsoredRows = await this.db
+			.select({
+				tools: tools,
+			})
 			.from(tools)
+			.innerJoin(
+				toolSponsorships,
+				and(
+					eq(toolSponsorships.toolId, tools.id),
+					eq(toolSponsorships.isActive, true),
+					sql`${toolSponsorships.startDate} <= ${now}`,
+					gt(toolSponsorships.endDate, now),
+				),
+			)
 			.where(eq(tools.featured, true))
-			.orderBy(desc(tools.createdAt), desc(tools.id))
+			.orderBy(
+				desc(toolSponsorships.priorityWeight),
+				desc(toolSponsorships.tier),
+				desc(tools.sponsorshipPriority),
+				desc(tools.createdAt),
+				desc(tools.id),
+			)
 			.limit(limit);
 
-		return rows;
+		const sponsoredTools = sponsoredRows.map((r) => r.tools);
+
+		// If we have enough sponsored tools, return them
+		if (sponsoredTools.length >= limit) {
+			return sponsoredTools;
+		}
+
+		// Otherwise, get remaining slots from non-sponsored featured tools
+		const remainingLimit = limit - sponsoredTools.length;
+		const sponsoredToolIds = sponsoredTools.map((t) => t.id);
+
+		const regularRows =
+			sponsoredToolIds.length > 0
+				? await this.db
+						.select()
+						.from(tools)
+						.where(
+							and(
+								eq(tools.featured, true),
+								sql`${tools.id} NOT IN (${sql.join(
+									sponsoredToolIds.map((id) => sql`${id}`),
+									sql`, `,
+								)})`,
+							),
+						)
+						.orderBy(desc(tools.createdAt), desc(tools.id))
+						.limit(remainingLimit)
+				: await this.db
+						.select()
+						.from(tools)
+						.where(eq(tools.featured, true))
+						.orderBy(desc(tools.createdAt), desc(tools.id))
+						.limit(remainingLimit);
+
+		return [...sponsoredTools, ...regularRows];
 	}
 
 	async getRecent(limit = 10): Promise<Tool[]> {

@@ -176,7 +176,7 @@ export const GlobalSearch = React.forwardRef<
 			const routes: Record<string, Route> = {
 				discover: "/discover",
 				categories: "/categories",
-				submit: "/submit",
+				submit: "/advertise",
 			};
 			const route = routes[action];
 			if (route) router.push(route);
@@ -295,7 +295,7 @@ export const GlobalSearch = React.forwardRef<
 							className="flex items-center gap-3"
 						>
 							<Sparkles className="h-4 w-4 text-muted-foreground" />
-							<span>Submit a tool</span>
+							<span>Advertise</span>
 						</CommandItem>
 					</CommandGroup>
 

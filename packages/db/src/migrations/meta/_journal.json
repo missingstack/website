@@ -8,6 +8,13 @@
 			"when": 1764572005594,
 			"tag": "0000_daily_charles_xavier",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1764598616238,
+			"tag": "0001_tranquil_rhodey",
+			"breakpoints": true
 		}
 	]
 }

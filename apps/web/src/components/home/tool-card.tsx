@@ -56,6 +56,11 @@ export function ToolCard({ tool }: ToolCardProps) {
 
 			<div className="mt-auto flex items-center justify-between border-border/50 border-t border-dashed pt-3 sm:pt-4">
 				<div className="flex min-w-0 flex-wrap gap-1.5 sm:gap-2">
+					{tool.isSponsored && (
+						<Badge variant="gold" className="text-[10px] sm:text-xs">
+							Sponsored
+						</Badge>
+					)}
 					<Badge
 						variant={getBadgeVariant(tool.pricing)}
 						className="text-[10px] sm:text-xs"

@@ -13,11 +13,17 @@ import { db } from "../src";
 import {
 	categories,
 	tags,
+	toolSponsorships,
 	tools,
 	toolsCategories,
 	toolsTags,
 } from "../src/schema";
-import type { BadgeVariant, PricingModel, TagType } from "../src/schema/enums";
+import type {
+	BadgeVariant,
+	PricingModel,
+	SponsorshipTier,
+	TagType,
+} from "../src/schema/enums";
 
 // Validate environment - use process.env directly for scripts
 const connectionString = process.env.DATABASE_URL;
@@ -179,7 +185,7 @@ async function seedTags(): Promise<Map<string, string>> {
 async function seedTools(
 	categorySlugToId: Map<string, string>,
 	tagSlugToId: Map<string, string>,
-) {
+): Promise<Map<string, string>> {
 	console.log("🔧 Seeding tools...");
 
 	const yamlTools = loadToolsFromJson();
@@ -289,7 +295,87 @@ async function seedTools(
 		}
 	}
 
+	// Query database to get actual IDs (important for onConflictDoUpdate which keeps existing IDs)
+	const actualTools = await db
+		.select({ id: tools.id, slug: tools.slug })
+		.from(tools);
+
+	const actualSlugToIdMap = new Map<string, string>();
+	for (const tool of actualTools) {
+		actualSlugToIdMap.set(tool.slug, tool.id);
+	}
+
 	console.log(`   ✅ Seeded ${yamlTools.length} tools`);
+	return actualSlugToIdMap;
+}
+
+async function seedSponsorships(toolSlugToId: Map<string, string>) {
+	console.log("⭐ Seeding sponsorships...");
+
+	const yamlTools = loadToolsFromJson();
+	let sponsorshipCount = 0;
+
+	// Create sponsorships for featured tools
+	for (const tool of yamlTools) {
+		if (!tool.featured) continue;
+
+		const toolId = toolSlugToId.get(tool.slug);
+		if (!toolId) {
+			console.warn(
+				`   ⚠️  Tool ID not found for slug ${tool.slug}, skipping sponsorship`,
+			);
+			continue;
+		}
+
+		// Determine tier based on tool (you can customize this logic)
+		// For now, assign "premium" to featured tools
+		const tier: SponsorshipTier = "premium";
+
+		// Create sponsorship that lasts for 30 days from now
+		const startDate = new Date();
+		const endDate = new Date();
+		endDate.setDate(endDate.getDate() + 30); // 30 days from now
+
+		// Priority weight: higher for premium/enterprise tiers
+		let priorityWeight: number;
+		if (tier === "premium") {
+			priorityWeight = 50;
+		} else {
+			priorityWeight = 10;
+		}
+
+		try {
+			await db
+				.insert(toolSponsorships)
+				.values({
+					toolId,
+					tier,
+					startDate,
+					endDate,
+					isActive: true,
+					priorityWeight,
+					paymentStatus: "completed",
+				})
+				.onConflictDoNothing();
+
+			// Update tool's isSponsored flag
+			await db
+				.update(tools)
+				.set({
+					isSponsored: true,
+					sponsorshipPriority: priorityWeight,
+				})
+				.where(eq(tools.id, toolId));
+
+			sponsorshipCount++;
+		} catch (error) {
+			console.warn(
+				`   ⚠️  Failed to create sponsorship for tool ${tool.slug}: ${error}`,
+			);
+		}
+	}
+
+	console.log(`   ✅ Seeded ${sponsorshipCount} sponsorships`);
 }
 
 async function recalculateToolCounts() {
@@ -316,7 +402,10 @@ async function main() {
 		// Get slug-to-ID mappings for junction tables
 		const categorySlugToId = await seedCategories();
 		const tagSlugToId = await seedTags();
-		await seedTools(categorySlugToId, tagSlugToId);
+		const toolSlugToId = await seedTools(categorySlugToId, tagSlugToId);
+
+		// Seed sponsorships for featured tools
+		await seedSponsorships(toolSlugToId);
 
 		// Recalculate denormalized counts after seeding
 		await recalculateToolCounts();

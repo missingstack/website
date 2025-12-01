@@ -60,7 +60,7 @@ export function HeaderContent({
 							className="rounded-full px-4 text-xs transition-all duration-300 hover:scale-105 active:scale-95 sm:px-5 sm:text-sm"
 							asChild
 						>
-							<Link href="/">Submit Tool</Link>
+							<Link href="/advertise">Advertise</Link>
 						</Button>
 					</div>
 				</div>

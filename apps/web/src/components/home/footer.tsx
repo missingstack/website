@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Separator } from "~/components/ui/separator";
 
 const RESOURCES = [
-	{ name: "Submit a Tool", href: "/" as const },
+	{ name: "Advertise", href: "/advertise" as const },
 	{ name: "Discover", href: "/discover" as const },
 	{ name: "Categories", href: "/categories" as const },
 ];

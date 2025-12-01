@@ -83,6 +83,13 @@ export const iconColorEnum = pgEnum("icon_color", [
 	"teal",
 ]);
 
+// Sponsorship tier enum - for sponsored/featured listings
+export const sponsorshipTierEnum = pgEnum("sponsorship_tier", [
+	"basic",
+	"premium",
+	"enterprise",
+]);
+
 export type Platform = (typeof platformEnum.enumValues)[number];
 export type PricingModel = (typeof pricingEnum.enumValues)[number];
 export type TagType = (typeof tagTypeEnum.enumValues)[number];
@@ -91,3 +98,4 @@ export type SectionType = (typeof sectionTypeEnum.enumValues)[number];
 export type SectionFilter = (typeof sectionFilterEnum.enumValues)[number];
 export type SectionLayout = (typeof sectionLayoutEnum.enumValues)[number];
 export type IconColor = (typeof iconColorEnum.enumValues)[number];
+export type SponsorshipTier = (typeof sponsorshipTierEnum.enumValues)[number];
