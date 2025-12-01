@@ -28,20 +28,6 @@ export type Section = {
 
 export const sections: Section[] = [
 	{
-		id: "newest",
-		type: "filter",
-		filter: "newest",
-		categoryId: null,
-		title: "Recently Added",
-		description: "Fresh tools added to the platform",
-		icon: "Clock",
-		iconColor: "emerald",
-		limit: 4,
-		layout: "grid",
-		enabled: true,
-		weight: 0,
-	},
-	{
 		id: "featured",
 		type: "filter",
 		filter: "featured",
@@ -53,8 +39,23 @@ export const sections: Section[] = [
 		limit: 6,
 		layout: "large",
 		enabled: true,
+		weight: 0,
+	},
+	{
+		id: "newest",
+		type: "filter",
+		filter: "newest",
+		categoryId: null,
+		title: "Recently Added",
+		description: "Fresh tools added to the platform",
+		icon: "Clock",
+		iconColor: "emerald",
+		limit: 4,
+		layout: "grid",
+		enabled: true,
 		weight: 1,
 	},
+
 	{
 		id: "dev-tools",
 		type: "category",
