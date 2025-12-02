@@ -220,7 +220,7 @@ async function ToolPageContent({
 
 						<div className="min-w-0 flex-1">
 							<div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-3 sm:gap-3">
-								<h1 className="font-serif text-2xl text-primary leading-tight sm:text-3xl md:text-4xl lg:text-5xl">
+								<h1 className="text-2xl text-primary leading-tight sm:text-3xl md:text-4xl lg:text-5xl">
 									{tool.name}
 									{validCategories.length > 0 && (
 										<span className="text-muted-foreground/70">
@@ -302,7 +302,7 @@ async function ToolPageContent({
 					<div className="space-y-6 sm:space-y-8 lg:col-span-2">
 						<section className="rounded-xl border border-border/50 bg-white p-5 transition-shadow duration-300 hover:shadow-md sm:rounded-2xl sm:p-6 lg:p-8">
 							<div className="mb-3 flex items-center justify-between sm:mb-4">
-								<h2 className="font-serif text-primary text-xl sm:text-2xl">
+								<h2 className="text-primary text-xl sm:text-2xl">
 									About {tool.name}
 								</h2>
 								{tool.updatedAt && (
@@ -347,7 +347,7 @@ async function ToolPageContent({
 						</section>
 
 						<section className="rounded-xl border border-border/50 bg-white p-5 transition-shadow duration-300 hover:shadow-md sm:rounded-2xl sm:p-6 lg:p-8">
-							<h2 className="mb-4 font-serif text-primary text-xl sm:mb-6 sm:text-2xl">
+							<h2 className="mb-4 text-primary text-xl sm:mb-6 sm:text-2xl">
 								Key Features
 							</h2>
 							<div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
@@ -368,7 +368,7 @@ async function ToolPageContent({
 						</section>
 
 						<section className="rounded-xl border border-border/50 bg-white p-5 transition-shadow duration-300 hover:shadow-md sm:rounded-2xl sm:p-6 lg:p-8">
-							<h2 className="mb-4 font-serif text-primary text-xl sm:mb-6 sm:text-2xl">
+							<h2 className="mb-4 text-primary text-xl sm:mb-6 sm:text-2xl">
 								Screenshots
 							</h2>
 							<div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -450,7 +450,7 @@ async function ToolPageContent({
 				{relatedTools.length > 0 && (
 					<section className="mt-12 sm:mt-16">
 						<div className="mb-6 flex items-center justify-between sm:mb-8">
-							<h2 className="font-serif text-primary text-xl sm:text-2xl">
+							<h2 className="text-primary text-xl sm:text-2xl">
 								Similar Tools
 							</h2>
 							<Link

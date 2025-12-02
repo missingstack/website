@@ -39,13 +39,13 @@ export default async function AdvertisePage() {
 
 					<div className="mx-auto max-w-4xl">
 						<div className="mb-12 text-center sm:mb-16">
-							<h1 className="mb-4 font-serif text-3xl text-primary leading-tight sm:mb-6 sm:text-4xl md:text-5xl">
+							<h1 className="mb-4 text-3xl text-primary leading-tight sm:mb-6 sm:text-4xl md:text-5xl">
 								Advertise on Missing Stack
 							</h1>
 						</div>
 
 						<section className="mb-12 sm:mb-16">
-							<h2 className="mb-4 font-serif text-2xl text-primary sm:mb-6 sm:text-3xl">
+							<h2 className="mb-4 text-2xl text-primary sm:mb-6 sm:text-3xl">
 								Reach an Engaged Developer Audience
 							</h2>
 							<p className="mb-6 text-base text-muted-foreground leading-relaxed sm:mb-8 sm:text-lg">
@@ -58,7 +58,7 @@ export default async function AdvertisePage() {
 						</section>
 
 						<section className="mb-12 sm:mb-16">
-							<h2 className="mb-4 font-serif text-2xl text-primary sm:mb-6 sm:text-3xl">
+							<h2 className="mb-4 text-2xl text-primary sm:mb-6 sm:text-3xl">
 								Why Advertise With Us
 							</h2>
 							<p className="mb-4 text-base text-muted-foreground leading-relaxed sm:mb-6 sm:text-lg">
@@ -72,7 +72,7 @@ export default async function AdvertisePage() {
 						</section>
 
 						<section className="mb-12 sm:mb-16">
-							<h2 className="mb-6 font-serif text-2xl text-primary sm:mb-8 sm:text-3xl">
+							<h2 className="mb-6 text-2xl text-primary sm:mb-8 sm:text-3xl">
 								Advertising Options
 							</h2>
 							<p className="mb-8 text-base text-muted-foreground leading-relaxed sm:mb-10 sm:text-lg">
@@ -85,7 +85,7 @@ export default async function AdvertisePage() {
 										<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 sm:h-12 sm:w-12">
 											<Sparkles className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
 										</div>
-										<h3 className="font-serif text-primary text-xl sm:text-2xl">
+										<h3 className="text-primary text-xl sm:text-2xl">
 											Sponsorships
 										</h3>
 									</div>
@@ -133,7 +133,7 @@ export default async function AdvertisePage() {
 							<div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-white/10 transition-transform duration-200 hover:scale-110 sm:mb-8 sm:h-16 sm:w-16">
 								<Mail className="h-7 w-7 sm:h-8 sm:w-8" />
 							</div>
-							<h2 className="mb-4 font-serif text-2xl leading-tight sm:mb-6 sm:text-3xl md:text-4xl">
+							<h2 className="mb-4 text-2xl leading-tight sm:mb-6 sm:text-3xl md:text-4xl">
 								Get in Touch
 							</h2>
 							<p className="mx-auto mb-8 max-w-xl text-sm text-white/80 sm:mb-10 sm:text-base">

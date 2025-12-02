@@ -40,7 +40,7 @@ export function ToolCard({ tool }: ToolCardProps) {
 						/>
 					</div>
 					<div className="min-w-0 flex-1">
-						<h3 className="font-medium font-serif text-base text-primary leading-tight transition-colors duration-200 group-hover:text-blue-600 sm:text-lg">
+						<h3 className="font-medium text-base text-primary leading-tight transition-colors duration-200 group-hover:text-blue-600 sm:text-lg">
 							{tool.name}
 						</h3>
 						<p className="mt-0.5 font-medium text-[10px] text-muted-foreground/80 uppercase tracking-wide sm:mt-1 sm:text-xs">

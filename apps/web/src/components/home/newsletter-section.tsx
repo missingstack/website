@@ -84,7 +84,7 @@ export function NewsletterSection() {
 						<Mail className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
 					</div>
 
-					<h2 className="mb-2 font-serif text-primary text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
+					<h2 className="mb-2 text-primary text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
 						Stay ahead of the curve
 					</h2>
 					<p className="mb-6 text-muted-foreground text-sm sm:mb-8 sm:text-base">

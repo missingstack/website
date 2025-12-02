@@ -145,7 +145,7 @@ async function CategoryPageContent({
 							<CategoryIcon className="h-8 w-8 text-primary sm:h-10 sm:w-10" />
 						</div>
 						<div className="min-w-0 flex-1">
-							<h1 className="mb-2 font-serif text-2xl text-primary leading-tight sm:mb-3 sm:text-3xl md:text-4xl lg:text-5xl">
+							<h1 className="mb-2 text-2xl text-primary leading-tight sm:mb-3 sm:text-3xl md:text-4xl lg:text-5xl">
 								{category.name} Tools
 							</h1>
 							<p className="max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">

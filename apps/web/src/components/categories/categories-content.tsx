@@ -87,7 +87,7 @@ export function CategoriesContent({
 			{(!hasSearchQuery || filteredCategoryPreviews.length > 0) && (
 				<section className="mx-auto mb-12 max-w-7xl px-4 sm:mb-16 sm:px-6 lg:mb-20">
 					<div className="mb-6 flex items-center justify-between sm:mb-8">
-						<h2 className="flex items-center gap-2 font-serif text-primary text-xl sm:text-2xl">
+						<h2 className="flex items-center gap-2 text-primary text-xl sm:text-2xl">
 							<Sparkles className="h-4 w-4 text-yellow-500 sm:h-5 sm:w-5" />
 							<span>
 								{hasSearchQuery
@@ -154,7 +154,7 @@ export function CategoriesContent({
 
 			{(!hasSearchQuery || filteredCategories.length > 0) && (
 				<section className="mx-auto max-w-7xl px-4 sm:px-6">
-					<h2 className="mb-6 font-serif text-primary text-xl sm:mb-8 sm:text-2xl">
+					<h2 className="mb-6 text-primary text-xl sm:mb-8 sm:text-2xl">
 						{hasSearchQuery
 							? "Search Results"
 							: `All ${categories.length} Tool Categories`}

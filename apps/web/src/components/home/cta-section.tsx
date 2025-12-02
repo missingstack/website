@@ -12,7 +12,7 @@ export function CTASection() {
 						<div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition-transform duration-200 hover:scale-110 sm:mb-5 sm:h-12 sm:w-12">
 							<DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
 						</div>
-						<h2 className="mb-2 font-serif text-white text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
+						<h2 className="mb-2 text-white text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
 							Sponsor Your Product
 						</h2>
 						<p className="mb-5 max-w-md text-sm text-white/70 sm:mb-6 sm:text-base">
@@ -37,7 +37,7 @@ export function CTASection() {
 						<div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 transition-transform duration-200 hover:scale-110 sm:mb-5 sm:h-12 sm:w-12">
 							<Heart className="h-5 w-5 sm:h-6 sm:w-6" />
 						</div>
-						<h2 className="mb-2 font-serif text-white text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
+						<h2 className="mb-2 text-white text-xl leading-tight sm:mb-3 sm:text-2xl md:text-3xl">
 							Support Missing stack
 						</h2>
 						<p className="mb-5 max-w-md text-sm text-white/70 sm:mb-6 sm:text-base">

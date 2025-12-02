@@ -1,15 +1,15 @@
-import { Inter, Playfair_Display } from "next/font/google";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 
-const playfair = Playfair_Display({
-	variable: "--font-playfair",
+const spaceGrotesk = Space_Grotesk({
+	variable: "--font-space-grotesk",
 	subsets: ["latin"],
 	weight: ["400", "500", "600", "700"],
 });
 
-const inter = Inter({
-	variable: "--font-inter",
+const spaceMono = Space_Mono({
+	variable: "--font-space-mono",
 	subsets: ["latin"],
-	weight: ["400", "500", "600", "700"],
+	weight: ["400", "700"],
 });
 
 export const config = {
@@ -20,8 +20,8 @@ export const config = {
 	locale: "en_US",
 	keywords: ["Missing Stack", "AI tools directory", "SaaS tools"],
 	fonts: {
-		playfair,
-		inter,
+		spaceGrotesk,
+		spaceMono,
 	},
 };
 

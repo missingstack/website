@@ -29,7 +29,7 @@ export function HeaderContent({
 						href="/"
 						className="group flex items-center gap-2 transition-transform duration-200 active:scale-95 sm:gap-2.5"
 					>
-						<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary font-bold font-serif text-lg text-white italic shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md sm:h-9 sm:w-9 sm:text-xl">
+						<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary font-bold text-lg text-white italic shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md sm:h-9 sm:w-9 sm:text-xl">
 							M
 						</div>
 						<span className="font-semibold text-base tracking-tight sm:text-lg">

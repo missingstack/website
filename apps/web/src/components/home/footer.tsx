@@ -48,7 +48,7 @@ export async function Footer() {
 							href="/"
 							className="mb-4 flex items-center gap-2 transition-transform duration-200 hover:scale-105 active:scale-95 sm:mb-5 sm:gap-2.5"
 						>
-							<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white font-bold font-serif text-lg text-primary italic transition-transform duration-200 hover:scale-110 sm:h-9 sm:w-9 sm:text-xl">
+							<div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white font-bold text-lg text-primary italic transition-transform duration-200 hover:scale-110 sm:h-9 sm:w-9 sm:text-xl">
 								M
 							</div>
 							<span className="font-semibold text-base text-white tracking-tight sm:text-lg">

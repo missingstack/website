@@ -101,7 +101,7 @@ export default async function CategoriesPage() {
 								{stats.totalCategories} Categories
 							</span>
 						</Badge>
-						<h1 className="mb-3 font-serif text-3xl text-primary leading-tight sm:mb-4 sm:text-4xl md:text-5xl lg:text-6xl">
+						<h1 className="mb-3 text-3xl text-primary leading-tight sm:mb-4 sm:text-4xl md:text-5xl lg:text-6xl">
 							Browse Tools by Category
 						</h1>
 						<p className="px-4 text-base text-muted-foreground sm:px-0 sm:text-lg">
@@ -126,7 +126,7 @@ export default async function CategoriesPage() {
 
 				<Container className="mt-12 sm:mt-16 lg:mt-20">
 					<div className="rounded-2xl bg-primary p-8 text-center text-white transition-all duration-300 hover:shadow-primary/20 hover:shadow-xl sm:rounded-3xl sm:p-10 lg:p-12">
-						<h2 className="mb-3 font-serif text-2xl sm:mb-4 sm:text-3xl md:text-4xl">
+						<h2 className="mb-3 text-2xl sm:mb-4 sm:text-3xl md:text-4xl">
 							Can't find what you're looking for?
 						</h2>
 						<p className="mx-auto mb-6 max-w-xl text-sm text-white/70 sm:mb-8 sm:text-base">

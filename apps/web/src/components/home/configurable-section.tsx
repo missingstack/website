@@ -122,7 +122,7 @@ export function ConfigurableSection({
 							<Icon className={`h-5 w-5 ${colors.text} sm:h-6 sm:w-6`} />
 						</div>
 						<div>
-							<h2 className="mb-1 font-bold font-serif text-primary text-xl leading-tight sm:text-2xl md:text-3xl">
+							<h2 className="mb-1 font-bold text-primary text-xl leading-tight sm:text-2xl md:text-3xl">
 								{config.title}
 							</h2>
 							<p className="text-muted-foreground/80 text-xs sm:text-sm">
@@ -161,7 +161,7 @@ export function ConfigurableSection({
 										/>
 									</div>
 									<div className="min-w-0 flex-1">
-										<h3 className="mb-1 font-semibold font-serif text-primary text-xl transition-colors group-hover:text-blue-600">
+										<h3 className="mb-1 font-semibold text-primary text-xl transition-colors group-hover:text-blue-600">
 											{tool.name}
 										</h3>
 										<p className="font-medium text-muted-foreground/80 text-sm uppercase tracking-wide">
@@ -218,7 +218,7 @@ export function ConfigurableSection({
 										/>
 									</div>
 									<div className="min-w-0 flex-1">
-										<h3 className="font-medium font-serif text-lg text-primary leading-tight transition-colors group-hover:text-blue-600">
+										<h3 className="font-medium text-lg text-primary leading-tight transition-colors group-hover:text-blue-600">
 											{tool.name}
 										</h3>
 										<p className="mt-1 font-medium text-muted-foreground/80 text-xs uppercase tracking-wide">

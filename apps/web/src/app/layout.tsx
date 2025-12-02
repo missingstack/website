@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Providers from "~/components/providers";
 import { config } from "~/lib/site-config";
 
-const { playfair, inter } = config.fonts;
+const { spaceGrotesk, spaceMono } = config.fonts;
 
 const ogImageUrl = new URL("/api/og", config.url);
 ogImageUrl.searchParams.set("title", config.title);
@@ -49,7 +49,9 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className="light" style={{ colorScheme: "light" }}>
-			<body className={`${playfair.variable} ${inter.variable} antialiased`}>
+			<body
+				className={`${spaceGrotesk.variable} ${spaceMono.variable} antialiased`}
+			>
 				<Providers>
 					<div className="grid h-svh w-screen grid-rows-[auto_1fr]">
 						{children}

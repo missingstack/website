@@ -35,7 +35,7 @@ export default function TermsPage() {
 						Back to home
 					</Link>
 
-					<h1 className="mb-6 font-serif text-3xl text-primary leading-tight sm:mb-8 sm:text-4xl">
+					<h1 className="mb-6 text-3xl text-primary leading-tight sm:mb-8 sm:text-4xl">
 						Terms of Service
 					</h1>
 
@@ -48,7 +48,7 @@ export default function TermsPage() {
 						</time>
 
 						<section className="mb-6 sm:mb-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
+							<h2 className="mb-3 text-primary text-xl sm:mb-4 sm:text-2xl">
 								1. Acceptance of Terms
 							</h2>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
@@ -58,7 +58,7 @@ export default function TermsPage() {
 						</section>
 
 						<section className="mb-6 sm:mb-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
+							<h2 className="mb-3 text-primary text-xl sm:mb-4 sm:text-2xl">
 								2. Use License
 							</h2>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
@@ -69,7 +69,7 @@ export default function TermsPage() {
 						</section>
 
 						<section className="mb-6 sm:mb-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
+							<h2 className="mb-3 text-primary text-xl sm:mb-4 sm:text-2xl">
 								3. User Submissions
 							</h2>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
@@ -81,7 +81,7 @@ export default function TermsPage() {
 						</section>
 
 						<section className="mb-6 sm:mb-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
+							<h2 className="mb-3 text-primary text-xl sm:mb-4 sm:text-2xl">
 								4. Disclaimer
 							</h2>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
@@ -96,7 +96,7 @@ export default function TermsPage() {
 						</section>
 
 						<section className="mb-6 sm:mb-8">
-							<h2 className="mb-3 font-serif text-primary text-xl sm:mb-4 sm:text-2xl">
+							<h2 className="mb-3 text-primary text-xl sm:mb-4 sm:text-2xl">
 								5. Contact
 							</h2>
 							<p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
