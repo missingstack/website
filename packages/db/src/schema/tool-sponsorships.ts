@@ -13,10 +13,9 @@ import {
 	pgTable,
 	timestamp,
 	uuid,
-	varchar,
 } from "drizzle-orm/pg-core";
 import { timestampFields, uuidPrimaryKey } from "./base";
-import { sponsorshipTierEnum } from "./enums";
+import { paymentStatusEnum, sponsorshipTierEnum } from "./enums";
 import { tools } from "./tools";
 
 // Tool sponsorships table
@@ -33,8 +32,8 @@ export const toolSponsorships = pgTable(
 		isActive: boolean("is_active").default(true).notNull(),
 		// Priority weight for ranking (higher = appears first)
 		priorityWeight: integer("priority_weight").default(0).notNull(),
-		// Payment status: pending, completed, failed, refunded
-		paymentStatus: varchar("payment_status", { length: 20 })
+		// Payment status
+		paymentStatus: paymentStatusEnum("payment_status")
 			.default("pending")
 			.notNull(),
 		...timestampFields,
@@ -48,6 +47,17 @@ export const toolSponsorships = pgTable(
 			table.endDate,
 		),
 		index("tool_sponsorships_priority_weight_idx").on(table.priorityWeight),
+		// Composite index for active sponsorships with priority
+		index("tool_sponsorships_active_priority_idx").on(
+			table.isActive,
+			table.priorityWeight,
+		),
+		// Index for date range queries
+		index("tool_sponsorships_start_date_idx").on(table.startDate),
+		// Index for payment status queries
+		index("tool_sponsorships_payment_status_idx").on(table.paymentStatus),
+		// Note: Check constraint for date validation should be added via migration:
+		// CHECK (end_date > start_date)
 	],
 );
 

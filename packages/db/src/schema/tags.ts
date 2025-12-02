@@ -5,9 +5,11 @@
  * Different tag types help organize tags by purpose.
  */
 
+import { relations } from "drizzle-orm";
 import { index, pgTable, text } from "drizzle-orm/pg-core";
 import { timestampFields, uuidPrimaryKey } from "./base";
 import { badgeVariantEnum, tagTypeEnum } from "./enums";
+import { toolsTags } from "./tools-tags";
 
 // Tags table
 export const tags = pgTable(
@@ -23,8 +25,15 @@ export const tags = pgTable(
 	(table) => [
 		index("tags_slug_idx").on(table.slug),
 		index("tags_type_idx").on(table.type),
+		// Composite index for filtering by type and slug
+		index("tags_type_slug_idx").on(table.type, table.slug),
 	],
 );
+
+// Tags relations
+export const tagsRelations = relations(tags, ({ many }) => ({
+	tools: many(toolsTags),
+}));
 
 export type Tag = typeof tags.$inferSelect;
 export type NewTag = typeof tags.$inferInsert;

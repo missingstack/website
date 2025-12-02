@@ -17,15 +17,17 @@ import {
 	index,
 	integer,
 	pgTable,
-	primaryKey,
 	text,
-	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { timestampFields, uuidPrimaryKey } from "./base";
-import { categories } from "./categories";
-import { pricingEnum } from "./enums";
-import { tags } from "./tags";
+import { licenseEnum, pricingEnum } from "./enums";
+import { toolAffiliateLinks } from "./tool-affiliate-links";
+import { toolSponsorships } from "./tool-sponsorships";
+import { toolsAlternatives } from "./tools-alternatives";
+import { toolsCategories } from "./tools-categories";
+import { toolsStacks } from "./tools-stacks";
+import { toolsTags } from "./tools-tags";
 
 // Custom type for PostgreSQL tsvector (full-text search)
 const tsvector = customType<{ data: string }>({
@@ -46,6 +48,7 @@ export const tools = pgTable(
 		logo: varchar("logo", { length: 256 }).notNull(),
 		website: varchar("website", { length: 256 }),
 		pricing: pricingEnum("pricing").notNull(),
+		license: licenseEnum("license"),
 		featured: boolean("featured").default(false),
 
 		// Monetization fields
@@ -67,82 +70,33 @@ export const tools = pgTable(
 		index("tools_featured_created_idx").on(table.featured, table.createdAt),
 		index("tools_pricing_created_idx").on(table.pricing, table.createdAt),
 		index("tools_featured_pricing_idx").on(table.featured, table.pricing),
+		index("tools_license_idx").on(table.license),
+		index("tools_pricing_license_idx").on(table.pricing, table.license),
 		index("tools_sponsorship_priority_idx").on(table.sponsorshipPriority),
 		index("tools_is_sponsored_idx").on(table.isSponsored),
+		// Composite index for featured + sponsored queries
+		index("tools_featured_sponsored_idx").on(table.featured, table.isSponsored),
+		// Index for monetization queries
+		index("tools_monetization_enabled_idx").on(table.monetizationEnabled),
 		// GIN index for full-text search
 		index("tools_search_idx").using("gin", table.searchVector),
-	],
-);
-
-// Junction table: tools <-> categories (many-to-many)
-export const toolsCategories = pgTable(
-	"tools_categories",
-	{
-		toolId: uuid("tool_id")
-			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
-		categoryId: uuid("category_id")
-			.notNull()
-			.references(() => categories.id, { onDelete: "cascade" }),
-	},
-	(table) => [
-		primaryKey({ columns: [table.toolId, table.categoryId] }),
-		index("tools_categories_tool_idx").on(table.toolId),
-		index("tools_categories_category_idx").on(table.categoryId),
-	],
-);
-
-// Junction table: tools <-> tags (many-to-many)
-export const toolsTags = pgTable(
-	"tools_tags",
-	{
-		toolId: uuid("tool_id")
-			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
-		tagId: uuid("tag_id")
-			.notNull()
-			.references(() => tags.id, { onDelete: "cascade" }),
-	},
-	(table) => [
-		primaryKey({ columns: [table.toolId, table.tagId] }),
-		index("tools_tags_tool_idx").on(table.toolId),
-		index("tools_tags_tag_idx").on(table.tagId),
 	],
 );
 
 // Tools relations
 export const toolsRelations = relations(tools, ({ many }) => ({
 	categories: many(toolsCategories),
+	stacks: many(toolsStacks),
 	tags: many(toolsTags),
-}));
-
-// Junction table relations
-export const toolsCategoriesRelations = relations(
-	toolsCategories,
-	({ one }) => ({
-		tool: one(tools, {
-			fields: [toolsCategories.toolId],
-			references: [tools.id],
-		}),
-		category: one(categories, {
-			fields: [toolsCategories.categoryId],
-			references: [categories.id],
-		}),
+	alternatives: many(toolsAlternatives, {
+		relationName: "alternatives",
 	}),
-);
-
-export const toolsTagsRelations = relations(toolsTags, ({ one }) => ({
-	tool: one(tools, {
-		fields: [toolsTags.toolId],
-		references: [tools.id],
+	alternativeOf: many(toolsAlternatives, {
+		relationName: "alternativeOf",
 	}),
-	tag: one(tags, {
-		fields: [toolsTags.tagId],
-		references: [tags.id],
-	}),
+	sponsorships: many(toolSponsorships),
+	affiliateLinks: many(toolAffiliateLinks),
 }));
 
 export type Tool = typeof tools.$inferSelect;
 export type NewTool = typeof tools.$inferInsert;
-export type ToolCategory = typeof toolsCategories.$inferSelect;
-export type ToolTag = typeof toolsTags.$inferSelect;

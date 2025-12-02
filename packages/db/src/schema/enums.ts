@@ -90,6 +90,30 @@ export const sponsorshipTierEnum = pgEnum("sponsorship_tier", [
 	"enterprise",
 ]);
 
+// License enum - software licenses for tools
+export const licenseEnum = pgEnum("license", [
+	"agpl-3",
+	"mit",
+	"apache-2",
+	"gpl-3",
+	"mpl-2",
+	"bsd-3-clause",
+	"gpl-2",
+	"lgpl-2-1",
+	"bsd-2-clause",
+	"epl-2",
+	"isc",
+	"lgpl-3",
+]);
+
+// Payment status enum - for sponsorship payments
+export const paymentStatusEnum = pgEnum("payment_status", [
+	"pending",
+	"completed",
+	"failed",
+	"refunded",
+]);
+
 export type Platform = (typeof platformEnum.enumValues)[number];
 export type PricingModel = (typeof pricingEnum.enumValues)[number];
 export type TagType = (typeof tagTypeEnum.enumValues)[number];
@@ -99,3 +123,5 @@ export type SectionFilter = (typeof sectionFilterEnum.enumValues)[number];
 export type SectionLayout = (typeof sectionLayoutEnum.enumValues)[number];
 export type IconColor = (typeof iconColorEnum.enumValues)[number];
 export type SponsorshipTier = (typeof sponsorshipTierEnum.enumValues)[number];
+export type License = (typeof licenseEnum.enumValues)[number];
+export type PaymentStatus = (typeof paymentStatusEnum.enumValues)[number];

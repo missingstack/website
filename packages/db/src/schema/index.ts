@@ -7,15 +7,22 @@
 
 export * from "./categories";
 export * from "./enums";
+export * from "./stacks";
 export * from "./tags";
 export * from "./tool-affiliate-links";
 export * from "./tool-sponsorships";
 export * from "./tools";
+export * from "./tools-alternatives";
+export * from "./tools-categories";
+export * from "./tools-stacks";
+export * from "./tools-tags";
 
 import { categories, categoriesRelations } from "./categories";
 import {
 	badgeVariantEnum,
 	iconColorEnum,
+	licenseEnum,
+	paymentStatusEnum,
 	platformEnum,
 	pricingEnum,
 	sectionFilterEnum,
@@ -24,7 +31,8 @@ import {
 	sponsorshipTierEnum,
 	tagTypeEnum,
 } from "./enums";
-import { tags } from "./tags";
+import { stacks, stacksRelations } from "./stacks";
+import { tags, tagsRelations } from "./tags";
 import {
 	toolAffiliateLinks,
 	toolAffiliateLinksRelations,
@@ -33,19 +41,21 @@ import {
 	toolSponsorships,
 	toolSponsorshipsRelations,
 } from "./tool-sponsorships";
+import { tools, toolsRelations } from "./tools";
 import {
-	tools,
-	toolsCategories,
-	toolsCategoriesRelations,
-	toolsRelations,
-	toolsTags,
-	toolsTagsRelations,
-} from "./tools";
+	toolsAlternatives,
+	toolsAlternativesRelations,
+} from "./tools-alternatives";
+import { toolsCategories, toolsCategoriesRelations } from "./tools-categories";
+import { toolsStacks, toolsStacksRelations } from "./tools-stacks";
+import { toolsTags, toolsTagsRelations } from "./tools-tags";
 
 export const schema = {
 	// Enums
 	platformEnum,
 	pricingEnum,
+	licenseEnum,
+	paymentStatusEnum,
 	tagTypeEnum,
 	badgeVariantEnum,
 	sectionTypeEnum,
@@ -56,18 +66,25 @@ export const schema = {
 
 	// Tables
 	categories,
+	stacks,
 	tags,
 	tools,
 	toolsCategories,
 	toolsTags,
+	toolsStacks,
+	toolsAlternatives,
 	toolSponsorships,
 	toolAffiliateLinks,
 
 	// Relations
 	categoriesRelations,
+	stacksRelations,
+	tagsRelations,
 	toolsRelations,
 	toolsCategoriesRelations,
 	toolsTagsRelations,
+	toolsStacksRelations,
+	toolsAlternativesRelations,
 	toolSponsorshipsRelations,
 	toolAffiliateLinksRelations,
 };

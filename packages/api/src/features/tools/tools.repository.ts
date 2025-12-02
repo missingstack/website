@@ -16,12 +16,9 @@ import {
 } from "@missingstack/db/drizzle-orm";
 import type { PricingModel } from "@missingstack/db/schema/enums";
 import { toolSponsorships } from "@missingstack/db/schema/tool-sponsorships";
-import {
-	type Tool,
-	tools,
-	toolsCategories,
-	toolsTags,
-} from "@missingstack/db/schema/tools";
+import { type Tool, tools } from "@missingstack/db/schema/tools";
+import { toolsCategories } from "@missingstack/db/schema/tools-categories";
+import { toolsTags } from "@missingstack/db/schema/tools-tags";
 import type {
 	ToolCollection,
 	ToolData,

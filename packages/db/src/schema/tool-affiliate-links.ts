@@ -48,6 +48,13 @@ export const toolAffiliateLinks = pgTable(
 			table.toolId,
 			table.isPrimary,
 		),
+		// Index for revenue tracking queries
+		index("tool_affiliate_links_revenue_idx").on(table.revenueTracked),
+		// Composite index for analytics queries
+		index("tool_affiliate_links_tool_revenue_idx").on(
+			table.toolId,
+			table.revenueTracked,
+		),
 	],
 );
 
