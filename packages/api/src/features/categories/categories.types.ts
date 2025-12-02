@@ -1,4 +1,8 @@
 import type { Category } from "@missingstack/db/schema/categories";
+import type {
+	CategoryCollection,
+	CategoryQueryOptions,
+} from "./categories.schema";
 
 // Category with computed tool count
 export type CategoryWithCount = Category & {
@@ -6,7 +10,7 @@ export type CategoryWithCount = Category & {
 };
 
 export interface CategoryRepositoryInterface {
-	getAll(): Promise<Category[]>;
+	getAll(options?: CategoryQueryOptions): Promise<CategoryCollection>;
 	getById(id: string): Promise<Category | null>;
 	getBySlug(slug: string): Promise<Category | null>;
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
@@ -14,7 +18,7 @@ export interface CategoryRepositoryInterface {
 }
 
 export interface CategoriesServiceInterface {
-	getAll(): Promise<Category[]>;
+	getAll(options?: CategoryQueryOptions): Promise<CategoryCollection>;
 	getById(id: string): Promise<Category | null>;
 	getBySlug(slug: string): Promise<Category | null>;
 	getAllWithCounts(): Promise<CategoryWithCount[]>;

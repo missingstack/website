@@ -9,7 +9,7 @@ async function getAllCategories() {
 	cacheTag("categories");
 
 	try {
-		return await services.categoryService.getAll();
+		return await services.categoryService.getAllWithCounts();
 	} catch (error) {
 		console.error("Error fetching categories for sitemap:", error);
 		return [];

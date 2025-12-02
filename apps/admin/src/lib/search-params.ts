@@ -1,50 +1,34 @@
 import {
-	createSearchParamsCache,
-	parseAsArrayOf,
-	parseAsString,
-	parseAsStringLiteral,
-} from "nuqs/server";
+	parseAsString as parseAsStringClient,
+	parseAsStringLiteral as parseAsStringLiteralClient,
+} from "nuqs";
+import { parseAsString, parseAsStringLiteral } from "nuqs/server";
 
-// Define sort options
-export const sortOptions = ["newest", "name", "popular"] as const;
-export type SortOption = (typeof sortOptions)[number];
+// Define sortable columns for admin categories
+export const categorySortColumns = [
+	"name",
+	"slug",
+	"weight",
+	"createdAt",
+] as const;
+export type CategorySortColumn = (typeof categorySortColumns)[number];
 
-// Define the search params parsers
-export const searchParamsParsers = {
-	search: parseAsString.withDefault(""),
-	sortBy: parseAsStringLiteral(sortOptions).withDefault("newest"),
-	categoryIds: parseAsArrayOf(parseAsString).withDefault([]),
-	pricing: parseAsArrayOf(parseAsString).withDefault([]),
-	platforms: parseAsArrayOf(parseAsString).withDefault([]),
-	tagIds: parseAsArrayOf(parseAsString).withDefault([]),
+// Define the search params parsers for admin (server-side)
+// Note: parseAsString defaults to null (empty string means no search)
+export const adminSearchParamsParsers = {
+	search: parseAsString,
+	sortBy: parseAsStringLiteral(categorySortColumns).withDefault("createdAt"),
+	sortOrder: parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc"),
+	edit: parseAsString, // Category ID to edit, "new" for new category
 };
 
-// Create a cache for server components
-export const searchParamsCache = createSearchParamsCache(searchParamsParsers);
-
-// Pricing options
-export const PRICING_OPTIONS = [
-	"Free",
-	"Freemium",
-	"Paid",
-	"Open Source",
-	"Enterprise",
-] as const;
-
-// Platform options
-export const PLATFORM_OPTIONS = [
-	"Web",
-	"Mac",
-	"Windows",
-	"Linux",
-	"iOS",
-	"Android",
-	"API",
-] as const;
-
-// Sort options with labels
-export const SORT_OPTIONS = [
-	{ value: "newest" as const, label: "Newest First" },
-	{ value: "name" as const, label: "Alphabetical" },
-	{ value: "popular" as const, label: "Most Popular" },
-];
+// Client-side parsers for nuqs (used in client components)
+export const adminSearchParamsParsersClient = {
+	search: parseAsStringClient.withDefault(""),
+	sortBy:
+		parseAsStringLiteralClient(categorySortColumns).withDefault("createdAt"),
+	sortOrder: parseAsStringLiteralClient(["asc", "desc"] as const).withDefault(
+		"desc",
+	),
+	edit: parseAsStringClient, // Category ID to edit, "new" for new category
+};

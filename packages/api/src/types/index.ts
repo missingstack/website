@@ -19,12 +19,15 @@ export type { License, PricingModel } from "@missingstack/db/schema/enums";
 export type { Stack } from "@missingstack/db/schema/stacks";
 export type { Tag } from "@missingstack/db/schema/tags";
 export type { Tool } from "@missingstack/db/schema/tools";
-
 export type {
 	CategoriesServiceInterface,
 	CategoryRepositoryInterface,
 	CategoryWithCount,
 } from "../features/categories";
+export type {
+	CategoryCollection,
+	CategoryQueryOptions,
+} from "../features/categories/categories.schema";
 export type {
 	Section,
 	SectionRepositoryInterface,

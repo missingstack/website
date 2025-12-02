@@ -305,7 +305,7 @@ async function getAllCategories() {
 	cacheLife("days");
 	cacheTag("categories");
 
-	return services.categoryService.getAll();
+	return services.categoryService.getAllWithCounts();
 }
 
 export async function generateStaticParams() {

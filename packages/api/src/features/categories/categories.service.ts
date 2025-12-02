@@ -1,5 +1,9 @@
 import type { Category } from "@missingstack/db/schema/categories";
 import type {
+	CategoryCollection,
+	CategoryQueryOptions,
+} from "./categories.schema";
+import type {
 	CategoriesServiceInterface,
 	CategoryRepositoryInterface,
 	CategoryWithCount,
@@ -11,8 +15,8 @@ const MAX_TOP_LIMIT = 100;
 export class CategoriesService implements CategoriesServiceInterface {
 	constructor(private readonly repository: CategoryRepositoryInterface) {}
 
-	async getAll(): Promise<Category[]> {
-		return this.repository.getAll();
+	async getAll(options?: CategoryQueryOptions): Promise<CategoryCollection> {
+		return this.repository.getAll(options);
 	}
 
 	async getById(id: string): Promise<Category | null> {
