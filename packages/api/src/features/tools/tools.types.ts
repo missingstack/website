@@ -4,9 +4,15 @@ import type {
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
+	ToolWithAlternativeCountCollection,
 } from "./tools.schema";
 
-export type { ToolCollection, ToolData, ToolQueryOptions };
+export type {
+	ToolCollection,
+	ToolData,
+	ToolQueryOptions,
+	ToolWithAlternativeCountCollection,
+};
 
 export interface ToolRepositoryInterface {
 	getAll(options?: ToolQueryOptions): Promise<ToolCollection>;
@@ -29,6 +35,9 @@ export interface ToolRepositoryInterface {
 	getFeatured(limit?: number): Promise<Tool[]>;
 	getRecent(limit?: number): Promise<Tool[]>;
 	getPopular(limit?: number): Promise<Tool[]>;
+	getAllWithAlternativeCounts(
+		options?: ToolQueryOptions,
+	): Promise<ToolWithAlternativeCountCollection>;
 }
 
 export interface ToolsServiceInterface {
@@ -52,4 +61,7 @@ export interface ToolsServiceInterface {
 	getFeatured(limit?: number): Promise<Tool[]>;
 	getRecent(limit?: number): Promise<Tool[]>;
 	getPopular(limit?: number): Promise<Tool[]>;
+	getAllWithAlternativeCounts(
+		options?: ToolQueryOptions,
+	): Promise<ToolWithAlternativeCountCollection>;
 }

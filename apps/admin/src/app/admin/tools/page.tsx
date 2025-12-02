@@ -1,19 +1,18 @@
 import { Suspense } from "react";
-import { CategoriesTable } from "~/components/admin/categories-table";
 import { TableSkeleton } from "~/components/admin/table-skeleton";
+import { ToolsTable } from "~/components/admin/tools-table";
 
-export default function AdminCategoriesPage() {
+export default function AdminToolsPage() {
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div>
-				<h2 className="font-bold text-2xl tracking-tight">Categories</h2>
+				<h2 className="font-bold text-2xl tracking-tight">Tools</h2>
 				<p className="text-muted-foreground text-sm">
-					Manage and organize tool categories
+					Manage and organize tools
 				</p>
 			</div>
-
 			<Suspense fallback={<TableSkeleton columnCount={5} />}>
-				<CategoriesTable />
+				<ToolsTable />
 			</Suspense>
 		</div>
 	);

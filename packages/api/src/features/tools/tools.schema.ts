@@ -35,3 +35,14 @@ export const toolQueryOptionsSchema = baseQueryOptionsSchema
 	.strict();
 
 export type ToolQueryOptions = z.infer<typeof toolQueryOptionsSchema>;
+
+// Tool with alternative count for admin
+export type ToolWithAlternativeCount = Tool & {
+	alternativeCount: number;
+};
+
+export type ToolWithAlternativeCountCollection = {
+	items: ToolWithAlternativeCount[];
+	nextCursor: string | null;
+	hasMore: boolean;
+};

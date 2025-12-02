@@ -26,6 +26,7 @@ import type {
 	ToolData,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
+	ToolWithAlternativeCountCollection,
 } from "./tools.types";
 
 type QueryableDb = Pick<Database, "select" | "transaction">;
@@ -778,6 +779,78 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			.limit(limit);
 
 		return rows;
+	}
+
+	async getAllWithAlternativeCounts(
+		options: ToolQueryOptions = {},
+	): Promise<ToolWithAlternativeCountCollection> {
+		const limit = options.limit ?? 20;
+		const sortBy = options.sortBy ?? "newest";
+		const sortOrder = options.sortOrder ?? "desc";
+
+		const context: SortContext = {
+			sortBy,
+			sortOrder,
+			searchQuery: options.search?.trim() || undefined,
+		};
+
+		const cursor = CursorManager.decode(options.cursor, sortBy);
+		const filters = this.filterBuilder.buildAllFilters(options);
+
+		// Get tools using the standard query executor
+		const collection = await this.queryExecutor.execute(
+			filters,
+			context,
+			cursor,
+			limit,
+		);
+
+		// Get alternative counts for all tools
+		const toolIds = collection.items.map((tool) => tool.id);
+		const alternativeCounts = await this.getAlternativeCounts(toolIds);
+
+		// Map tools with their alternative counts
+		const items = collection.items.map((tool) => ({
+			...tool,
+			alternativeCount: alternativeCounts.get(tool.id) ?? 0,
+		}));
+
+		return {
+			items,
+			nextCursor: collection.nextCursor,
+			hasMore: collection.hasMore,
+		};
+	}
+
+	private async getAlternativeCounts(
+		toolIds: string[],
+	): Promise<Map<string, number>> {
+		if (toolIds.length === 0) {
+			return new Map();
+		}
+
+		const counts = await this.db
+			.select({
+				toolId: toolsAlternatives.toolId,
+				count: sql<number>`count(*)::int`,
+			})
+			.from(toolsAlternatives)
+			.where(inArray(toolsAlternatives.toolId, toolIds))
+			.groupBy(toolsAlternatives.toolId);
+
+		const countMap = new Map<string, number>();
+		for (const { toolId, count } of counts) {
+			countMap.set(toolId, count);
+		}
+
+		// Ensure all tool IDs have a count (even if 0)
+		for (const toolId of toolIds) {
+			if (!countMap.has(toolId)) {
+				countMap.set(toolId, 0);
+			}
+		}
+
+		return countMap;
 	}
 
 	async getPopular(limit = 10): Promise<Tool[]> {

@@ -4,6 +4,7 @@ import type {
 	ToolData,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
+	ToolWithAlternativeCountCollection,
 	ToolsServiceInterface,
 } from "./tools.types";
 
@@ -115,6 +116,49 @@ export class ToolsService implements ToolsServiceInterface {
 	async getPopular(limit?: number): Promise<Tool[]> {
 		const clampedLimit = clampPresetLimit(limit);
 		return this.repository.getPopular(clampedLimit);
+	}
+
+	async getAllWithAlternativeCounts(
+		options: ToolQueryOptions = {},
+	): Promise<ToolWithAlternativeCountCollection> {
+		// Sanitize and validate options
+		const sanitizedOptions: ToolQueryOptions = {
+			...options,
+			cursor: options.cursor ?? null,
+			limit: clampLimit(options.limit),
+			sortBy: options.sortBy ?? "newest",
+			sortOrder: options.sortOrder ?? "desc",
+			includeRelations: options.includeRelations ?? true,
+			// Filter out empty arrays
+			categoryIds:
+				options.categoryIds && options.categoryIds.length > 0
+					? options.categoryIds
+					: undefined,
+			tagIds:
+				options.tagIds && options.tagIds.length > 0
+					? options.tagIds
+					: undefined,
+			stackIds:
+				options.stackIds && options.stackIds.length > 0
+					? options.stackIds
+					: undefined,
+			alternativeIds:
+				options.alternativeIds && options.alternativeIds.length > 0
+					? options.alternativeIds
+					: undefined,
+			license:
+				options.license && options.license.length > 0
+					? options.license
+					: undefined,
+			pricing:
+				options.pricing && options.pricing.length > 0
+					? options.pricing
+					: undefined,
+			// Trim search term
+			search: options.search?.trim() || undefined,
+		};
+
+		return this.repository.getAllWithAlternativeCounts(sanitizedOptions);
 	}
 }
 

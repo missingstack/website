@@ -54,11 +54,6 @@ const navigation = [
 				url: "/admin/tags",
 				icon: Tags,
 			},
-			{
-				title: "Alternatives",
-				url: "/admin/alternatives",
-				icon: LinkIcon,
-			},
 		],
 	},
 	{

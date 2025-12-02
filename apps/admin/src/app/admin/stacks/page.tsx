@@ -1,19 +1,18 @@
 import { Suspense } from "react";
-import { CategoriesTable } from "~/components/admin/categories-table";
+import { StacksTable } from "~/components/admin/stacks-table";
 import { TableSkeleton } from "~/components/admin/table-skeleton";
 
-export default function AdminCategoriesPage() {
+export default function AdminStacksPage() {
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div>
-				<h2 className="font-bold text-2xl tracking-tight">Categories</h2>
+				<h2 className="font-bold text-2xl tracking-tight">Stacks</h2>
 				<p className="text-muted-foreground text-sm">
-					Manage and organize tool categories
+					Manage and organize technology stacks
 				</p>
 			</div>
-
 			<Suspense fallback={<TableSkeleton columnCount={5} />}>
-				<CategoriesTable />
+				<StacksTable />
 			</Suspense>
 		</div>
 	);

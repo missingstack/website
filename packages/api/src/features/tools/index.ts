@@ -10,6 +10,8 @@ export type {
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
+	ToolWithAlternativeCount,
+	ToolWithAlternativeCountCollection,
 } from "./tools.schema";
 
 export type {
@@ -122,6 +124,11 @@ export function createToolsRouter(app: Elysia) {
 					query: t.Object({ search: t.String() }),
 				},
 			)
+			.get("/with-alternative-counts", async ({ request }) => {
+				const rawQueryOptions = parseRawQuery(request.url);
+				const options = parseQueryOptions(rawQueryOptions);
+				return services.toolService.getAllWithAlternativeCounts(options);
+			})
 			.get(
 				"/:id",
 				async ({ params: { id } }) => {
