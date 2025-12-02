@@ -15,6 +15,13 @@
 			"when": 1764598616238,
 			"tag": "0001_tranquil_rhodey",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1764654988028,
+			"tag": "0002_easy_microbe",
+			"breakpoints": true
 		}
 	]
 }

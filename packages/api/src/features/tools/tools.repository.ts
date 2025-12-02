@@ -14,10 +14,12 @@ import {
 	or,
 	sql,
 } from "@missingstack/db/drizzle-orm";
-import type { PricingModel } from "@missingstack/db/schema/enums";
+import type { License, PricingModel } from "@missingstack/db/schema/enums";
 import { toolSponsorships } from "@missingstack/db/schema/tool-sponsorships";
 import { type Tool, tools } from "@missingstack/db/schema/tools";
+import { toolsAlternatives } from "@missingstack/db/schema/tools-alternatives";
 import { toolsCategories } from "@missingstack/db/schema/tools-categories";
+import { toolsStacks } from "@missingstack/db/schema/tools-stacks";
 import { toolsTags } from "@missingstack/db/schema/tools-tags";
 import type {
 	ToolCollection,
@@ -115,6 +117,11 @@ class FilterBuilder {
 		return inArray(tools.pricing, pricing);
 	}
 
+	buildLicenseFilter(license?: License[]): SQL<unknown> | null {
+		if (!license || license.length === 0) return null;
+		return inArray(tools.license, license);
+	}
+
 	buildCategoryFilter(categoryIds?: string[]): SQL<unknown> | null {
 		if (!categoryIds || categoryIds.length === 0) return null;
 		return exists(
@@ -138,6 +145,38 @@ class FilterBuilder {
 				.from(toolsTags)
 				.where(
 					and(eq(toolsTags.toolId, tools.id), inArray(toolsTags.tagId, tagIds)),
+				),
+		);
+	}
+
+	buildStackFilter(stackIds?: string[]): SQL<unknown> | null {
+		if (!stackIds || stackIds.length === 0) return null;
+		return exists(
+			this.db
+				.select()
+				.from(toolsStacks)
+				.where(
+					and(
+						eq(toolsStacks.toolId, tools.id),
+						inArray(toolsStacks.stackId, stackIds),
+					),
+				),
+		);
+	}
+
+	buildAlternativeFilter(alternativeIds?: string[]): SQL<unknown> | null {
+		if (!alternativeIds || alternativeIds.length === 0) return null;
+		// Find tools that have the specified tools as alternatives
+		// This means: tool.alternativeIds includes any of the alternativeIds
+		return exists(
+			this.db
+				.select()
+				.from(toolsAlternatives)
+				.where(
+					and(
+						eq(toolsAlternatives.toolId, tools.id),
+						inArray(toolsAlternatives.alternativeToolId, alternativeIds),
+					),
 				),
 		);
 	}
@@ -168,8 +207,11 @@ class FilterBuilder {
 		return [
 			this.buildFeaturedFilter(options.featured),
 			this.buildPricingFilter(options.pricing),
+			this.buildLicenseFilter(options.license),
 			this.buildCategoryFilter(options.categoryIds),
 			this.buildTagFilter(options.tagIds),
+			this.buildStackFilter(options.stackIds),
+			this.buildAlternativeFilter(options.alternativeIds),
 			this.buildSearchFilter(options.search),
 		].filter((condition): condition is SQL<unknown> => condition !== null);
 	}
@@ -556,6 +598,26 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		});
 	}
 
+	async getByStack(
+		stackId: string,
+		options: ToolQueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.getAll({
+			...options,
+			stackIds: [stackId],
+		});
+	}
+
+	async getByAlternative(
+		alternativeId: string,
+		options: ToolQueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.getAll({
+			...options,
+			alternativeIds: [alternativeId],
+		});
+	}
+
 	async search(
 		query: string,
 		options: BaseQueryOptions = {},
@@ -577,21 +639,31 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		if (!tool) return null;
 
 		// Load relations
-		const [categoryIds, tagIds] = await Promise.all([
+		const [categoryIds, tagIds, stackIds, alternativeIds] = await Promise.all([
 			this.db
 				.select({ categoryId: toolsCategories.categoryId })
 				.from(toolsCategories)
-				.where(eq(toolsCategories.toolId, id)),
+				.where(eq(toolsCategories.toolId, tool.id)),
 			this.db
 				.select({ tagId: toolsTags.tagId })
 				.from(toolsTags)
-				.where(eq(toolsTags.toolId, id)),
+				.where(eq(toolsTags.toolId, tool.id)),
+			this.db
+				.select({ stackId: toolsStacks.stackId })
+				.from(toolsStacks)
+				.where(eq(toolsStacks.toolId, tool.id)),
+			this.db
+				.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
+				.from(toolsAlternatives)
+				.where(eq(toolsAlternatives.toolId, tool.id)),
 		]);
 
 		return {
 			...tool,
 			categoryIds: categoryIds.map((c) => c.categoryId),
 			tagIds: tagIds.map((t) => t.tagId),
+			stackIds: stackIds.map((s) => s.stackId),
+			alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
 		};
 	}
 
@@ -605,7 +677,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		if (!tool) return null;
 
 		// Load relations
-		const [categoryIds, tagIds] = await Promise.all([
+		const [categoryIds, tagIds, stackIds, alternativeIds] = await Promise.all([
 			this.db
 				.select({ categoryId: toolsCategories.categoryId })
 				.from(toolsCategories)
@@ -614,12 +686,22 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 				.select({ tagId: toolsTags.tagId })
 				.from(toolsTags)
 				.where(eq(toolsTags.toolId, tool.id)),
+			this.db
+				.select({ stackId: toolsStacks.stackId })
+				.from(toolsStacks)
+				.where(eq(toolsStacks.toolId, tool.id)),
+			this.db
+				.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
+				.from(toolsAlternatives)
+				.where(eq(toolsAlternatives.toolId, tool.id)),
 		]);
 
 		return {
 			...tool,
 			categoryIds: categoryIds.map((c) => c.categoryId),
 			tagIds: tagIds.map((t) => t.tagId),
+			stackIds: stackIds.map((s) => s.stackId),
+			alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
 		};
 	}
 

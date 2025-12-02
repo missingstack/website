@@ -15,7 +15,8 @@
  */
 
 export type { Category } from "@missingstack/db/schema/categories";
-export type { PricingModel } from "@missingstack/db/schema/enums";
+export type { License, PricingModel } from "@missingstack/db/schema/enums";
+export type { Stack } from "@missingstack/db/schema/stacks";
 export type { Tag } from "@missingstack/db/schema/tags";
 export type { Tool } from "@missingstack/db/schema/tools";
 
@@ -28,6 +29,10 @@ export type {
 	SectionRepositoryInterface,
 	SectionsServiceInterface,
 } from "../features/sections";
+export type {
+	StackRepositoryInterface,
+	StacksServiceInterface,
+} from "../features/stacks";
 export type {
 	Stats,
 	StatsRepositoryInterface,

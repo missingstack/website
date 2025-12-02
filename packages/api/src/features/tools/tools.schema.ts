@@ -1,14 +1,17 @@
 import { baseQueryOptionsSchema } from "@missingstack/api/shared";
-import { pricingEnum } from "@missingstack/db/schema/enums";
+import { licenseEnum, pricingEnum } from "@missingstack/db/schema/enums";
 import type { Tool } from "@missingstack/db/schema/tools";
 import { z } from "zod";
 
 const pricingEnumValues = pricingEnum.enumValues;
+const licenseEnumValues = licenseEnum.enumValues;
 
 // Tool with relations
 export type ToolData = Tool & {
 	categoryIds: string[];
 	tagIds: string[];
+	stackIds: string[];
+	alternativeIds: string[];
 };
 
 export type ToolCollection = {
@@ -22,7 +25,10 @@ export const toolQueryOptionsSchema = baseQueryOptionsSchema
 	.extend({
 		categoryIds: z.array(z.string()).optional(),
 		tagIds: z.array(z.string()).optional(),
+		stackIds: z.array(z.string()).optional(),
+		alternativeIds: z.array(z.string()).optional(),
 		pricing: z.array(z.enum(pricingEnumValues)).optional(),
+		license: z.array(z.enum(licenseEnumValues)).optional(),
 		featured: z.boolean().optional(),
 		search: z.string().optional(),
 	})

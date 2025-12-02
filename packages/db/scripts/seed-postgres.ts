@@ -2,7 +2,7 @@
  * Database Seed Script
  *
  * Bootstraps the Supabase database with initial data from JSON/YAML files.
- * Run with: bun run scripts/seed.ts
+ * Run with: bun run scripts/seed-postgres.ts
  */
 
 import { randomUUID } from "node:crypto";
@@ -50,7 +50,7 @@ interface ToolJson {
 }
 
 function loadToolsFromJson(): ToolJson[] {
-	const toolsPath = path.join(process.cwd(), "scripts/tools.json");
+	const toolsPath = path.join(process.cwd(), "data/tools.json");
 
 	try {
 		const content = fs.readFileSync(toolsPath, "utf-8");
@@ -75,7 +75,7 @@ const pricingMap: Record<string, PricingModel> = {
 async function seedCategories(): Promise<Map<string, string>> {
 	console.log("📁 Seeding categories...");
 
-	const categoriesPath = path.join(process.cwd(), "scripts/categories.json");
+	const categoriesPath = path.join(process.cwd(), "data/categories.json");
 	const categoriesData = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
 	const slugToIdMap = new Map<string, string>();
 
@@ -139,7 +139,7 @@ async function seedCategories(): Promise<Map<string, string>> {
 async function seedTags(): Promise<Map<string, string>> {
 	console.log("🏷️  Seeding tags...");
 
-	const tagsPath = path.join(process.cwd(), "scripts/tags.json");
+	const tagsPath = path.join(process.cwd(), "data/tags.json");
 	const tagsData = JSON.parse(fs.readFileSync(tagsPath, "utf-8"));
 	const slugToIdMap = new Map<string, string>();
 

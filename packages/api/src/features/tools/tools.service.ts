@@ -32,6 +32,18 @@ export class ToolsService implements ToolsServiceInterface {
 				options.tagIds && options.tagIds.length > 0
 					? options.tagIds
 					: undefined,
+			stackIds:
+				options.stackIds && options.stackIds.length > 0
+					? options.stackIds
+					: undefined,
+			alternativeIds:
+				options.alternativeIds && options.alternativeIds.length > 0
+					? options.alternativeIds
+					: undefined,
+			license:
+				options.license && options.license.length > 0
+					? options.license
+					: undefined,
 			pricing:
 				options.pricing && options.pricing.length > 0
 					? options.pricing
@@ -55,6 +67,20 @@ export class ToolsService implements ToolsServiceInterface {
 		options: ToolQueryOptions = {},
 	): Promise<ToolCollection> {
 		return this.repository.getByTag(tagId, options);
+	}
+
+	async getByStack(
+		stackId: string,
+		options: ToolQueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.repository.getByStack(stackId, options);
+	}
+
+	async getByAlternative(
+		alternativeId: string,
+		options: ToolQueryOptions = {},
+	): Promise<ToolCollection> {
+		return this.repository.getByAlternative(alternativeId, options);
 	}
 
 	async search(
