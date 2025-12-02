@@ -2,6 +2,7 @@ import type { TagType } from "@missingstack/db/schema/enums";
 import type { Tag } from "@missingstack/db/schema/tags";
 import type {
 	TagRepositoryInterface,
+	TagWithCount,
 	TagsServiceInterface,
 } from "./tags.types";
 
@@ -22,5 +23,9 @@ export class TagsService implements TagsServiceInterface {
 
 	async getByType(type: TagType): Promise<Tag[]> {
 		return this.repository.getByType(type);
+	}
+
+	async getAllWithCounts(): Promise<TagWithCount[]> {
+		return this.repository.getAllWithCounts();
 	}
 }

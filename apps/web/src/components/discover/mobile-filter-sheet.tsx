@@ -1,6 +1,6 @@
 "use client";
 
-import type { Category, Tag } from "@missingstack/api/types";
+import type { CategoryWithCount, Tag } from "@missingstack/api/types";
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -16,7 +16,7 @@ import {
 import { FilterSidebar } from "./filter-sidebar";
 
 interface MobileFilterSheetProps {
-	categories: Category[];
+	categories: CategoryWithCount[];
 	tags: Tag[];
 	pricingOptions: readonly string[];
 	platformOptions: readonly string[];

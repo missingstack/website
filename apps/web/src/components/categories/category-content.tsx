@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-	Category,
+	CategoryWithCount,
 	PricingModel,
 	Tag,
 	ToolData,
@@ -43,8 +43,8 @@ import {
 import { CategoryMobileFilterSheet } from "./category-mobile-filter-sheet";
 
 interface CategoryContentProps {
-	category: Category;
-	relatedCategories: Category[];
+	category: CategoryWithCount;
+	relatedCategories: CategoryWithCount[];
 	tags: Tag[];
 }
 

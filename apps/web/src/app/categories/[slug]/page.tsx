@@ -1,5 +1,5 @@
 import { services } from "@missingstack/api/context";
-import type { Category, Tag } from "@missingstack/api/types";
+import type { CategoryWithCount, Tag } from "@missingstack/api/types";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
@@ -76,7 +76,7 @@ async function CategoryPageContent({
 	tags,
 }: {
 	paramsPromise: Promise<{ slug: string }>;
-	allCategories: Category[];
+	allCategories: CategoryWithCount[];
 	tags: Tag[];
 }) {
 	const { slug } = await paramsPromise;

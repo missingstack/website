@@ -1,9 +1,10 @@
 import type { Database } from "@missingstack/db";
-import { asc, eq } from "@missingstack/db/drizzle-orm";
+import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import type { TagType } from "@missingstack/db/schema/enums";
 import { type Tag, tags } from "@missingstack/db/schema/tags";
+import { toolsTags } from "@missingstack/db/schema/tools-tags";
 
-import type { TagRepositoryInterface } from "./tags.types";
+import type { TagRepositoryInterface, TagWithCount } from "./tags.types";
 
 type QueryableDb = Pick<Database, "select">;
 
@@ -44,5 +45,31 @@ export class DrizzleTagRepository implements TagRepositoryInterface {
 			.orderBy(asc(tags.name));
 
 		return rows;
+	}
+
+	async getAllWithCounts(): Promise<TagWithCount[]> {
+		// Efficient COUNT query using LEFT JOIN with indexed junction table
+		const rows = await this.db
+			.select({
+				id: tags.id,
+				slug: tags.slug,
+				name: tags.name,
+				type: tags.type,
+				color: tags.color,
+				createdAt: tags.createdAt,
+				updatedAt: tags.updatedAt,
+				toolCount: sql<number>`COALESCE(${count(toolsTags.tagId)}, 0)`.as(
+					"toolCount",
+				),
+			})
+			.from(tags)
+			.leftJoin(toolsTags, eq(tags.id, toolsTags.tagId))
+			.groupBy(tags.id)
+			.orderBy(desc(sql`toolCount`), asc(tags.name));
+
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 }

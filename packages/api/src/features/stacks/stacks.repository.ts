@@ -1,7 +1,8 @@
 import type { Database } from "@missingstack/db";
-import { asc, desc, eq } from "@missingstack/db/drizzle-orm";
+import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import { type Stack, stacks } from "@missingstack/db/schema/stacks";
-import type { StackRepositoryInterface } from "./stacks.types";
+import { toolsStacks } from "@missingstack/db/schema/tools-stacks";
+import type { StackRepositoryInterface, StackWithCount } from "./stacks.types";
 
 export class DrizzleStackRepository implements StackRepositoryInterface {
 	constructor(private readonly db: Database) {}
@@ -35,22 +36,60 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 		return row ?? null;
 	}
 
-	async getAllWithCounts(): Promise<Stack[]> {
+	async getAllWithCounts(): Promise<StackWithCount[]> {
+		// Efficient COUNT query using LEFT JOIN with indexed junction table
 		const rows = await this.db
-			.select()
+			.select({
+				id: stacks.id,
+				slug: stacks.slug,
+				name: stacks.name,
+				description: stacks.description,
+				icon: stacks.icon,
+				parentId: stacks.parentId,
+				weight: stacks.weight,
+				createdAt: stacks.createdAt,
+				updatedAt: stacks.updatedAt,
+				toolCount: sql<number>`COALESCE(${count(toolsStacks.toolId)}, 0)`.as(
+					"toolCount",
+				),
+			})
 			.from(stacks)
-			.orderBy(desc(stacks.toolCount), asc(stacks.name));
+			.leftJoin(toolsStacks, eq(stacks.id, toolsStacks.stackId))
+			.groupBy(stacks.id)
+			.orderBy(desc(sql`toolCount`), asc(stacks.name));
 
-		return rows;
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 
-	async getTopStacks(limit = 10): Promise<Stack[]> {
+	async getTopStacks(limit = 10): Promise<StackWithCount[]> {
+		// Efficient COUNT query using LEFT JOIN with indexed junction table
 		const rows = await this.db
-			.select()
+			.select({
+				id: stacks.id,
+				slug: stacks.slug,
+				name: stacks.name,
+				description: stacks.description,
+				icon: stacks.icon,
+				parentId: stacks.parentId,
+				weight: stacks.weight,
+				createdAt: stacks.createdAt,
+				updatedAt: stacks.updatedAt,
+				toolCount: sql<number>`COALESCE(${count(toolsStacks.toolId)}, 0)`.as(
+					"toolCount",
+				),
+			})
 			.from(stacks)
-			.orderBy(desc(stacks.toolCount), asc(stacks.name))
+			.leftJoin(toolsStacks, eq(stacks.id, toolsStacks.stackId))
+			.groupBy(stacks.id)
+			.orderBy(desc(sql`toolCount`), asc(stacks.name))
 			.limit(limit);
 
-		return rows;
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 }

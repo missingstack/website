@@ -1,7 +1,11 @@
 import type { Database } from "@missingstack/db";
-import { asc, desc, eq } from "@missingstack/db/drizzle-orm";
+import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import { type Category, categories } from "@missingstack/db/schema/categories";
-import type { CategoryRepositoryInterface } from "./categories.types";
+import { toolsCategories } from "@missingstack/db/schema/tools-categories";
+import type {
+	CategoryRepositoryInterface,
+	CategoryWithCount,
+} from "./categories.types";
 
 export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 	constructor(private readonly db: Database) {}
@@ -35,22 +39,68 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 		return row ?? null;
 	}
 
-	async getAllWithCounts(): Promise<Category[]> {
+	async getAllWithCounts(): Promise<CategoryWithCount[]> {
+		// Efficient COUNT query using LEFT JOIN with indexed junction table
 		const rows = await this.db
-			.select()
+			.select({
+				id: categories.id,
+				slug: categories.slug,
+				name: categories.name,
+				description: categories.description,
+				icon: categories.icon,
+				parentId: categories.parentId,
+				weight: categories.weight,
+				createdAt: categories.createdAt,
+				updatedAt: categories.updatedAt,
+				toolCount:
+					sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`.as(
+						"toolCount",
+					),
+			})
 			.from(categories)
-			.orderBy(desc(categories.toolCount), asc(categories.name));
+			.leftJoin(toolsCategories, eq(categories.id, toolsCategories.categoryId))
+			.groupBy(categories.id)
+			.orderBy(
+				desc(sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`),
+				asc(categories.name),
+			);
 
-		return rows;
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 
-	async getTopCategories(limit = 10): Promise<Category[]> {
+	async getTopCategories(limit = 10): Promise<CategoryWithCount[]> {
+		// Efficient COUNT query using LEFT JOIN with indexed junction table
 		const rows = await this.db
-			.select()
+			.select({
+				id: categories.id,
+				slug: categories.slug,
+				name: categories.name,
+				description: categories.description,
+				icon: categories.icon,
+				parentId: categories.parentId,
+				weight: categories.weight,
+				createdAt: categories.createdAt,
+				updatedAt: categories.updatedAt,
+				toolCount:
+					sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`.as(
+						"toolCount",
+					),
+			})
 			.from(categories)
-			.orderBy(desc(categories.toolCount), asc(categories.name))
+			.leftJoin(toolsCategories, eq(categories.id, toolsCategories.categoryId))
+			.groupBy(categories.id)
+			.orderBy(
+				desc(sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`),
+				asc(categories.name),
+			)
 			.limit(limit);
 
-		return rows;
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 }

@@ -6,6 +6,7 @@ export type { Category } from "@missingstack/db/schema/categories";
 export type {
 	CategoriesServiceInterface,
 	CategoryRepositoryInterface,
+	CategoryWithCount,
 } from "./categories.types";
 
 export function createCategoriesRouter(app: Elysia) {

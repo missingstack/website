@@ -1,6 +1,6 @@
 "use client";
 
-import type { Category } from "@missingstack/api/types";
+import type { CategoryWithCount } from "@missingstack/api/types";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
@@ -9,9 +9,9 @@ import { CategoryNavigation } from "./category-navigation";
 import { GlobalSearch } from "./global-search";
 
 interface HeaderContentProps {
-	categories: Category[];
+	categories: CategoryWithCount[];
 	stats: { totalTools: number; totalCategories: number };
-	topCategories: Category[];
+	topCategories: CategoryWithCount[];
 }
 
 export function HeaderContent({

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Category, Tag } from "@missingstack/api/types";
+import type { CategoryWithCount, Tag } from "@missingstack/api/types";
 import { SlidersHorizontal } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { Button } from "~/components/ui/button";
@@ -12,7 +12,7 @@ import { searchParamsParsers } from "~/lib/search-params";
 import { cn } from "~/lib/utils";
 
 interface FilterSidebarProps {
-	categories: Category[];
+	categories: CategoryWithCount[];
 	tags: Tag[];
 	pricingOptions: readonly string[];
 	platformOptions: readonly string[];

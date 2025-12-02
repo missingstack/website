@@ -1,7 +1,7 @@
 "use client";
 
 import type {
-	Category,
+	CategoryWithCount,
 	PricingModel,
 	Tag,
 	ToolData,
@@ -29,7 +29,7 @@ import {
 } from "~/lib/search-params";
 
 interface DiscoverContentProps {
-	categories: Category[];
+	categories: CategoryWithCount[];
 	tags: Tag[];
 	categoryNames: Record<string, string>;
 	tagNames: Record<string, string>;

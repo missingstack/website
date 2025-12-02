@@ -23,6 +23,7 @@ export type { Tool } from "@missingstack/db/schema/tools";
 export type {
 	CategoriesServiceInterface,
 	CategoryRepositoryInterface,
+	CategoryWithCount,
 } from "../features/categories";
 export type {
 	Section,
@@ -31,6 +32,7 @@ export type {
 } from "../features/sections";
 export type {
 	StackRepositoryInterface,
+	StackWithCount,
 	StacksServiceInterface,
 } from "../features/stacks";
 export type {
@@ -40,6 +42,7 @@ export type {
 } from "../features/stats";
 export type {
 	TagRepositoryInterface,
+	TagWithCount,
 	TagsServiceInterface,
 } from "../features/tags";
 export type {

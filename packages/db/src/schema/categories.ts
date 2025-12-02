@@ -5,8 +5,8 @@
  * Supports hierarchical categories with parent-child relationships.
  *
  * Performance optimizations:
- * - Denormalized tool_count for O(1) count lookups
  * - Composite index for weight + name sorting
+ * - Tool counts computed via efficient COUNT queries with indexed junction tables
  */
 
 import { relations } from "drizzle-orm";
@@ -33,16 +33,12 @@ export const categories = pgTable(
 		icon: varchar("icon", { length: 100 }).notNull(), // Lucide icon name
 		parentId: uuid("parent_id").references((): AnyPgColumn => categories.id),
 		weight: integer("weight").default(0),
-		// Denormalized tool count - updated via trigger or application code
-		// Eliminates expensive COUNT subqueries on reads
-		toolCount: integer("tool_count").default(0).notNull(),
 		...timestampFields,
 	},
 	(table) => [
 		index("categories_slug_idx").on(table.slug),
 		index("categories_parent_idx").on(table.parentId),
 		index("categories_weight_name_idx").on(table.weight, table.name),
-		index("categories_tool_count_idx").on(table.toolCount),
 	],
 );
 

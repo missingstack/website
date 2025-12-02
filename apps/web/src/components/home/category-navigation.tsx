@@ -1,13 +1,13 @@
 "use client";
 
-import type { Category } from "@missingstack/api/types";
+import type { CategoryWithCount } from "@missingstack/api/types";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getIcon } from "~/lib/icons";
 
 interface CategoryNavigationProps {
-	categories: Category[];
+	categories: CategoryWithCount[];
 }
 
 export function CategoryNavigation({ categories }: CategoryNavigationProps) {

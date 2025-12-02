@@ -1,6 +1,6 @@
 "use client";
 
-import type { Category, ToolData } from "@missingstack/api/types";
+import type { CategoryWithCount, ToolData } from "@missingstack/api/types";
 import { ArrowRight, Search, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,8 +10,8 @@ import { Input } from "~/components/ui/input";
 import { getIcon } from "~/lib/icons";
 
 interface CategoriesContentProps {
-	categories: Category[];
-	categoryToolPreviews: { category: Category; tools: ToolData[] }[];
+	categories: CategoryWithCount[];
+	categoryToolPreviews: { category: CategoryWithCount; tools: ToolData[] }[];
 }
 
 export function CategoriesContent({

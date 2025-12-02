@@ -6,6 +6,7 @@ import { t } from "elysia";
 export type { Tag } from "@missingstack/db/schema/tags";
 export type {
 	TagRepositoryInterface,
+	TagWithCount,
 	TagsServiceInterface,
 } from "./tags.types";
 
@@ -53,6 +54,9 @@ export function createTagsRouter(app: Elysia) {
 				{
 					params: t.Object({ type: t.String() }),
 				},
-			),
+			)
+			.get("/with-counts", async () => {
+				return services.tagService.getAllWithCounts();
+			}),
 	);
 }
