@@ -3,6 +3,7 @@ import type {
 	CategoryCollection,
 	CategoryQueryOptions,
 	CreateCategoryInput,
+	UpdateCategoryInput,
 } from "./categories.schema";
 
 // Category with computed tool count
@@ -17,6 +18,7 @@ export interface CategoryRepositoryInterface {
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
+	update(id: string, input: UpdateCategoryInput): Promise<Category>;
 	delete(id: string): Promise<void>;
 }
 
@@ -27,5 +29,6 @@ export interface CategoriesServiceInterface {
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
+	update(id: string, input: UpdateCategoryInput): Promise<Category>;
 	delete(id: string): Promise<void>;
 }

@@ -28,6 +28,7 @@ import type {
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 	ToolWithAlternativeCountCollection,
+	UpdateToolInput,
 } from "./tools.types";
 
 type QueryableDb = Pick<
@@ -946,6 +947,234 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 				tagIds: input.tagIds,
 				stackIds: input.stackIds,
 				alternativeIds: input.alternativeIds,
+			};
+		});
+	}
+
+	async update(id: string, input: UpdateToolInput): Promise<ToolData> {
+		return this.db.transaction(async (tx) => {
+			// Update the tool
+			const updateData: Partial<typeof tools.$inferInsert> = {
+				...(input.slug && { slug: input.slug }),
+				...(input.name && { name: input.name }),
+				...(input.tagline && {
+					tagline: input.tagline || null,
+				}),
+				...(input.description && {
+					description: input.description,
+				}),
+				...(input.logo && { logo: input.logo }),
+				...(input.website && {
+					website: input.website || null,
+				}),
+				...(input.pricing && { pricing: input.pricing }),
+				...(input.license && {
+					license: input.license || null,
+				}),
+				...(input.featured && { featured: input.featured }),
+				...(input.affiliateUrl && {
+					affiliateUrl: input.affiliateUrl || null,
+				}),
+				...(input.sponsorshipPriority && {
+					sponsorshipPriority: input.sponsorshipPriority,
+				}),
+				...(input.isSponsored && {
+					isSponsored: input.isSponsored,
+				}),
+				...(input.monetizationEnabled && {
+					monetizationEnabled: input.monetizationEnabled,
+				}),
+			};
+
+			const [tool] = await tx
+				.update(tools)
+				.set(updateData)
+				.where(eq(tools.id, id))
+				.returning();
+
+			if (!tool) {
+				throw new Error("Failed to update tool");
+			}
+
+			// Update relations if provided - make it idempotent by comparing current vs new
+			if (input.categoryIds) {
+				// Get current relations
+				const currentCategoryIds = await tx
+					.select({ categoryId: toolsCategories.categoryId })
+					.from(toolsCategories)
+					.where(eq(toolsCategories.toolId, tool.id));
+
+				const currentSet = new Set(currentCategoryIds.map((c) => c.categoryId));
+				const newSet = new Set(input.categoryIds);
+
+				// Find IDs to remove (in current but not in new)
+				const toRemove = Array.from(currentSet).filter((id) => !newSet.has(id));
+				// Find IDs to add (in new but not in current)
+				const toAdd = Array.from(newSet).filter((id) => !currentSet.has(id));
+
+				// Only delete what needs to be removed
+				if (toRemove.length > 0) {
+					await tx
+						.delete(toolsCategories)
+						.where(
+							and(
+								eq(toolsCategories.toolId, tool.id),
+								inArray(toolsCategories.categoryId, toRemove),
+							),
+						);
+				}
+
+				// Only insert what needs to be added
+				if (toAdd.length > 0) {
+					await tx.insert(toolsCategories).values(
+						toAdd.map((categoryId) => ({
+							toolId: tool.id,
+							categoryId,
+						})),
+					);
+				}
+			}
+
+			if (input.stackIds) {
+				const currentStackIds = await tx
+					.select({ stackId: toolsStacks.stackId })
+					.from(toolsStacks)
+					.where(eq(toolsStacks.toolId, tool.id));
+
+				const currentSet = new Set(currentStackIds.map((s) => s.stackId));
+				const newSet = new Set(input.stackIds);
+
+				const toRemove = Array.from(currentSet).filter((id) => !newSet.has(id));
+				const toAdd = Array.from(newSet).filter((id) => !currentSet.has(id));
+
+				if (toRemove.length > 0) {
+					await tx
+						.delete(toolsStacks)
+						.where(
+							and(
+								eq(toolsStacks.toolId, tool.id),
+								inArray(toolsStacks.stackId, toRemove),
+							),
+						);
+				}
+
+				if (toAdd.length > 0) {
+					await tx.insert(toolsStacks).values(
+						toAdd.map((stackId) => ({
+							toolId: tool.id,
+							stackId,
+						})),
+					);
+				}
+			}
+
+			if (input.tagIds) {
+				const currentTagIds = await tx
+					.select({ tagId: toolsTags.tagId })
+					.from(toolsTags)
+					.where(eq(toolsTags.toolId, tool.id));
+
+				const currentSet = new Set(currentTagIds.map((t) => t.tagId));
+				const newSet = new Set(input.tagIds);
+
+				const toRemove = Array.from(currentSet).filter((id) => !newSet.has(id));
+				const toAdd = Array.from(newSet).filter((id) => !currentSet.has(id));
+
+				if (toRemove.length > 0) {
+					await tx
+						.delete(toolsTags)
+						.where(
+							and(
+								eq(toolsTags.toolId, tool.id),
+								inArray(toolsTags.tagId, toRemove),
+							),
+						);
+				}
+
+				if (toAdd.length > 0) {
+					await tx.insert(toolsTags).values(
+						toAdd.map((tagId) => ({
+							toolId: tool.id,
+							tagId,
+						})),
+					);
+				}
+			}
+
+			if (input.alternativeIds) {
+				const currentAlternativeIds = await tx
+					.select({
+						alternativeToolId: toolsAlternatives.alternativeToolId,
+					})
+					.from(toolsAlternatives)
+					.where(eq(toolsAlternatives.toolId, tool.id));
+
+				const currentSet = new Set(
+					currentAlternativeIds.map((a) => a.alternativeToolId),
+				);
+				const newSet = new Set(input.alternativeIds);
+
+				const toRemove = Array.from(currentSet).filter((id) => !newSet.has(id));
+				const toAdd = Array.from(newSet).filter((id) => !currentSet.has(id));
+
+				if (toRemove.length > 0) {
+					await tx
+						.delete(toolsAlternatives)
+						.where(
+							and(
+								eq(toolsAlternatives.toolId, tool.id),
+								inArray(toolsAlternatives.alternativeToolId, toRemove),
+							),
+						);
+				}
+
+				if (toAdd.length > 0) {
+					await tx.insert(toolsAlternatives).values(
+						toAdd.map((alternativeId) => ({
+							toolId: tool.id,
+							alternativeToolId: alternativeId,
+						})),
+					);
+				}
+			}
+
+			// Update search vector
+			await tx.execute(
+				sql`UPDATE tools SET search_vector = 
+					to_tsvector('english', coalesce(name, '') || ' ' || coalesce(tagline, '') || ' ' || coalesce(description, ''))
+					WHERE id = ${tool.id}`,
+			);
+
+			// Return tool with relations
+			const [categoryIds, tagIds, stackIds, alternativeIds] = await Promise.all(
+				[
+					tx
+						.select({ categoryId: toolsCategories.categoryId })
+						.from(toolsCategories)
+						.where(eq(toolsCategories.toolId, tool.id)),
+					tx
+						.select({ tagId: toolsTags.tagId })
+						.from(toolsTags)
+						.where(eq(toolsTags.toolId, tool.id)),
+					tx
+						.select({ stackId: toolsStacks.stackId })
+						.from(toolsStacks)
+						.where(eq(toolsStacks.toolId, tool.id)),
+					tx
+						.select({
+							alternativeToolId: toolsAlternatives.alternativeToolId,
+						})
+						.from(toolsAlternatives)
+						.where(eq(toolsAlternatives.toolId, tool.id)),
+				],
+			);
+
+			return {
+				...tool,
+				categoryIds: categoryIds.map((c) => c.categoryId),
+				tagIds: tagIds.map((t) => t.tagId),
+				stackIds: stackIds.map((s) => s.stackId),
+				alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
 			};
 		});
 	}

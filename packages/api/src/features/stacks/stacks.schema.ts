@@ -13,3 +13,8 @@ export const createStackSchema = z
 	.strict();
 
 export type CreateStackInput = z.infer<typeof createStackSchema>;
+
+// Update stack request schema (same as create, all fields optional)
+export const updateStackSchema = createStackSchema.partial();
+
+export type UpdateStackInput = z.infer<typeof updateStackSchema>;

@@ -21,6 +21,7 @@ import {
 import { useQueryState, useQueryStates } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { EditCategoryForm } from "~/components/admin/edit-category-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -53,6 +54,10 @@ export function CategoriesTable() {
 		id: string;
 		name: string;
 	} | null>(null);
+	const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+		null,
+	);
+	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
 	const [search, setSearch] = useQueryState("search", {
 		...adminSearchParamsParsersClient.search,
@@ -198,6 +203,18 @@ export function CategoriesTable() {
 		}
 	};
 
+	const handleRowClick = (categoryId: string) => {
+		setSelectedCategoryId(categoryId);
+		setIsEditDrawerOpen(true);
+	};
+
+	const handleEditDrawerClose = (open: boolean) => {
+		setIsEditDrawerOpen(open);
+		if (!open) {
+			setSelectedCategoryId(null);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -296,7 +313,11 @@ export function CategoriesTable() {
 						{!isLoading &&
 							!isError &&
 							allCategories.map((category) => (
-								<TableRow key={category.id}>
+								<TableRow
+									key={category.id}
+									onClick={() => handleRowClick(category.id)}
+									className="cursor-pointer"
+								>
 									<TableCell className="font-medium">{category.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
 										{category.slug}
@@ -311,7 +332,7 @@ export function CategoriesTable() {
 									<TableCell className="font-mono text-muted-foreground text-xs">
 										{category.icon}
 									</TableCell>
-									<TableCell>
+									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
@@ -392,6 +413,12 @@ export function CategoriesTable() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<EditCategoryForm
+				categoryId={selectedCategoryId}
+				open={isEditDrawerOpen}
+				onOpenChange={handleEditDrawerClose}
+			/>
 		</div>
 	);
 }

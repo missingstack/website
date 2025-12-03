@@ -2,7 +2,7 @@ import type { Database } from "@missingstack/db";
 import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import { type Stack, stacks } from "@missingstack/db/schema/stacks";
 import { toolsStacks } from "@missingstack/db/schema/tools-stacks";
-import type { CreateStackInput } from "./stacks.schema";
+import type { CreateStackInput, UpdateStackInput } from "./stacks.schema";
 import type { StackRepositoryInterface, StackWithCount } from "./stacks.types";
 
 export class DrizzleStackRepository implements StackRepositoryInterface {
@@ -109,6 +109,33 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 
 		if (!stack) {
 			throw new Error("Failed to create stack");
+		}
+
+		return stack;
+	}
+
+	async update(id: string, input: UpdateStackInput): Promise<Stack> {
+		const updateData: Partial<typeof stacks.$inferInsert> = {
+			...(input.slug && { slug: input.slug }),
+			...(input.name && { name: input.name }),
+			...(input.description && {
+				description: input.description || null,
+			}),
+			...(input.icon && { icon: input.icon || null }),
+			...(input.parentId && {
+				parentId: input.parentId || null,
+			}),
+			...(input.weight && { weight: input.weight }),
+		};
+
+		const [stack] = await this.db
+			.update(stacks)
+			.set(updateData)
+			.where(eq(stacks.id, id))
+			.returning();
+
+		if (!stack) {
+			throw new Error("Failed to update stack");
 		}
 
 		return stack;

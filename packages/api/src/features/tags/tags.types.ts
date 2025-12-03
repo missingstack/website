@@ -1,6 +1,6 @@
 import type { TagType } from "@missingstack/db/schema/enums";
 import type { Tag } from "@missingstack/db/schema/tags";
-import type { CreateTagInput } from "./tags.schema";
+import type { CreateTagInput, UpdateTagInput } from "./tags.schema";
 
 // Tag with computed tool count
 export type TagWithCount = Tag & {
@@ -14,6 +14,7 @@ export interface TagRepositoryInterface {
 	getByType(type: TagType): Promise<Tag[]>;
 	getAllWithCounts(): Promise<TagWithCount[]>;
 	create(input: CreateTagInput): Promise<Tag>;
+	update(id: string, input: UpdateTagInput): Promise<Tag>;
 	delete(id: string): Promise<void>;
 }
 
@@ -24,5 +25,6 @@ export interface TagsServiceInterface {
 	getByType(type: TagType): Promise<Tag[]>;
 	getAllWithCounts(): Promise<TagWithCount[]>;
 	create(input: CreateTagInput): Promise<Tag>;
+	update(id: string, input: UpdateTagInput): Promise<Tag>;
 	delete(id: string): Promise<void>;
 }

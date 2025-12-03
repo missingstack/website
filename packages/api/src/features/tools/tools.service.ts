@@ -1,6 +1,6 @@
 import type { Tool } from "@missingstack/api/types";
+import type { CreateToolInput, UpdateToolInput } from "./tools.schema";
 import type {
-	CreateToolInput,
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
@@ -164,6 +164,10 @@ export class ToolsService implements ToolsServiceInterface {
 
 	async create(input: CreateToolInput): Promise<ToolData> {
 		return this.repository.create(input);
+	}
+
+	async update(id: string, input: UpdateToolInput): Promise<ToolData> {
+		return this.repository.update(id, input);
 	}
 
 	async delete(id: string): Promise<void> {

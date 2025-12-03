@@ -8,6 +8,7 @@ import {
 	type ToolQueryOptions,
 	createToolSchema,
 	toolQueryOptionsSchema,
+	updateToolSchema,
 } from "./tools.schema";
 
 export type {
@@ -218,6 +219,40 @@ export function createToolsRouter(app: Elysia) {
 				},
 				{
 					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			)
+			.put(
+				"/:id",
+				async ({ params: { id }, body }) => {
+					const result = updateToolSchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid tool data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.toolService.update(id, result.data);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+					body: t.Object({
+						slug: t.Optional(t.String()),
+						name: t.Optional(t.String()),
+						tagline: t.Optional(t.String()),
+						description: t.Optional(t.String()),
+						logo: t.Optional(t.String()),
+						website: t.Optional(t.String()),
+						pricing: t.Optional(t.String()),
+						license: t.Optional(t.String()),
+						featured: t.Optional(t.Boolean()),
+						affiliateUrl: t.Optional(t.String()),
+						sponsorshipPriority: t.Optional(t.Number()),
+						isSponsored: t.Optional(t.Boolean()),
+						monetizationEnabled: t.Optional(t.Boolean()),
+						categoryIds: t.Optional(t.Array(t.String())),
+						stackIds: t.Optional(t.Array(t.String())),
+						tagIds: t.Optional(t.Array(t.String())),
+						alternativeIds: t.Optional(t.Array(t.String())),
+					}),
 				},
 			)
 			.delete(

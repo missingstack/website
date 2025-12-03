@@ -32,3 +32,12 @@ export const createCategorySchema = z
 	.strict();
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
+
+// Update category request schema (same as create, all fields optional except id)
+export const updateCategorySchema = createCategorySchema.partial().extend({
+	slug: z.string().min(1).max(120).optional(),
+	name: z.string().min(1).max(160).optional(),
+	icon: z.string().min(1).max(100).optional(),
+});
+
+export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;

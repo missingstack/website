@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { EditStackForm } from "~/components/admin/edit-stack-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -43,6 +44,8 @@ export function StacksTable() {
 		id: string;
 		name: string;
 	} | null>(null);
+	const [selectedStackId, setSelectedStackId] = useState<string | null>(null);
+	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: string) => {
@@ -154,6 +157,18 @@ export function StacksTable() {
 		}
 	};
 
+	const handleRowClick = (stackId: string) => {
+		setSelectedStackId(stackId);
+		setIsEditDrawerOpen(true);
+	};
+
+	const handleEditDrawerClose = (open: boolean) => {
+		setIsEditDrawerOpen(open);
+		if (!open) {
+			setSelectedStackId(null);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -252,7 +267,11 @@ export function StacksTable() {
 						{!isLoading &&
 							!isError &&
 							filteredAndSortedStacks.map((stack) => (
-								<TableRow key={stack.id}>
+								<TableRow
+									key={stack.id}
+									onClick={() => handleRowClick(stack.id)}
+									className="cursor-pointer"
+								>
 									<TableCell className="font-medium">{stack.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
 										{stack.slug}
@@ -267,7 +286,7 @@ export function StacksTable() {
 									<TableCell className="font-mono text-muted-foreground text-xs">
 										{stack.icon || "-"}
 									</TableCell>
-									<TableCell>
+									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
@@ -322,6 +341,12 @@ export function StacksTable() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<EditStackForm
+				stackId={selectedStackId}
+				open={isEditDrawerOpen}
+				onOpenChange={handleEditDrawerClose}
+			/>
 		</div>
 	);
 }

@@ -3,10 +3,10 @@ import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import type { TagType } from "@missingstack/db/schema/enums";
 import { type Tag, tags } from "@missingstack/db/schema/tags";
 import { toolsTags } from "@missingstack/db/schema/tools-tags";
-import type { CreateTagInput } from "./tags.schema";
+import type { CreateTagInput, UpdateTagInput } from "./tags.schema";
 import type { TagRepositoryInterface, TagWithCount } from "./tags.types";
 
-type QueryableDb = Pick<Database, "select" | "insert" | "delete">;
+type QueryableDb = Pick<Database, "select" | "insert" | "update" | "delete">;
 
 export class DrizzleTagRepository implements TagRepositoryInterface {
 	constructor(private readonly db: QueryableDb) {}
@@ -86,6 +86,27 @@ export class DrizzleTagRepository implements TagRepositoryInterface {
 
 		if (!tag) {
 			throw new Error("Failed to create tag");
+		}
+
+		return tag;
+	}
+
+	async update(id: string, input: UpdateTagInput): Promise<Tag> {
+		const updateData: Partial<typeof tags.$inferInsert> = {
+			...(input.slug && { slug: input.slug }),
+			...(input.name && { name: input.name }),
+			...(input.type && { type: input.type }),
+			...(input.color && { color: input.color }),
+		};
+
+		const [tag] = await this.db
+			.update(tags)
+			.set(updateData)
+			.where(eq(tags.id, id))
+			.returning();
+
+		if (!tag) {
+			throw new Error("Failed to update tag");
 		}
 
 		return tag;

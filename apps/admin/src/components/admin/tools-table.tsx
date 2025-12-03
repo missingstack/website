@@ -18,6 +18,7 @@ import {
 import { useQueryState, useQueryStates } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { EditToolForm } from "~/components/admin/edit-tool-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -50,6 +51,8 @@ export function ToolsTable() {
 		id: string;
 		name: string;
 	} | null>(null);
+	const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
+	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
 	const [search, setSearch] = useQueryState("search", {
 		...adminToolsSearchParamsParsersClient.search,
@@ -233,6 +236,18 @@ export function ToolsTable() {
 		}
 	};
 
+	const handleRowClick = (toolId: string) => {
+		setSelectedToolId(toolId);
+		setIsEditDrawerOpen(true);
+	};
+
+	const handleEditDrawerClose = (open: boolean) => {
+		setIsEditDrawerOpen(open);
+		if (!open) {
+			setSelectedToolId(null);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -325,7 +340,11 @@ export function ToolsTable() {
 						{!isLoading &&
 							!isError &&
 							allTools.map((tool) => (
-								<TableRow key={tool.id}>
+								<TableRow
+									key={tool.id}
+									onClick={() => handleRowClick(tool.id)}
+									className="cursor-pointer"
+								>
 									<TableCell className="font-medium">{tool.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
 										{tool.slug}
@@ -353,7 +372,7 @@ export function ToolsTable() {
 									<TableCell className="text-muted-foreground text-sm">
 										{tool.featured ? "Yes" : "No"}
 									</TableCell>
-									<TableCell>
+									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
@@ -427,6 +446,12 @@ export function ToolsTable() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<EditToolForm
+				toolId={selectedToolId}
+				open={isEditDrawerOpen}
+				onOpenChange={handleEditDrawerClose}
+			/>
 		</div>
 	);
 }

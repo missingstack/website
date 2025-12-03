@@ -6,6 +6,7 @@ import type {
 	ToolData,
 	ToolQueryOptions,
 	ToolWithAlternativeCountCollection,
+	UpdateToolInput,
 } from "./tools.schema";
 
 export type {
@@ -40,10 +41,11 @@ export interface ToolRepositoryInterface {
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
 	create(input: CreateToolInput): Promise<ToolData>;
+	update(id: string, input: UpdateToolInput): Promise<ToolData>;
 	delete(id: string): Promise<void>;
 }
 
-export type { CreateToolInput } from "./tools.schema";
+export type { CreateToolInput, UpdateToolInput } from "./tools.schema";
 
 export interface ToolsServiceInterface {
 	getAll(options?: ToolQueryOptions): Promise<ToolCollection>;
@@ -70,5 +72,6 @@ export interface ToolsServiceInterface {
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
 	create(input: CreateToolInput): Promise<ToolData>;
+	update(id: string, input: UpdateToolInput): Promise<ToolData>;
 	delete(id: string): Promise<void>;
 }

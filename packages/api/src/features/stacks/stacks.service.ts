@@ -1,5 +1,5 @@
 import type { Stack } from "@missingstack/db/schema/stacks";
-import type { CreateStackInput } from "./stacks.schema";
+import type { CreateStackInput, UpdateStackInput } from "./stacks.schema";
 import type {
 	StackRepositoryInterface,
 	StackWithCount,
@@ -31,6 +31,10 @@ export class StacksService implements StacksServiceInterface {
 
 	async create(input: CreateStackInput): Promise<Stack> {
 		return this.repository.create(input);
+	}
+
+	async update(id: string, input: UpdateStackInput): Promise<Stack> {
+		return this.repository.update(id, input);
 	}
 
 	async delete(id: string): Promise<void> {

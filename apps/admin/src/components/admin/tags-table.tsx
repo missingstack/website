@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { EditTagForm } from "~/components/admin/edit-tag-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -43,6 +44,8 @@ export function TagsTable() {
 		id: string;
 		name: string;
 	} | null>(null);
+	const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: string) => {
@@ -148,6 +151,18 @@ export function TagsTable() {
 		}
 	};
 
+	const handleRowClick = (tagId: string) => {
+		setSelectedTagId(tagId);
+		setIsEditDrawerOpen(true);
+	};
+
+	const handleEditDrawerClose = (open: boolean) => {
+		setIsEditDrawerOpen(open);
+		if (!open) {
+			setSelectedTagId(null);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -240,7 +255,11 @@ export function TagsTable() {
 						{!isLoading &&
 							!isError &&
 							filteredAndSortedTags.map((tag) => (
-								<TableRow key={tag.id}>
+								<TableRow
+									key={tag.id}
+									onClick={() => handleRowClick(tag.id)}
+									className="cursor-pointer"
+								>
 									<TableCell className="font-medium">{tag.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
 										{tag.slug}
@@ -254,7 +273,7 @@ export function TagsTable() {
 									<TableCell className="text-muted-foreground text-sm">
 										{new Date(tag.createdAt).toLocaleDateString()}
 									</TableCell>
-									<TableCell>
+									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
@@ -309,6 +328,12 @@ export function TagsTable() {
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
+
+			<EditTagForm
+				tagId={selectedTagId}
+				open={isEditDrawerOpen}
+				onOpenChange={handleEditDrawerClose}
+			/>
 		</div>
 	);
 }

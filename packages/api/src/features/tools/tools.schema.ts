@@ -71,3 +71,14 @@ export const createToolSchema = z
 	.strict();
 
 export type CreateToolInput = z.infer<typeof createToolSchema>;
+
+// Update tool request schema (same as create, all fields optional)
+export const updateToolSchema = createToolSchema.partial().extend({
+	slug: z.string().min(1).max(120).optional(),
+	name: z.string().min(1).max(160).optional(),
+	description: z.string().min(1).optional(),
+	logo: z.string().min(1).max(256).optional(),
+	pricing: z.enum(pricingEnumValues).optional(),
+});
+
+export type UpdateToolInput = z.infer<typeof updateToolSchema>;

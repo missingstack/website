@@ -3,6 +3,7 @@ import type {
 	CategoryCollection,
 	CategoryQueryOptions,
 	CreateCategoryInput,
+	UpdateCategoryInput,
 } from "./categories.schema";
 import type {
 	CategoriesServiceInterface,
@@ -39,6 +40,10 @@ export class CategoriesService implements CategoriesServiceInterface {
 
 	async create(input: CreateCategoryInput): Promise<Category> {
 		return this.repository.create(input);
+	}
+
+	async update(id: string, input: UpdateCategoryInput): Promise<Category> {
+		return this.repository.update(id, input);
 	}
 
 	async delete(id: string): Promise<void> {

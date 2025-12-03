@@ -18,6 +18,7 @@ import type {
 	CategoryCollection,
 	CategoryQueryOptions,
 	CreateCategoryInput,
+	UpdateCategoryInput,
 } from "./categories.schema";
 import type {
 	CategoryRepositoryInterface,
@@ -26,7 +27,7 @@ import type {
 
 type QueryableDb = Pick<
 	Database,
-	"select" | "transaction" | "insert" | "delete"
+	"select" | "transaction" | "insert" | "update" | "delete"
 >;
 type CursorState = {
 	id: string;
@@ -423,6 +424,33 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 
 		if (!category) {
 			throw new Error("Failed to create category");
+		}
+
+		return category;
+	}
+
+	async update(id: string, input: UpdateCategoryInput): Promise<Category> {
+		const updateData: Partial<typeof categories.$inferInsert> = {
+			...(input.slug && { slug: input.slug }),
+			...(input.name && { name: input.name }),
+			...(input.description && {
+				description: input.description || null,
+			}),
+			...(input.icon && { icon: input.icon }),
+			...(input.parentId && {
+				parentId: input.parentId || null,
+			}),
+			...(input.weight && { weight: input.weight }),
+		};
+
+		const [category] = await this.db
+			.update(categories)
+			.set(updateData)
+			.where(eq(categories.id, id))
+			.returning();
+
+		if (!category) {
+			throw new Error("Failed to update category");
 		}
 
 		return category;

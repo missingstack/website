@@ -15,3 +15,8 @@ export const createTagSchema = z
 	.strict();
 
 export type CreateTagInput = z.infer<typeof createTagSchema>;
+
+// Update tag request schema (same as create, all fields optional)
+export const updateTagSchema = createTagSchema.partial();
+
+export type UpdateTagInput = z.infer<typeof updateTagSchema>;

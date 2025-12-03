@@ -10,7 +10,7 @@ export type {
 	TagsServiceInterface,
 } from "./tags.types";
 
-import { createTagSchema } from "./tags.schema";
+import { createTagSchema, updateTagSchema } from "./tags.schema";
 
 const tagTypeEnumValues = tagTypeEnum.enumValues;
 
@@ -80,6 +80,27 @@ export function createTagsRouter(app: Elysia) {
 			.get("/with-counts", async () => {
 				return services.tagService.getAllWithCounts();
 			})
+			.put(
+				"/:id",
+				async ({ params: { id }, body }) => {
+					const result = updateTagSchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid tag data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.tagService.update(id, result.data);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+					body: t.Object({
+						slug: t.Optional(t.String()),
+						name: t.Optional(t.String()),
+						type: t.Optional(t.String()),
+						color: t.Optional(t.String()),
+					}),
+				},
+			)
 			.delete(
 				"/:id",
 				async ({ params: { id } }) => {

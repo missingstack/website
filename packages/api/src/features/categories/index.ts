@@ -5,6 +5,7 @@ import {
 	type CategoryQueryOptions,
 	categoryQueryOptionsSchema,
 	createCategorySchema,
+	updateCategorySchema,
 } from "./categories.schema";
 
 export type { Category } from "@missingstack/db/schema/categories";
@@ -122,6 +123,29 @@ export function createCategoriesRouter(app: Elysia) {
 				},
 				{
 					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
+				},
+			)
+			.put(
+				"/:id",
+				async ({ params: { id }, body }) => {
+					const result = updateCategorySchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid category data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.categoryService.update(id, result.data);
+				},
+				{
+					params: t.Object({ id: t.String() }),
+					body: t.Object({
+						slug: t.Optional(t.String()),
+						name: t.Optional(t.String()),
+						description: t.Optional(t.String()),
+						icon: t.Optional(t.String()),
+						parentId: t.Optional(t.String()),
+						weight: t.Optional(t.Number()),
+					}),
 				},
 			)
 			.delete(
