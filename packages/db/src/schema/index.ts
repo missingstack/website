@@ -6,6 +6,7 @@
  */
 
 export * from "./categories";
+export * from "./categories-stacks";
 export * from "./enums";
 export * from "./stacks";
 export * from "./tags";
@@ -18,6 +19,10 @@ export * from "./tools-stacks";
 export * from "./tools-tags";
 
 import { categories, categoriesRelations } from "./categories";
+import {
+	categoriesStacks,
+	categoriesStacksRelations,
+} from "./categories-stacks";
 import {
 	badgeVariantEnum,
 	iconColorEnum,
@@ -69,6 +74,7 @@ export const schema = {
 	stacks,
 	tags,
 	tools,
+	categoriesStacks,
 	toolsCategories,
 	toolsTags,
 	toolsStacks,
@@ -81,6 +87,7 @@ export const schema = {
 	stacksRelations,
 	tagsRelations,
 	toolsRelations,
+	categoriesStacksRelations,
 	toolsCategoriesRelations,
 	toolsTagsRelations,
 	toolsStacksRelations,

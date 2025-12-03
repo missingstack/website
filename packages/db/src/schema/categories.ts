@@ -20,6 +20,7 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 import { timestampFields, uuidPrimaryKey } from "./base";
+import { categoriesStacks } from "./categories-stacks";
 import { toolsCategories } from "./tools-categories";
 
 // Categories table
@@ -56,6 +57,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
 		relationName: "parentCategory",
 	}),
 	tools: many(toolsCategories),
+	stacks: many(categoriesStacks),
 }));
 
 export type Category = typeof categories.$inferSelect;
