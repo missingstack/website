@@ -1,4 +1,8 @@
 import {
+	PLATFORM_OPTIONS,
+	PRICING_OPTIONS,
+} from "@missingstack/api/constants/enums";
+import {
 	createSearchParamsCache,
 	parseAsArrayOf,
 	parseAsString,
@@ -22,25 +26,8 @@ export const searchParamsParsers = {
 // Create a cache for server components
 export const searchParamsCache = createSearchParamsCache(searchParamsParsers);
 
-// Pricing options
-export const PRICING_OPTIONS = [
-	"Free",
-	"Freemium",
-	"Paid",
-	"Open Source",
-	"Enterprise",
-] as const;
-
-// Platform options
-export const PLATFORM_OPTIONS = [
-	"Web",
-	"Mac",
-	"Windows",
-	"Linux",
-	"iOS",
-	"Android",
-	"API",
-] as const;
+// Re-export enum options from API package
+export { PLATFORM_OPTIONS, PRICING_OPTIONS };
 
 // Sort options with labels
 export const SORT_OPTIONS = [

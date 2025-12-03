@@ -1,6 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	LICENSE_OPTIONS,
+	PRICING_OPTIONS,
+} from "@missingstack/api/constants/enums";
 import type { ToolData } from "@missingstack/api/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -38,31 +42,10 @@ import {
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { api } from "~/lib/eden";
+import { formatPricingDisplay } from "~/lib/utils";
 
-// Pricing enum values
-const pricingOptions = [
-	"Free",
-	"Freemium",
-	"Paid",
-	"Open Source",
-	"Enterprise",
-] as const;
-
-// License enum values
-const licenseOptions = [
-	"agpl-3",
-	"mit",
-	"apache-2",
-	"gpl-3",
-	"mpl-2",
-	"bsd-3-clause",
-	"gpl-2",
-	"lgpl-2-1",
-	"bsd-2-clause",
-	"epl-2",
-	"isc",
-	"lgpl-3",
-] as const;
+const pricingOptions = PRICING_OPTIONS;
+const licenseOptions = LICENSE_OPTIONS;
 
 // Form schema
 const toolFormSchema = z.object({
@@ -89,8 +72,8 @@ const toolFormSchema = z.object({
 		.max(256, "Website URL must be 256 characters or less")
 		.optional()
 		.or(z.literal("")),
-	pricing: z.enum(pricingOptions),
-	license: z.enum(licenseOptions).optional(),
+	pricing: z.enum(pricingOptions as [string, ...string[]]),
+	license: z.enum(licenseOptions as [string, ...string[]]).optional(),
 	featured: z.boolean(),
 	affiliateUrl: z
 		.string()
@@ -189,7 +172,7 @@ export function EditToolForm({
 			description: "",
 			logo: "",
 			website: "",
-			pricing: "Free",
+			pricing: "free",
 			license: undefined,
 			featured: false,
 			affiliateUrl: "",
@@ -203,9 +186,34 @@ export function EditToolForm({
 		},
 	});
 
+	// Reset form when drawer closes or toolId changes
+	useEffect(() => {
+		if (!open) {
+			form.reset({
+				slug: "",
+				name: "",
+				tagline: "",
+				description: "",
+				logo: "",
+				website: "",
+				pricing: "free",
+				license: undefined,
+				featured: false,
+				affiliateUrl: "",
+				sponsorshipPriority: 0,
+				isSponsored: false,
+				monetizationEnabled: false,
+				categoryIds: [],
+				stackIds: [],
+				tagIds: [],
+				alternativeIds: [],
+			});
+		}
+	}, [open, form]);
+
 	// Update form when tool data is loaded
 	useEffect(() => {
-		if (toolData) {
+		if (toolData && open) {
 			form.reset({
 				slug: toolData.slug,
 				name: toolData.name,
@@ -213,8 +221,8 @@ export function EditToolForm({
 				description: toolData.description,
 				logo: toolData.logo,
 				website: toolData.website || "",
-				pricing: toolData.pricing,
-				license: toolData.license || undefined,
+				pricing: toolData.pricing as ToolFormValues["pricing"],
+				license: toolData.license as ToolFormValues["license"],
 				featured: toolData.featured ?? false,
 				affiliateUrl: toolData.affiliateUrl || "",
 				sponsorshipPriority: toolData.sponsorshipPriority ?? 0,
@@ -226,7 +234,7 @@ export function EditToolForm({
 				alternativeIds: toolData.alternativeIds || [],
 			});
 		}
-	}, [toolData, form]);
+	}, [toolData, open, form]);
 
 	const onSubmit = async (data: ToolFormValues) => {
 		if (!toolId) return;
@@ -398,13 +406,15 @@ export function EditToolForm({
 											<Field>
 												<FieldLabel htmlFor="pricing">Pricing *</FieldLabel>
 												<Select
+													key={`pricing-${toolId}-${form.watch("pricing")}`}
 													value={form.watch("pricing")}
-													onValueChange={(value) =>
+													onValueChange={(value) => {
 														form.setValue(
 															"pricing",
 															value as ToolFormValues["pricing"],
-														)
-													}
+															{ shouldValidate: true },
+														);
+													}}
 												>
 													<SelectTrigger id="pricing">
 														<SelectValue placeholder="Select pricing" />
@@ -412,7 +422,7 @@ export function EditToolForm({
 													<SelectContent>
 														{pricingOptions.map((option) => (
 															<SelectItem key={option} value={option}>
-																{option}
+																{formatPricingDisplay(option)}
 															</SelectItem>
 														))}
 													</SelectContent>
@@ -423,13 +433,15 @@ export function EditToolForm({
 											<Field>
 												<FieldLabel htmlFor="license">License</FieldLabel>
 												<Select
-													value={form.watch("license") ?? undefined}
-													onValueChange={(value) =>
+													key={`license-${toolId}-${form.watch("license")}`}
+													value={form.watch("license")}
+													onValueChange={(value) => {
 														form.setValue(
 															"license",
 															value as ToolFormValues["license"],
-														)
-													}
+															{ shouldValidate: true },
+														);
+													}}
 												>
 													<SelectTrigger id="license">
 														<SelectValue placeholder="Select license (optional)" />

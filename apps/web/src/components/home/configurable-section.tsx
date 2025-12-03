@@ -24,6 +24,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
+import { formatPricingDisplay } from "~/lib/utils";
 
 // IconColor type - matches the enum from @missingstack/db/schema/enums
 type IconColor =
@@ -179,8 +180,8 @@ export function ConfigurableSection({
 										{"isSponsored" in tool && tool.isSponsored && (
 											<Badge variant="gold">Sponsored</Badge>
 										)}
-										<Badge variant={tool.pricing === "Free" ? "green" : "blue"}>
-											{tool.pricing}
+										<Badge variant={tool.pricing === "free" ? "green" : "blue"}>
+											{formatPricingDisplay(tool.pricing)}
 										</Badge>
 									</div>
 									<div className="flex translate-x-2 transform items-center gap-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
@@ -239,10 +240,10 @@ export function ConfigurableSection({
 											</Badge>
 										)}
 										<Badge
-											variant={tool.pricing === "Free" ? "green" : "blue"}
+											variant={tool.pricing === "free" ? "green" : "blue"}
 											className="text-xs"
 										>
-											{tool.pricing}
+											{formatPricingDisplay(tool.pricing)}
 										</Badge>
 									</div>
 									<div className="flex translate-x-2 transform items-center gap-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">

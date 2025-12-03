@@ -6,6 +6,7 @@ import { useQueryStates } from "nuqs";
 import { Button } from "~/components/ui/button";
 import { Toggle } from "~/components/ui/toggle";
 import { PRICING_OPTIONS, searchParamsParsers } from "~/lib/search-params";
+import { formatPricingDisplay } from "~/lib/utils";
 
 interface CategoryFilterSidebarProps {
 	tags: Tag[];
@@ -81,7 +82,7 @@ export function CategoryFilterSidebar({
 					Pricing
 				</h4>
 				<div className="flex flex-wrap gap-2">
-					{PRICING_OPTIONS.map((pricing) => {
+					{PRICING_OPTIONS.map((pricing: (typeof PRICING_OPTIONS)[number]) => {
 						const isSelected = filters.pricing.includes(pricing);
 						return (
 							<Toggle
@@ -92,7 +93,7 @@ export function CategoryFilterSidebar({
 								variant="outline"
 								className="rounded-full px-3 text-xs data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
 							>
-								{pricing}
+								{formatPricingDisplay(pricing)}
 							</Toggle>
 						);
 					})}

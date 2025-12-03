@@ -9,23 +9,23 @@ import { pgEnum } from "drizzle-orm/pg-core";
 
 // Platform enum - supported platforms for tools
 export const platformEnum = pgEnum("platform", [
-	"Web",
-	"Mac",
-	"Windows",
-	"Linux",
-	"iOS",
-	"Android",
-	"Extension",
-	"API",
+	"web",
+	"mac",
+	"windows",
+	"linux",
+	"ios",
+	"android",
+	"extension",
+	"api",
 ]);
 
 // Pricing model enum
 export const pricingEnum = pgEnum("pricing_model", [
-	"Free",
-	"Freemium",
-	"Paid",
-	"Open Source",
-	"Enterprise",
+	"free",
+	"freemium",
+	"paid",
+	"open-source",
+	"enterprise",
 ]);
 
 // Tag type enum - categorizes different kinds of tags

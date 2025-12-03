@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { Badge } from "~/components/ui/badge";
 import { searchParamsParsers } from "~/lib/search-params";
+import { formatPlatformDisplay, formatPricingDisplay } from "~/lib/utils";
 
 interface ActiveFiltersProps {
 	categoryNames: Record<string, string>;
@@ -74,20 +75,22 @@ export function ActiveFilters({ categoryNames, tagNames }: ActiveFiltersProps) {
 			))}
 			{filters.pricing.map((p) => (
 				<Badge key={p} variant="secondary" className="gap-1 pr-1">
-					{p}
+					{formatPricingDisplay(p)}
 					<button
 						type="button"
 						onClick={() => removeFilter("pricing", p)}
 						className="ml-1 rounded-full p-0.5 hover:bg-muted"
 					>
 						<X className="h-3 w-3" />
-						<span className="sr-only">Remove {p} filter</span>
+						<span className="sr-only">
+							Remove {formatPricingDisplay(p)} filter
+						</span>
 					</button>
 				</Badge>
 			))}
 			{filters.platforms.map((p) => (
 				<Badge key={p} variant="secondary" className="gap-1 pr-1">
-					{p}
+					{formatPlatformDisplay(p)}
 					<button
 						type="button"
 						onClick={() => removeFilter("platforms", p)}

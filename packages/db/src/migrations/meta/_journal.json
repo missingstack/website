@@ -43,6 +43,13 @@
 			"when": 1764738983898,
 			"tag": "0005_groovy_cassandra_nova",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1764765478657,
+			"tag": "0006_living_liz_osborn",
+			"breakpoints": true
 		}
 	]
 }

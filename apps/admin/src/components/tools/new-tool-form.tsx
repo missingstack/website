@@ -1,6 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	LICENSE_OPTIONS,
+	PRICING_OPTIONS,
+} from "@missingstack/api/constants/enums";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -37,31 +41,10 @@ import {
 import { Switch } from "~/components/ui/switch";
 import { Textarea } from "~/components/ui/textarea";
 import { api } from "~/lib/eden";
+import { formatPricingDisplay } from "~/lib/utils";
 
-// Pricing enum values
-const pricingOptions = [
-	"Free",
-	"Freemium",
-	"Paid",
-	"Open Source",
-	"Enterprise",
-] as const;
-
-// License enum values
-const licenseOptions = [
-	"agpl-3",
-	"mit",
-	"apache-2",
-	"gpl-3",
-	"mpl-2",
-	"bsd-3-clause",
-	"gpl-2",
-	"lgpl-2-1",
-	"bsd-2-clause",
-	"epl-2",
-	"isc",
-	"lgpl-3",
-] as const;
+const pricingOptions = PRICING_OPTIONS;
+const licenseOptions = LICENSE_OPTIONS;
 
 // Form schema
 const toolFormSchema = z.object({
@@ -88,8 +71,8 @@ const toolFormSchema = z.object({
 		.max(256, "Website URL must be 256 characters or less")
 		.optional()
 		.or(z.literal("")),
-	pricing: z.enum(pricingOptions),
-	license: z.enum(licenseOptions).optional(),
+	pricing: z.enum(pricingOptions as [string, ...string[]]),
+	license: z.enum(licenseOptions as [string, ...string[]]).optional(),
 	featured: z.boolean(),
 	affiliateUrl: z
 		.string()
@@ -171,7 +154,7 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 			description: "",
 			logo: "",
 			website: "",
-			pricing: "Free",
+			pricing: "free",
 			license: undefined,
 			featured: false,
 			affiliateUrl: "",
@@ -352,7 +335,7 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 												<SelectContent>
 													{pricingOptions.map((option) => (
 														<SelectItem key={option} value={option}>
-															{option}
+															{formatPricingDisplay(option)}
 														</SelectItem>
 													))}
 												</SelectContent>

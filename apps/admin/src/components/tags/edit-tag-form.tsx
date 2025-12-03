@@ -1,6 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+	BADGE_VARIANT_OPTIONS,
+	TAG_TYPE_OPTIONS,
+} from "@missingstack/api/constants/enums";
 import type { Tag } from "@missingstack/api/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -35,33 +39,18 @@ import {
 } from "~/components/ui/select";
 import { api } from "~/lib/eden";
 
-// Tag type enum values
-const tagTypeOptions = [
-	"pricing",
-	"platform",
-	"compliance",
-	"deployment",
-	"stage",
-	"feature",
-] as const;
+const tagTypeOptions = TAG_TYPE_OPTIONS;
 
-// Badge variant enum values
-const badgeVariantOptions = [
-	"default",
-	"blue",
-	"green",
-	"purple",
-	"gold",
-	"secondary",
-	"outline",
-] as const;
+const badgeVariantOptions = BADGE_VARIANT_OPTIONS;
 
 // Form schema
 const tagFormSchema = z.object({
 	slug: z.string().min(1, "Slug is required"),
 	name: z.string().min(1, "Name is required"),
-	type: z.enum(tagTypeOptions),
-	color: z.enum(badgeVariantOptions).default("default"),
+	type: z.enum(tagTypeOptions as [string, ...string[]]),
+	color: z
+		.enum(badgeVariantOptions as [string, ...string[]])
+		.default("default"),
 });
 
 type TagFormValues = z.infer<typeof tagFormSchema>;

@@ -40,6 +40,7 @@ import {
 	SORT_OPTIONS,
 	searchParamsParsers,
 } from "~/lib/search-params";
+import { formatPricingDisplay } from "~/lib/utils";
 import { CategoryMobileFilterSheet } from "./category-mobile-filter-sheet";
 
 interface CategoryContentProps {
@@ -234,23 +235,25 @@ export function CategoryContent({
 									Pricing
 								</h4>
 								<div className="flex flex-wrap gap-1.5 sm:gap-2">
-									{PRICING_OPTIONS.map((pricing) => {
-										const isSelected = filters.pricing.includes(pricing);
-										return (
-											<Toggle
-												key={pricing}
-												pressed={isSelected}
-												onPressedChange={() =>
-													toggleArrayValue("pricing", pricing)
-												}
-												size="sm"
-												variant="outline"
-												className="min-h-[32px] rounded-full px-2.5 text-[10px] transition-all duration-200 hover:scale-105 active:scale-95 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground sm:px-3 sm:text-xs"
-											>
-												{pricing}
-											</Toggle>
-										);
-									})}
+									{PRICING_OPTIONS.map(
+										(pricing: (typeof PRICING_OPTIONS)[number]) => {
+											const isSelected = filters.pricing.includes(pricing);
+											return (
+												<Toggle
+													key={pricing}
+													pressed={isSelected}
+													onPressedChange={() =>
+														toggleArrayValue("pricing", pricing)
+													}
+													size="sm"
+													variant="outline"
+													className="min-h-[32px] rounded-full px-2.5 text-[10px] transition-all duration-200 hover:scale-105 active:scale-95 data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground sm:px-3 sm:text-xs"
+												>
+													{formatPricingDisplay(pricing)}
+												</Toggle>
+											);
+										},
+									)}
 								</div>
 							</div>
 
@@ -337,14 +340,16 @@ export function CategoryContent({
 									)}
 									{filters.pricing.map((p) => (
 										<Badge key={p} variant="secondary" className="gap-1 pr-1">
-											{p}
+											{formatPricingDisplay(p)}
 											<button
 												type="button"
 												onClick={() => removeFilter("pricing", p)}
 												className="ml-1 rounded-full p-0.5 hover:bg-muted"
 											>
 												<X className="h-3 w-3" />
-												<span className="sr-only">Remove {p} filter</span>
+												<span className="sr-only">
+													Remove {formatPricingDisplay(p)} filter
+												</span>
 											</button>
 										</Badge>
 									))}

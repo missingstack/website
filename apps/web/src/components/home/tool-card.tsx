@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
+import { formatPricingDisplay } from "~/lib/utils";
 
 interface ToolCardProps {
 	tool: ToolData;
@@ -16,7 +17,7 @@ function getBadgeVariant(
 	const lower = pricing.toLowerCase();
 	if (lower === "free") return "green";
 	if (lower === "freemium") return "blue";
-	if (lower === "open source") return "purple";
+	if (lower === "open-source") return "purple";
 	if (lower === "paid" || lower === "enterprise") return "gold";
 	return "default";
 }
@@ -65,7 +66,7 @@ export function ToolCard({ tool }: ToolCardProps) {
 						variant={getBadgeVariant(tool.pricing)}
 						className="text-[10px] sm:text-xs"
 					>
-						{tool.pricing}
+						{formatPricingDisplay(tool.pricing)}
 					</Badge>
 				</div>
 

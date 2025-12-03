@@ -26,7 +26,7 @@ export type {
 
 /**
  * Parse raw query string from URL to preserve array parameters
- * Handles cases like pricing=Free&pricing=Freemium
+ * Handles cases like pricing=free&pricing=freemium
  */
 function parseRawQuery(url: string | URL): Record<string, string | string[]> {
 	const parsedUrl = typeof url === "string" ? new URL(url) : url;

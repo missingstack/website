@@ -10,6 +10,9 @@
 		},
 		"./types": {
 			"default": "./src/types/index.ts"
+		},
+		"./constants/enums": {
+			"default": "./src/constants/enums.ts"
 		}
 	},
 	"devDependencies": {

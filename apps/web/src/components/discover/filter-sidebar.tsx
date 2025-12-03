@@ -9,7 +9,7 @@ import { ScrollArea } from "~/components/ui/scroll-area";
 import { Toggle } from "~/components/ui/toggle";
 import { getIcon } from "~/lib/icons";
 import { searchParamsParsers } from "~/lib/search-params";
-import { cn } from "~/lib/utils";
+import { cn, formatPlatformDisplay, formatPricingDisplay } from "~/lib/utils";
 
 interface FilterSidebarProps {
 	categories: CategoryWithCount[];
@@ -134,7 +134,7 @@ export function FilterSidebar({
 									onCheckedChange={() => toggleArrayValue("pricing", pricing)}
 								/>
 								<span className="text-muted-foreground text-sm transition-colors group-hover:text-primary">
-									{pricing}
+									{formatPricingDisplay(pricing)}
 								</span>
 							</label>
 						);
@@ -156,7 +156,7 @@ export function FilterSidebar({
 								variant="outline"
 								className="rounded-full px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
 							>
-								{platform}
+								{formatPlatformDisplay(platform)}
 							</Toggle>
 						);
 					})}

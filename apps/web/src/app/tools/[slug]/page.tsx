@@ -28,6 +28,7 @@ import {
 	generateSEOMetadata,
 	softwareApplication,
 } from "~/lib/seo";
+import { formatPricingDisplay } from "~/lib/utils";
 
 interface ToolPageProps {
 	params: Promise<{ slug: string }>;
@@ -69,7 +70,7 @@ function getBadgeVariant(
 	const lower = pricing.toLowerCase();
 	if (lower === "free") return "green";
 	if (lower === "freemium") return "blue";
-	if (lower === "open source") return "purple";
+	if (lower === "open-source") return "purple";
 	if (lower === "paid" || lower === "enterprise") return "gold";
 	return "default";
 }
@@ -244,7 +245,7 @@ async function ToolPageContent({
 									variant={getBadgeVariant(tool.pricing)}
 									className="text-xs sm:text-sm"
 								>
-									{tool.pricing}
+									{formatPricingDisplay(tool.pricing)}
 								</Badge>
 								{validCategories.map((cat) => (
 									<Badge
@@ -398,7 +399,7 @@ async function ToolPageContent({
 										Pricing
 									</span>
 									<p className="font-medium text-primary text-sm sm:text-base">
-										{tool.pricing}
+										{formatPricingDisplay(tool.pricing)}
 									</p>
 								</div>
 
@@ -413,14 +414,6 @@ async function ToolPageContent({
 											? validCategories.map((cat) => cat.name).join(", ")
 											: "Uncategorized"}
 									</p>
-								</div>
-
-								<Separator />
-
-								<div>
-									<span className="mb-2 block text-[10px] text-muted-foreground uppercase tracking-wider sm:text-xs">
-										Available on
-									</span>
 								</div>
 							</div>
 						</div>
