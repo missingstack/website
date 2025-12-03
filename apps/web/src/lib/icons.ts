@@ -13,6 +13,7 @@ import {
 	Database,
 	FileText,
 	Globe,
+	HatGlasses,
 	HelpCircle,
 	type LucideIcon,
 	MessagesSquare,
@@ -41,6 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
 	Play,
 	BarChart3,
 	Users,
+	HatGlasses,
 };
 
 export function getIcon(name: string): LucideIcon {

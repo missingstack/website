@@ -534,8 +534,21 @@ async function getTools() {
 }
 
 export async function generateStaticParams() {
-	const result = await getTools();
-	return result.items.map((tool) => ({
-		slug: tool.slug,
-	}));
+	try {
+		const result = await getTools();
+		const params = result.items.map((tool) => ({
+			slug: tool.slug,
+		}));
+
+		// Next.js Cache Components requires at least one result
+		// Return a placeholder if no tools exist
+		if (params.length === 0) {
+			return [{ slug: "base" }];
+		}
+
+		return params;
+	} catch (error) {
+		console.error("Error generating static params for tools:", error);
+		return [{ slug: "base" }];
+	}
 }

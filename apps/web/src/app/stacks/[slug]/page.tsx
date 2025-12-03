@@ -331,13 +331,19 @@ async function getAllStacks() {
 export async function generateStaticParams() {
 	try {
 		const stacks = await getAllStacks();
-		return stacks.map((stack) => ({
+		const params = stacks.map((stack) => ({
 			slug: stack.slug,
 		}));
+
+		if (params.length === 0) {
+			// Next.js Cache Components requires at least one result
+			// Return a placeholder if no stacks exist
+			return [{ slug: "base" }];
+		}
+
+		return params;
 	} catch (error) {
 		console.error("Error generating static params for stacks:", error);
-		// Return empty array on error to prevent build failure
-		// Pages will be generated on-demand if static generation fails
-		return [];
+		return [{ slug: "base" }];
 	}
 }

@@ -311,13 +311,19 @@ async function getAllCategories() {
 export async function generateStaticParams() {
 	try {
 		const categories = await getAllCategories();
-		return categories.map((cat) => ({
+		const params = categories.map((cat) => ({
 			slug: cat.slug,
 		}));
+
+		if (params.length === 0) {
+			// Next.js Cache Components requires at least one result
+			// Return a placeholder if no categories exist
+			return [{ slug: "base" }];
+		}
+
+		return params;
 	} catch (error) {
 		console.error("Error generating static params for categories:", error);
-		// Return empty array on error to prevent build failure
-		// Pages will be generated on-demand if static generation fails
-		return [];
+		return [{ slug: "base" }];
 	}
 }

@@ -14,7 +14,7 @@ export function CategoryNavigation({ categories }: CategoryNavigationProps) {
 	const pathname = usePathname();
 
 	return (
-		<div className="flex items-center gap-3 pb-4 sm:gap-4 sm:pb-6">
+		<div className="flex items-center gap-3 sm:gap-4">
 			<nav className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto px-1 py-2 sm:gap-3 sm:py-2.5">
 				{categories.map((cat) => {
 					const Icon = getIcon(cat.icon);
@@ -24,7 +24,7 @@ export function CategoryNavigation({ categories }: CategoryNavigationProps) {
 						<Link
 							key={cat.id}
 							href={`/categories/${cat.slug}`}
-							className={`group flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-xs transition-all duration-200 active:scale-95 sm:gap-2 sm:px-3.5 sm:text-sm ${
+							className={`group flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 font-medium text-xs transition-all duration-200 active:scale-95 sm:gap-2 sm:px-3.5 sm:text-sm ${
 								isActive
 									? "bg-primary text-white shadow-md hover:bg-primary/90 hover:shadow-lg"
 									: "text-muted-foreground hover:bg-secondary/80 hover:text-primary"
