@@ -1,6 +1,14 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+	CategoryCollection,
+	CategoryQueryOptions,
+} from "@missingstack/api/types";
+import {
+	useInfiniteQuery,
+	useMutation,
+	useQueryClient,
+} from "@tanstack/react-query";
 import {
 	ArrowDown,
 	ArrowUp,
@@ -10,9 +18,10 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useQueryState, useQueryStates } from "nuqs";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { EditStackForm } from "~/components/admin/edit-stack-form";
+import { EditCategoryForm } from "~/components/categories/edit-category-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -32,101 +41,137 @@ import {
 	TableRow,
 } from "~/components/ui/table";
 import { api } from "~/lib/eden";
-import type { StackSortColumn } from "~/lib/search-params";
+import {
+	type CategorySortColumn,
+	adminSearchParamsParsersClient,
+} from "~/lib/search-params";
 
-export function StacksTable() {
-	const [search, setSearch] = useState("");
-	const [sortBy, setSortBy] = useState<StackSortColumn>("createdAt");
-	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+export function CategoriesTable() {
+	const loadMoreRef = useRef<HTMLTableRowElement>(null);
 	const queryClient = useQueryClient();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [stackToDelete, setStackToDelete] = useState<{
+	const [categoryToDelete, setCategoryToDelete] = useState<{
 		id: string;
 		name: string;
 	} | null>(null);
-	const [selectedStackId, setSelectedStackId] = useState<string | null>(null);
+	const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+		null,
+	);
 	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+
+	const [search, setSearch] = useQueryState("search", {
+		...adminSearchParamsParsersClient.search,
+		shallow: false,
+		throttleMs: 300,
+	});
+
+	const [filters, setFilters] = useQueryStates(
+		{
+			sortBy: adminSearchParamsParsersClient.sortBy,
+			sortOrder: adminSearchParamsParsersClient.sortOrder,
+		},
+		{ shallow: false },
+	);
+
+	const fetchCategories = async ({ pageParam }: { pageParam?: string }) => {
+		const query: Partial<CategoryQueryOptions> = {};
+
+		if (search) query.search = search;
+		if (filters.sortBy) query.sortBy = filters.sortBy;
+		if (filters.sortOrder) query.sortOrder = filters.sortOrder;
+		if (pageParam) query.cursor = pageParam;
+		query.limit = 20;
+
+		const { data, error } = await api.v1.categories.get({
+			query: query as CategoryQueryOptions,
+		});
+
+		if (error)
+			throw new Error(error.value.message ?? "Failed to fetch categories");
+		if (!data) throw new Error("No data returned from API");
+
+		return {
+			items: data.items,
+			nextCursor: data.nextCursor,
+			hasMore: data.hasMore,
+		} as CategoryCollection;
+	};
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: string) => {
-			const { error } = await api.v1.stacks({ id }).delete();
+			const { error } = await api.v1.categories({ id }).delete();
 			if (error)
-				throw new Error(error.value.message ?? "Failed to delete stack");
+				throw new Error(error.value.message ?? "Failed to delete category");
 		},
 		onSuccess: () => {
-			toast.success("Stack deleted successfully");
-			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
-			queryClient.refetchQueries({ queryKey: ["adminStacks"] });
+			toast.success("Category deleted successfully");
+			queryClient.resetQueries({ queryKey: ["adminCategories"] });
 			setDeleteDialogOpen(false);
-			setStackToDelete(null);
+			setCategoryToDelete(null);
 		},
 		onError: (error: Error) => {
-			toast.error(error.message || "Failed to delete stack");
+			toast.error(error.message || "Failed to delete category");
 		},
 	});
 
-	const { data, isLoading, isError } = useQuery({
-		queryKey: ["adminStacks"],
-		queryFn: async () => {
-			const { data, error } = await api.v1.stacks.get();
-			if (error)
-				throw new Error(error.value.message ?? "Failed to fetch stacks");
-			if (!data) throw new Error("No data returned from API");
-			return data;
-		},
+	const {
+		data,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading,
+		isError,
+	} = useInfiniteQuery({
+		queryKey: ["adminCategories", search, filters],
+		queryFn: fetchCategories,
+		initialPageParam: undefined as string | undefined,
+		getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
 	});
 
-	const filteredAndSortedStacks = useMemo(() => {
-		if (!data) return [];
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (
+					entries[0].isIntersecting &&
+					hasNextPage &&
+					!isFetchingNextPage &&
+					!isLoading
+				) {
+					fetchNextPage();
+				}
+			},
+			{ threshold: 0.1, rootMargin: "100px" },
+		);
 
-		let filtered = [...data];
-
-		// Apply search filter
-		if (search) {
-			const searchLower = search.toLowerCase();
-			filtered = filtered.filter(
-				(stack) =>
-					stack.name.toLowerCase().includes(searchLower) ||
-					stack.slug.toLowerCase().includes(searchLower) ||
-					stack.description?.toLowerCase().includes(searchLower),
-			);
+		const currentRef = loadMoreRef.current;
+		if (currentRef) {
+			observer.observe(currentRef);
 		}
 
-		// Apply sorting
-		filtered.sort((a, b) => {
-			let comparison = 0;
-			switch (sortBy) {
-				case "name":
-					comparison = a.name.localeCompare(b.name);
-					break;
-				case "slug":
-					comparison = a.slug.localeCompare(b.slug);
-					break;
-				case "weight":
-					comparison = (a.weight ?? 0) - (b.weight ?? 0);
-					break;
-				case "createdAt":
-					comparison =
-						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-					break;
+		return () => {
+			if (currentRef) {
+				observer.unobserve(currentRef);
 			}
-			return sortOrder === "asc" ? comparison : -comparison;
-		});
+		};
+	}, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
 
-		return filtered;
-	}, [data, search, sortBy, sortOrder]);
+	const allCategories = data?.pages.flatMap((page) => page.items) ?? [];
 
-	const toggleSort = (column: StackSortColumn) => {
-		if (sortBy === column) {
-			setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+	const toggleSort = (column: CategorySortColumn) => {
+		if (filters.sortBy === column) {
+			setFilters({
+				sortOrder: filters.sortOrder === "asc" ? "desc" : "asc",
+			});
 		} else {
-			setSortBy(column);
-			setSortOrder("asc");
+			setFilters({
+				sortBy: column,
+				sortOrder: "asc",
+			});
 		}
 	};
 
-	const SortButton = ({ column }: { column: StackSortColumn }) => {
-		const isActive = sortBy === column;
+	const SortButton = ({ column }: { column: CategorySortColumn }) => {
+		const isActive = filters.sortBy === column;
 		return (
 			<Button
 				variant="ghost"
@@ -135,7 +180,7 @@ export function StacksTable() {
 				onClick={() => toggleSort(column)}
 			>
 				{isActive ? (
-					sortOrder === "asc" ? (
+					filters.sortOrder === "asc" ? (
 						<ArrowUp className="h-4 w-4" />
 					) : (
 						<ArrowDown className="h-4 w-4" />
@@ -147,26 +192,26 @@ export function StacksTable() {
 		);
 	};
 
-	const handleDeleteClick = (stack: { id: string; name: string }) => {
-		setStackToDelete(stack);
+	const handleDeleteClick = (category: { id: string; name: string }) => {
+		setCategoryToDelete(category);
 		setDeleteDialogOpen(true);
 	};
 
 	const handleDeleteConfirm = () => {
-		if (stackToDelete) {
-			deleteMutation.mutate(stackToDelete.id);
+		if (categoryToDelete) {
+			deleteMutation.mutate(categoryToDelete.id);
 		}
 	};
 
-	const handleRowClick = (stackId: string) => {
-		setSelectedStackId(stackId);
+	const handleRowClick = (categoryId: string) => {
+		setSelectedCategoryId(categoryId);
 		setIsEditDrawerOpen(true);
 	};
 
 	const handleEditDrawerClose = (open: boolean) => {
 		setIsEditDrawerOpen(open);
 		if (!open) {
-			setSelectedStackId(null);
+			setSelectedCategoryId(null);
 		}
 	};
 
@@ -178,15 +223,15 @@ export function StacksTable() {
 					<Input
 						type="text"
 						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						placeholder="Search stacks..."
+						onChange={(e) => setSearch(e.target.value || null)}
+						placeholder="Search categories..."
 						className="pr-9 pl-9"
 					/>
 					{search && (
 						<Button
 							variant="ghost"
 							size="sm"
-							onClick={() => setSearch("")}
+							onClick={() => setSearch(null)}
 							className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 p-0"
 						>
 							<X className="h-4 w-4" />
@@ -236,7 +281,7 @@ export function StacksTable() {
 									<div className="flex items-center justify-center gap-2">
 										<Loader2 className="h-4 w-4 animate-spin" />
 										<span className="text-muted-foreground">
-											Loading stacks...
+											Loading categories...
 										</span>
 									</div>
 								</TableCell>
@@ -249,50 +294,53 @@ export function StacksTable() {
 									colSpan={7}
 									className="h-24 text-center text-destructive"
 								>
-									Failed to load stacks. Please try again.
+									Failed to load categories. Please try again.
 								</TableCell>
 							</TableRow>
 						)}
 
-						{!isLoading && !isError && filteredAndSortedStacks.length === 0 && (
+						{!isLoading && !isError && allCategories.length === 0 && (
 							<TableRow>
 								<TableCell
 									colSpan={7}
 									className="h-24 text-center text-muted-foreground"
 								>
-									No stacks found.
+									No categories found.
 								</TableCell>
 							</TableRow>
 						)}
 
 						{!isLoading &&
 							!isError &&
-							filteredAndSortedStacks.map((stack) => (
+							allCategories.map((category) => (
 								<TableRow
-									key={stack.id}
-									onClick={() => handleRowClick(stack.id)}
+									key={category.id}
+									onClick={() => handleRowClick(category.id)}
 									className="cursor-pointer"
 								>
-									<TableCell className="font-medium">{stack.name}</TableCell>
+									<TableCell className="font-medium">{category.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
-										{stack.slug}
+										{category.slug}
 									</TableCell>
-									<TableCell>{stack.weight ?? 0}</TableCell>
+									<TableCell>{category.weight}</TableCell>
 									<TableCell className="text-muted-foreground text-sm">
-										{new Date(stack.createdAt).toLocaleDateString()}
+										{new Date(category.createdAt).toLocaleDateString()}
 									</TableCell>
 									<TableCell className="max-w-[200px] truncate text-muted-foreground text-sm">
-										{stack.description || "-"}
+										{category.description || "-"}
 									</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-xs">
-										{stack.icon || "-"}
+										{category.icon}
 									</TableCell>
 									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
 											onClick={() =>
-												handleDeleteClick({ id: stack.id, name: stack.name })
+												handleDeleteClick({
+													id: category.id,
+													name: category.name,
+												})
 											}
 											className="text-destructive hover:text-destructive"
 										>
@@ -301,6 +349,29 @@ export function StacksTable() {
 									</TableCell>
 								</TableRow>
 							))}
+
+						{!isLoading && !isError && allCategories.length > 0 && (
+							<TableRow ref={loadMoreRef}>
+								<TableCell colSpan={7} className="h-16 text-center">
+									{isFetchingNextPage && (
+										<div className="flex items-center justify-center gap-2 text-muted-foreground">
+											<Loader2 className="h-4 w-4 animate-spin" />
+											<span className="text-sm">
+												Loading more categories...
+											</span>
+										</div>
+									)}
+									{!hasNextPage &&
+										allCategories.length > 0 &&
+										!isFetchingNextPage && (
+											<p className="text-muted-foreground text-sm">
+												Showing all {allCategories.length} categor
+												{allCategories.length !== 1 ? "ies" : "y"}
+											</p>
+										)}
+								</TableCell>
+							</TableRow>
+						)}
 					</TableBody>
 				</Table>
 			</div>
@@ -308,9 +379,9 @@ export function StacksTable() {
 			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Delete Stack</DialogTitle>
+						<DialogTitle>Delete Category</DialogTitle>
 						<DialogDescription>
-							Are you sure you want to delete "{stackToDelete?.name}"? This
+							Are you sure you want to delete "{categoryToDelete?.name}"? This
 							action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
@@ -319,7 +390,7 @@ export function StacksTable() {
 							variant="outline"
 							onClick={() => {
 								setDeleteDialogOpen(false);
-								setStackToDelete(null);
+								setCategoryToDelete(null);
 							}}
 							disabled={deleteMutation.isPending}
 						>
@@ -343,8 +414,8 @@ export function StacksTable() {
 				</DialogContent>
 			</Dialog>
 
-			<EditStackForm
-				stackId={selectedStackId}
+			<EditCategoryForm
+				categoryId={selectedCategoryId}
 				open={isEditDrawerOpen}
 				onOpenChange={handleEditDrawerClose}
 			/>

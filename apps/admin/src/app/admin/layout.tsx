@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { AdminHeader } from "~/components/admin/header";
-import { AdminSidebar } from "~/components/admin/sidebar";
+import { AdminHeader } from "~/components/header";
+import { AdminSidebar } from "~/components/sidebar";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 

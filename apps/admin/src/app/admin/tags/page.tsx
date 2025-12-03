@@ -2,9 +2,9 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { NewTagForm } from "~/components/admin/new-tag-form";
-import { TableSkeleton } from "~/components/admin/table-skeleton";
-import { TagsTable } from "~/components/admin/tags-table";
+import { TableSkeleton } from "~/components/table-skeleton";
+import { NewTagForm } from "~/components/tags/new-tag-form";
+import { TagsTable } from "~/components/tags/tags-table";
 import { Button } from "~/components/ui/button";
 
 export default function AdminTagsPage() {

@@ -2,9 +2,9 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { NewToolForm } from "~/components/admin/new-tool-form";
-import { TableSkeleton } from "~/components/admin/table-skeleton";
-import { ToolsTable } from "~/components/admin/tools-table";
+import { TableSkeleton } from "~/components/table-skeleton";
+import { NewToolForm } from "~/components/tools/new-tool-form";
+import { ToolsTable } from "~/components/tools/tools-table";
 import { Button } from "~/components/ui/button";
 
 export default function AdminToolsPage() {

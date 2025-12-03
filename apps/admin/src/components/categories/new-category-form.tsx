@@ -30,7 +30,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { api } from "~/lib/eden";
 
 // Form schema
-const stackFormSchema = z.object({
+const categoryFormSchema = z.object({
 	slug: z
 		.string()
 		.min(1, "Slug is required")
@@ -40,35 +40,38 @@ const stackFormSchema = z.object({
 		.min(1, "Name is required")
 		.max(160, "Name must be 160 characters or less"),
 	description: z.string().optional(),
-	icon: z.string().max(100, "Icon must be 100 characters or less").optional(),
+	icon: z
+		.string()
+		.min(1, "Icon is required")
+		.max(100, "Icon must be 100 characters or less"),
 	parentId: z.string().uuid().optional().or(z.literal("")),
-	weight: z.number().int().default(0),
+	weight: z.number().int().optional(),
 });
 
-type StackFormValues = z.infer<typeof stackFormSchema>;
+type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-interface NewStackFormProps {
+interface NewCategoryFormProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
-	const [isSubmitting, setIsSubmitting] = useState(false);
+export function NewCategoryForm({ open, onOpenChange }: NewCategoryFormProps) {
 	const queryClient = useQueryClient();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Fetch stacks for parent selection
-	const { data: stacksData } = useQuery({
-		queryKey: ["stacks"],
+	// Fetch categories for parent selection
+	const { data: categoriesData } = useQuery({
+		queryKey: ["categories"],
 		queryFn: async () => {
-			const { data, error } = await api.v1.stacks.get({});
+			const { data, error } = await api.v1.categories.get({});
 			if (error)
-				throw new Error(error.value.message ?? "Failed to fetch stacks");
+				throw new Error(error.value.message ?? "Failed to fetch categories");
 			return data;
 		},
 	});
 
-	const form = useForm<StackFormValues>({
-		resolver: zodResolver(stackFormSchema),
+	const form = useForm<CategoryFormValues>({
+		resolver: zodResolver(categoryFormSchema),
 		defaultValues: {
 			slug: "",
 			name: "",
@@ -79,51 +82,48 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 		},
 	});
 
-	const onSubmit = async (data: StackFormValues) => {
+	const onSubmit = async (data: CategoryFormValues) => {
 		setIsSubmitting(true);
 		try {
-			const { error } = await api.v1.stacks.post({
+			const { error } = await api.v1.categories.post({
 				slug: data.slug,
 				name: data.name,
 				description: data.description || undefined,
-				icon: data.icon || undefined,
+				icon: data.icon,
 				parentId: data.parentId || undefined,
-				weight: data.weight,
+				weight: data.weight ?? 0,
 			});
 
 			if (error) {
-				throw new Error(error.value.message ?? "Failed to create stack");
+				throw new Error(error.value.message ?? "Failed to create category");
 			}
 
-			toast.success("Stack created successfully!");
-			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
-			queryClient.invalidateQueries({ queryKey: ["stacks"] });
+			toast.success("Category created successfully!");
+			queryClient.resetQueries({ queryKey: ["adminCategories"] });
 			form.reset();
 			onOpenChange(false);
 		} catch (error) {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to create stack",
+				error instanceof Error ? error.message : "Failed to create category",
 			);
 		} finally {
 			setIsSubmitting(false);
 		}
 	};
 
-	const stackOptions = (Array.isArray(stacksData) ? stacksData : []).map(
-		(stack: { id: string; name: string }) => ({
-			value: stack.id,
-			label: stack.name,
-		}),
-	);
+	const categoryOptions =
+		categoriesData?.items.map((cat) => ({
+			value: cat.id,
+			label: cat.name,
+		})) ?? [];
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange} direction="right">
 			<DrawerContent className="flex h-full flex-col data-[vaul-drawer-direction=right]:max-w-lg! sm:data-[vaul-drawer-direction=right]:max-w-lg!">
 				<DrawerHeader className="shrink-0 border-b">
-					<DrawerTitle>Create New Stack</DrawerTitle>
+					<DrawerTitle>Create New Category</DrawerTitle>
 					<DrawerDescription>
-						Add a new technology stack to the directory. Fill in all required
-						fields.
+						Add a new category to the directory. Fill in all required fields.
 					</DrawerDescription>
 				</DrawerHeader>
 
@@ -140,7 +140,7 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 										<Input
 											id="name"
 											{...form.register("name")}
-											placeholder="Stack name"
+											placeholder="Category name"
 										/>
 										<FieldError errors={[form.formState.errors.name]} />
 									</Field>
@@ -150,7 +150,7 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 										<Input
 											id="slug"
 											{...form.register("slug")}
-											placeholder="stack-slug"
+											placeholder="category-slug"
 										/>
 										<FieldError errors={[form.formState.errors.slug]} />
 									</Field>
@@ -160,34 +160,35 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 										<Textarea
 											id="description"
 											{...form.register("description")}
-											placeholder="Stack description"
+											placeholder="Category description"
 											rows={4}
 										/>
 										<FieldError errors={[form.formState.errors.description]} />
 									</Field>
 
 									<Field>
-										<FieldLabel htmlFor="icon">Icon</FieldLabel>
+										<FieldLabel htmlFor="icon">Icon *</FieldLabel>
 										<Input
 											id="icon"
 											{...form.register("icon")}
-											placeholder="Icon name"
+											placeholder="lucide icon name"
 										/>
 										<FieldError errors={[form.formState.errors.icon]} />
 									</Field>
 
 									<Field>
-										<FieldLabel htmlFor="parent">Parent Stack</FieldLabel>
+										<FieldLabel htmlFor="parent">Parent Category</FieldLabel>
 										<Combobox
-											options={stackOptions}
-											selectedValues={
-												form.watch("parentId") ? [form.watch("parentId")] : []
-											}
+											options={categoryOptions}
+											selectedValues={(() => {
+												const parentId = form.watch("parentId");
+												return parentId ? [parentId] : [];
+											})()}
 											onSelectedValuesChange={(values) =>
 												form.setValue("parentId", values[0] || "")
 											}
-											placeholder="Select parent stack (optional)"
-											searchPlaceholder="Search stacks..."
+											placeholder="Select parent category (optional)"
+											searchPlaceholder="Search categories..."
 										/>
 									</Field>
 
@@ -213,7 +214,7 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 							{isSubmitting && (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							)}
-							Create Stack
+							Create Category
 						</Button>
 						<DrawerClose asChild>
 							<Button type="button" variant="outline">

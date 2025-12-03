@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { EditTagForm } from "~/components/admin/edit-tag-form";
+import { EditStackForm } from "~/components/stacks/edit-stack-form";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -32,49 +32,50 @@ import {
 	TableRow,
 } from "~/components/ui/table";
 import { api } from "~/lib/eden";
-import type { TagSortColumn } from "~/lib/search-params";
+import type { StackSortColumn } from "~/lib/search-params";
 
-export function TagsTable() {
+export function StacksTable() {
 	const [search, setSearch] = useState("");
-	const [sortBy, setSortBy] = useState<TagSortColumn>("createdAt");
+	const [sortBy, setSortBy] = useState<StackSortColumn>("createdAt");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 	const queryClient = useQueryClient();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [tagToDelete, setTagToDelete] = useState<{
+	const [stackToDelete, setStackToDelete] = useState<{
 		id: string;
 		name: string;
 	} | null>(null);
-	const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
+	const [selectedStackId, setSelectedStackId] = useState<string | null>(null);
 	const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
 	const deleteMutation = useMutation({
 		mutationFn: async (id: string) => {
-			const { error } = await api.v1.tags({ id }).delete();
-			if (error) throw new Error(error.value.message ?? "Failed to delete tag");
+			const { error } = await api.v1.stacks({ id }).delete();
+			if (error)
+				throw new Error(error.value.message ?? "Failed to delete stack");
 		},
 		onSuccess: () => {
-			toast.success("Tag deleted successfully");
-			queryClient.invalidateQueries({ queryKey: ["adminTags"] });
-			queryClient.refetchQueries({ queryKey: ["adminTags"] });
+			toast.success("Stack deleted successfully");
+			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
 			setDeleteDialogOpen(false);
-			setTagToDelete(null);
+			setStackToDelete(null);
 		},
 		onError: (error: Error) => {
-			toast.error(error.message || "Failed to delete tag");
+			toast.error(error.message || "Failed to delete stack");
 		},
 	});
 
 	const { data, isLoading, isError } = useQuery({
-		queryKey: ["adminTags"],
+		queryKey: ["adminStacks"],
 		queryFn: async () => {
-			const { data, error } = await api.v1.tags.get();
-			if (error) throw new Error(error.value.message ?? "Failed to fetch tags");
+			const { data, error } = await api.v1.stacks.get();
+			if (error)
+				throw new Error(error.value.message ?? "Failed to fetch stacks");
 			if (!data) throw new Error("No data returned from API");
 			return data;
 		},
 	});
 
-	const filteredAndSortedTags = useMemo(() => {
+	const filteredAndSortedStacks = useMemo(() => {
 		if (!data) return [];
 
 		let filtered = [...data];
@@ -83,9 +84,10 @@ export function TagsTable() {
 		if (search) {
 			const searchLower = search.toLowerCase();
 			filtered = filtered.filter(
-				(tag) =>
-					tag.name.toLowerCase().includes(searchLower) ||
-					tag.slug.toLowerCase().includes(searchLower),
+				(stack) =>
+					stack.name.toLowerCase().includes(searchLower) ||
+					stack.slug.toLowerCase().includes(searchLower) ||
+					stack.description?.toLowerCase().includes(searchLower),
 			);
 		}
 
@@ -99,6 +101,9 @@ export function TagsTable() {
 				case "slug":
 					comparison = a.slug.localeCompare(b.slug);
 					break;
+				case "weight":
+					comparison = (a.weight ?? 0) - (b.weight ?? 0);
+					break;
 				case "createdAt":
 					comparison =
 						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -110,7 +115,7 @@ export function TagsTable() {
 		return filtered;
 	}, [data, search, sortBy, sortOrder]);
 
-	const toggleSort = (column: TagSortColumn) => {
+	const toggleSort = (column: StackSortColumn) => {
 		if (sortBy === column) {
 			setSortOrder(sortOrder === "asc" ? "desc" : "asc");
 		} else {
@@ -119,7 +124,7 @@ export function TagsTable() {
 		}
 	};
 
-	const SortButton = ({ column }: { column: TagSortColumn }) => {
+	const SortButton = ({ column }: { column: StackSortColumn }) => {
 		const isActive = sortBy === column;
 		return (
 			<Button
@@ -141,26 +146,26 @@ export function TagsTable() {
 		);
 	};
 
-	const handleDeleteClick = (tag: { id: string; name: string }) => {
-		setTagToDelete(tag);
+	const handleDeleteClick = (stack: { id: string; name: string }) => {
+		setStackToDelete(stack);
 		setDeleteDialogOpen(true);
 	};
 
 	const handleDeleteConfirm = () => {
-		if (tagToDelete) {
-			deleteMutation.mutate(tagToDelete.id);
+		if (stackToDelete) {
+			deleteMutation.mutate(stackToDelete.id);
 		}
 	};
 
-	const handleRowClick = (tagId: string) => {
-		setSelectedTagId(tagId);
+	const handleRowClick = (stackId: string) => {
+		setSelectedStackId(stackId);
 		setIsEditDrawerOpen(true);
 	};
 
 	const handleEditDrawerClose = (open: boolean) => {
 		setIsEditDrawerOpen(open);
 		if (!open) {
-			setSelectedTagId(null);
+			setSelectedStackId(null);
 		}
 	};
 
@@ -173,7 +178,7 @@ export function TagsTable() {
 						type="text"
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
-						placeholder="Search tags..."
+						placeholder="Search stacks..."
 						className="pr-9 pl-9"
 					/>
 					{search && (
@@ -206,25 +211,31 @@ export function TagsTable() {
 									<SortButton column="slug" />
 								</div>
 							</TableHead>
-							<TableHead className="w-[150px]">Type</TableHead>
-							<TableHead className="w-[100px]">Color</TableHead>
+							<TableHead className="w-[100px]">
+								<div className="flex items-center gap-2">
+									<span>Weight</span>
+									<SortButton column="weight" />
+								</div>
+							</TableHead>
 							<TableHead className="w-[200px]">
 								<div className="flex items-center gap-2">
 									<span>Created</span>
 									<SortButton column="createdAt" />
 								</div>
 							</TableHead>
+							<TableHead className="w-[100px]">Description</TableHead>
+							<TableHead className="w-[100px]">Icon</TableHead>
 							<TableHead className="w-[100px]">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{isLoading && (
 							<TableRow>
-								<TableCell colSpan={6} className="h-24 text-center">
+								<TableCell colSpan={7} className="h-24 text-center">
 									<div className="flex items-center justify-center gap-2">
 										<Loader2 className="h-4 w-4 animate-spin" />
 										<span className="text-muted-foreground">
-											Loading tags...
+											Loading stacks...
 										</span>
 									</div>
 								</TableCell>
@@ -234,52 +245,53 @@ export function TagsTable() {
 						{isError && (
 							<TableRow>
 								<TableCell
-									colSpan={6}
+									colSpan={7}
 									className="h-24 text-center text-destructive"
 								>
-									Failed to load tags. Please try again.
+									Failed to load stacks. Please try again.
 								</TableCell>
 							</TableRow>
 						)}
 
-						{!isLoading && !isError && filteredAndSortedTags.length === 0 && (
+						{!isLoading && !isError && filteredAndSortedStacks.length === 0 && (
 							<TableRow>
 								<TableCell
-									colSpan={6}
+									colSpan={7}
 									className="h-24 text-center text-muted-foreground"
 								>
-									No tags found.
+									No stacks found.
 								</TableCell>
 							</TableRow>
 						)}
 
 						{!isLoading &&
 							!isError &&
-							filteredAndSortedTags.map((tag) => (
+							filteredAndSortedStacks.map((stack) => (
 								<TableRow
-									key={tag.id}
-									onClick={() => handleRowClick(tag.id)}
+									key={stack.id}
+									onClick={() => handleRowClick(stack.id)}
 									className="cursor-pointer"
 								>
-									<TableCell className="font-medium">{tag.name}</TableCell>
+									<TableCell className="font-medium">{stack.name}</TableCell>
 									<TableCell className="font-mono text-muted-foreground text-sm">
-										{tag.slug}
+										{stack.slug}
 									</TableCell>
+									<TableCell>{stack.weight ?? 0}</TableCell>
 									<TableCell className="text-muted-foreground text-sm">
-										{tag.type}
+										{new Date(stack.createdAt).toLocaleDateString()}
 									</TableCell>
-									<TableCell className="text-muted-foreground text-sm">
-										{tag.color || "default"}
+									<TableCell className="max-w-[200px] truncate text-muted-foreground text-sm">
+										{stack.description || "-"}
 									</TableCell>
-									<TableCell className="text-muted-foreground text-sm">
-										{new Date(tag.createdAt).toLocaleDateString()}
+									<TableCell className="font-mono text-muted-foreground text-xs">
+										{stack.icon || "-"}
 									</TableCell>
 									<TableCell onClick={(e) => e.stopPropagation()}>
 										<Button
 											variant="ghost"
 											size="sm"
 											onClick={() =>
-												handleDeleteClick({ id: tag.id, name: tag.name })
+												handleDeleteClick({ id: stack.id, name: stack.name })
 											}
 											className="text-destructive hover:text-destructive"
 										>
@@ -295,10 +307,10 @@ export function TagsTable() {
 			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Delete Tag</DialogTitle>
+						<DialogTitle>Delete Stack</DialogTitle>
 						<DialogDescription>
-							Are you sure you want to delete "{tagToDelete?.name}"? This action
-							cannot be undone.
+							Are you sure you want to delete "{stackToDelete?.name}"? This
+							action cannot be undone.
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -306,7 +318,7 @@ export function TagsTable() {
 							variant="outline"
 							onClick={() => {
 								setDeleteDialogOpen(false);
-								setTagToDelete(null);
+								setStackToDelete(null);
 							}}
 							disabled={deleteMutation.isPending}
 						>
@@ -330,8 +342,8 @@ export function TagsTable() {
 				</DialogContent>
 			</Dialog>
 
-			<EditTagForm
-				tagId={selectedTagId}
+			<EditStackForm
+				stackId={selectedStackId}
 				open={isEditDrawerOpen}
 				onOpenChange={handleEditDrawerClose}
 			/>

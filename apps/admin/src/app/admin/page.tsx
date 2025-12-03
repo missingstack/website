@@ -1,4 +1,4 @@
-import { AdminStats } from "~/components/admin/admin-stats";
+import { AdminStats } from "~/components/admin-stats";
 
 export default function AdminDashboardPage() {
 	return (

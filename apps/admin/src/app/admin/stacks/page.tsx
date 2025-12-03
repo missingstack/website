@@ -2,9 +2,9 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { NewStackForm } from "~/components/admin/new-stack-form";
-import { StacksTable } from "~/components/admin/stacks-table";
-import { TableSkeleton } from "~/components/admin/table-skeleton";
+import { NewStackForm } from "~/components/stacks/new-stack-form";
+import { StacksTable } from "~/components/stacks/stacks-table";
+import { TableSkeleton } from "~/components/table-skeleton";
 import { Button } from "~/components/ui/button";
 
 export default function AdminStacksPage() {

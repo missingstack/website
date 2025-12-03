@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -59,7 +60,7 @@ const tagFormSchema = z.object({
 	slug: z.string().min(1, "Slug is required"),
 	name: z.string().min(1, "Name is required"),
 	type: z.enum(tagTypeOptions),
-	color: z.enum(badgeVariantOptions).default("default"),
+	color: z.enum(badgeVariantOptions).optional(),
 });
 
 type TagFormValues = z.infer<typeof tagFormSchema>;
@@ -70,6 +71,7 @@ interface NewTagFormProps {
 }
 
 export function NewTagForm({ open, onOpenChange }: NewTagFormProps) {
+	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const form = useForm<TagFormValues>({
@@ -89,7 +91,7 @@ export function NewTagForm({ open, onOpenChange }: NewTagFormProps) {
 				slug: data.slug,
 				name: data.name,
 				type: data.type,
-				color: data.color,
+				color: data.color ?? "default",
 			});
 
 			if (error) {
@@ -97,6 +99,7 @@ export function NewTagForm({ open, onOpenChange }: NewTagFormProps) {
 			}
 
 			toast.success("Tag created successfully!");
+			queryClient.invalidateQueries({ queryKey: ["adminTags"] });
 			form.reset();
 			onOpenChange(false);
 		} catch (error) {
@@ -172,7 +175,7 @@ export function NewTagForm({ open, onOpenChange }: NewTagFormProps) {
 										<Field>
 											<FieldLabel htmlFor="color">Color</FieldLabel>
 											<Select
-												value={form.watch("color")}
+												value={form.watch("color") ?? "default"}
 												onValueChange={(value) =>
 													form.setValue(
 														"color",

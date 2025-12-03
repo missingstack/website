@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -114,6 +114,7 @@ interface NewToolFormProps {
 }
 
 export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
+	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Fetch categories
@@ -212,6 +213,7 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 			}
 
 			toast.success("Tool created successfully!");
+			queryClient.resetQueries({ queryKey: ["adminTools"] });
 			form.reset();
 			onOpenChange(false);
 		} catch (error) {
