@@ -1,5 +1,6 @@
 import type { Tool } from "@missingstack/api/types";
 import type {
+	CreateToolInput,
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
@@ -159,6 +160,10 @@ export class ToolsService implements ToolsServiceInterface {
 		};
 
 		return this.repository.getAllWithAlternativeCounts(sanitizedOptions);
+	}
+
+	async create(input: CreateToolInput): Promise<ToolData> {
+		return this.repository.create(input);
 	}
 }
 

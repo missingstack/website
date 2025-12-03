@@ -4,7 +4,6 @@ import {
 	FolderTree,
 	Layers,
 	LayoutDashboard,
-	Link as LinkIcon,
 	Settings,
 	Tags,
 	TrendingUp,

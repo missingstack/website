@@ -4,7 +4,11 @@ import { t } from "elysia";
 
 export type { Tool } from "@missingstack/db/schema/tools";
 
-import { type ToolQueryOptions, toolQueryOptionsSchema } from "./tools.schema";
+import {
+	type ToolQueryOptions,
+	createToolSchema,
+	toolQueryOptionsSchema,
+} from "./tools.schema";
 
 export type {
 	ToolCollection,
@@ -86,6 +90,39 @@ function parseQueryOptions(
 export function createToolsRouter(app: Elysia) {
 	return app.group("/tools", (app) =>
 		app
+			.post(
+				"/",
+				async ({ body }) => {
+					const result = createToolSchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid tool data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.toolService.create(result.data);
+				},
+				{
+					body: t.Object({
+						slug: t.String(),
+						name: t.String(),
+						tagline: t.Optional(t.String()),
+						description: t.String(),
+						logo: t.String(),
+						website: t.Optional(t.String()),
+						pricing: t.String(),
+						license: t.Optional(t.String()),
+						featured: t.Optional(t.Boolean()),
+						affiliateUrl: t.Optional(t.String()),
+						sponsorshipPriority: t.Optional(t.Number()),
+						isSponsored: t.Optional(t.Boolean()),
+						monetizationEnabled: t.Optional(t.Boolean()),
+						categoryIds: t.Optional(t.Array(t.String())),
+						stackIds: t.Optional(t.Array(t.String())),
+						tagIds: t.Optional(t.Array(t.String())),
+						alternativeIds: t.Optional(t.Array(t.String())),
+					}),
+				},
+			)
 			.get("/", async ({ request }) => {
 				const rawQueryOptions = parseRawQuery(request.url);
 				const options = parseQueryOptions(rawQueryOptions);

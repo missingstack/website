@@ -1,6 +1,7 @@
 import type { BaseQueryOptions } from "@missingstack/api/shared";
 import type { Tool } from "@missingstack/api/types";
 import type {
+	CreateToolInput,
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
@@ -38,7 +39,10 @@ export interface ToolRepositoryInterface {
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
+	create(input: CreateToolInput): Promise<ToolData>;
 }
+
+export type { CreateToolInput } from "./tools.schema";
 
 export interface ToolsServiceInterface {
 	getAll(options?: ToolQueryOptions): Promise<ToolCollection>;
@@ -64,4 +68,5 @@ export interface ToolsServiceInterface {
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
+	create(input: CreateToolInput): Promise<ToolData>;
 }

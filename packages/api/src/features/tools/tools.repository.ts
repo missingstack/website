@@ -22,6 +22,7 @@ import { toolsCategories } from "@missingstack/db/schema/tools-categories";
 import { toolsStacks } from "@missingstack/db/schema/tools-stacks";
 import { toolsTags } from "@missingstack/db/schema/tools-tags";
 import type {
+	CreateToolInput,
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
@@ -29,7 +30,7 @@ import type {
 	ToolWithAlternativeCountCollection,
 } from "./tools.types";
 
-type QueryableDb = Pick<Database, "select" | "transaction">;
+type QueryableDb = Pick<Database, "select" | "insert" | "transaction">;
 type CursorState = {
 	id: string;
 	createdAt?: Date;
@@ -863,6 +864,87 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			.limit(limit);
 
 		return rows;
+	}
+
+	async create(input: CreateToolInput): Promise<ToolData> {
+		return this.db.transaction(async (tx) => {
+			// Insert the tool
+			const [tool] = await tx
+				.insert(tools)
+				.values({
+					slug: input.slug,
+					name: input.name,
+					tagline: input.tagline || null,
+					description: input.description,
+					logo: input.logo,
+					website: input.website || null,
+					pricing: input.pricing,
+					license: input.license || null,
+					featured: input.featured ?? false,
+					affiliateUrl: input.affiliateUrl || null,
+					sponsorshipPriority: input.sponsorshipPriority ?? 0,
+					isSponsored: input.isSponsored ?? false,
+					monetizationEnabled: input.monetizationEnabled ?? false,
+				})
+				.returning();
+
+			if (!tool) {
+				throw new Error("Failed to create tool");
+			}
+
+			// Insert junction table records
+			if (input.categoryIds.length > 0) {
+				await tx.insert(toolsCategories).values(
+					input.categoryIds.map((categoryId) => ({
+						toolId: tool.id,
+						categoryId,
+					})),
+				);
+			}
+
+			if (input.stackIds.length > 0) {
+				await tx.insert(toolsStacks).values(
+					input.stackIds.map((stackId) => ({
+						toolId: tool.id,
+						stackId,
+					})),
+				);
+			}
+
+			if (input.tagIds.length > 0) {
+				await tx.insert(toolsTags).values(
+					input.tagIds.map((tagId) => ({
+						toolId: tool.id,
+						tagId,
+					})),
+				);
+			}
+
+			if (input.alternativeIds.length > 0) {
+				await tx.insert(toolsAlternatives).values(
+					input.alternativeIds.map((alternativeId) => ({
+						toolId: tool.id,
+						alternativeToolId: alternativeId,
+					})),
+				);
+			}
+
+			// Update search vector (PostgreSQL trigger should handle this, but we can also do it manually)
+			await tx.execute(
+				sql`UPDATE tools SET search_vector = 
+					to_tsvector('english', coalesce(name, '') || ' ' || coalesce(tagline, '') || ' ' || coalesce(description, ''))
+					WHERE id = ${tool.id}`,
+			);
+
+			// Return tool with relations
+			return {
+				...tool,
+				categoryIds: input.categoryIds,
+				tagIds: input.tagIds,
+				stackIds: input.stackIds,
+				alternativeIds: input.alternativeIds,
+			};
+		});
 	}
 
 	async withTransaction<T>(

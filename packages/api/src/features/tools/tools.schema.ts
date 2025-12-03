@@ -46,3 +46,28 @@ export type ToolWithAlternativeCountCollection = {
 	nextCursor: string | null;
 	hasMore: boolean;
 };
+
+// Create tool request schema
+export const createToolSchema = z
+	.object({
+		slug: z.string().min(1).max(120),
+		name: z.string().min(1).max(160),
+		tagline: z.string().max(256).optional(),
+		description: z.string().min(1),
+		logo: z.string().min(1).max(256),
+		website: z.string().url().max(256).optional().or(z.literal("")),
+		pricing: z.enum(pricingEnumValues),
+		license: z.enum(licenseEnumValues).optional(),
+		featured: z.boolean().default(false),
+		affiliateUrl: z.string().url().max(512).optional().or(z.literal("")),
+		sponsorshipPriority: z.number().int().default(0),
+		isSponsored: z.boolean().default(false),
+		monetizationEnabled: z.boolean().default(false),
+		categoryIds: z.array(z.string().uuid()).default([]),
+		stackIds: z.array(z.string().uuid()).default([]),
+		tagIds: z.array(z.string().uuid()).default([]),
+		alternativeIds: z.array(z.string().uuid()).default([]),
+	})
+	.strict();
+
+export type CreateToolInput = z.infer<typeof createToolSchema>;
