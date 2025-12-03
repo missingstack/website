@@ -1,0 +1,35 @@
+{
+	"name": "@missingstack/email",
+	"version": "0.0.0",
+	"private": true,
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./src/email.ts",
+		"./send": "./src/send.ts",
+		"./contacts": "./src/contacts.ts",
+		"./types": "./src/types.ts",
+		"./config": "./src/config.ts",
+		"./resend-client": "./src/resend-client.ts"
+	},
+	"scripts": {
+		"lint": "biome check ./emails",
+		"format": "biome format --write .",
+		"check-types": "tsc --noEmit",
+		"dev": "email dev -p 9999"
+	},
+	"dependencies": {
+		"@react-email/components": "1.0.0",
+		"@react-email/render": "2.0.0",
+		"@react-email/tailwind": "2.0.0",
+		"resend": "^6.5.2"
+	},
+	"devDependencies": {
+		"@missingstack/config": "workspace:*",
+		"@types/react": "19.2.2",
+		"react-email": "5.0.1"
+	},
+	"peerDependencies": {
+		"react": "^19.0.0"
+	}
+}

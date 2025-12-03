@@ -14,6 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { api } from "~/lib/eden";
 
 const BENEFITS = [
 	{
@@ -34,22 +35,21 @@ const BENEFITS = [
 ];
 
 async function subscribeToNewsletter(email: string) {
-	const response = await fetch("/api/subscribe", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ email }),
+	const { data, error } = await api.v1.newsletter.post({
+		email,
 	});
 
-	if (!response.ok) {
-		const error = await response
-			.json()
-			.catch(() => ({ message: "Failed to subscribe" }));
-		throw new Error(error.message || "Failed to subscribe");
+	if (error) {
+		// Handle HTTP errors (validation errors, network errors, etc.)
+		const errorMessage = error.value?.message || "Failed to subscribe";
+		throw new Error(errorMessage);
 	}
 
-	return response.json();
+	if (!data.success) {
+		throw new Error("Failed to subscribe");
+	}
+
+	return data;
 }
 
 export function NewsletterSection() {
@@ -141,7 +141,7 @@ export function NewsletterSection() {
 
 					{mutation.isSuccess && (
 						<p className="mb-4 text-green-600 text-sm">
-							Successfully subscribed! Check your inbox for confirmation.
+							Successfully subscribed!
 						</p>
 					)}
 

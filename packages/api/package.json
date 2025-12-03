@@ -24,9 +24,11 @@
 	"dependencies": {
 		"@elysiajs/openapi": "^1.4.11",
 		"@missingstack/db": "workspace:*",
+		"@missingstack/email": "workspace:*",
 		"dotenv": "catalog:",
 		"drizzle-orm": "^0.44.2",
 		"elysia": "^1.4.16",
+		"resend": "^6.5.2",
 		"zod": "catalog:"
 	}
 }

@@ -1,6 +1,7 @@
 import { openapi } from "@elysiajs/openapi";
 import { services } from "@missingstack/api/context";
 import { createCategoriesRouter } from "@missingstack/api/features/categories";
+import { createNewsletterRouter } from "@missingstack/api/features/newsletter";
 import { createSectionsRouter } from "@missingstack/api/features/sections";
 import { createStacksRouter } from "@missingstack/api/features/stacks";
 import { createStatsRouter } from "@missingstack/api/features/stats";
@@ -26,6 +27,7 @@ export const app = createApp(services)
 	.use(createTagsRouter)
 	.use(createStacksRouter)
 	.use(createSectionsRouter)
-	.use(createStatsRouter);
+	.use(createStatsRouter)
+	.use(createNewsletterRouter);
 
 export type app = typeof app;

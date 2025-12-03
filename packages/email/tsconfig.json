@@ -1,0 +1,9 @@
+{
+	"extends": "@missingstack/config/tsconfig.base.json",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"jsxImportSource": "react",
+		"lib": ["DOM", "DOM.Iterable", "ES2022"]
+	},
+	"include": ["emails", "src"]
+}
