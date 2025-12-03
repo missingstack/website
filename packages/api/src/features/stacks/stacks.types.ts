@@ -1,4 +1,5 @@
 import type { Stack } from "@missingstack/db/schema/stacks";
+import type { CreateStackInput } from "./stacks.schema";
 
 // Stack with computed tool count
 export type StackWithCount = Stack & {
@@ -11,6 +12,7 @@ export interface StackRepositoryInterface {
 	getBySlug(slug: string): Promise<Stack | null>;
 	getAllWithCounts(): Promise<StackWithCount[]>;
 	getTopStacks(limit?: number): Promise<StackWithCount[]>;
+	create(input: CreateStackInput): Promise<Stack>;
 }
 
 export interface StacksServiceInterface {
@@ -19,4 +21,5 @@ export interface StacksServiceInterface {
 	getBySlug(slug: string): Promise<Stack | null>;
 	getAllWithCounts(): Promise<StackWithCount[]>;
 	getTopStacks(limit?: number): Promise<StackWithCount[]>;
+	create(input: CreateStackInput): Promise<Stack>;
 }

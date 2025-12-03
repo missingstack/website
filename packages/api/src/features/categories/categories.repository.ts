@@ -17,13 +17,14 @@ import { toolsCategories } from "@missingstack/db/schema/tools-categories";
 import type {
 	CategoryCollection,
 	CategoryQueryOptions,
+	CreateCategoryInput,
 } from "./categories.schema";
 import type {
 	CategoryRepositoryInterface,
 	CategoryWithCount,
 } from "./categories.types";
 
-type QueryableDb = Pick<Database, "select" | "transaction">;
+type QueryableDb = Pick<Database, "select" | "transaction" | "insert">;
 type CursorState = {
 	id: string;
 	createdAt?: Date;
@@ -402,5 +403,25 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 			...row,
 			toolCount: Number(row.toolCount),
 		}));
+	}
+
+	async create(input: CreateCategoryInput): Promise<Category> {
+		const [category] = await this.db
+			.insert(categories)
+			.values({
+				slug: input.slug,
+				name: input.name,
+				description: input.description || null,
+				icon: input.icon,
+				parentId: input.parentId || null,
+				weight: input.weight ?? 0,
+			})
+			.returning();
+
+		if (!category) {
+			throw new Error("Failed to create category");
+		}
+
+		return category;
 	}
 }

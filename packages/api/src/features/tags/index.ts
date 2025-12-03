@@ -10,11 +10,33 @@ export type {
 	TagsServiceInterface,
 } from "./tags.types";
 
+import { createTagSchema } from "./tags.schema";
+
 const tagTypeEnumValues = tagTypeEnum.enumValues;
 
 export function createTagsRouter(app: Elysia) {
 	return app.group("/tags", (app) =>
 		app
+			.post(
+				"/",
+				async ({ body }) => {
+					const result = createTagSchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid tag data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.tagService.create(result.data);
+				},
+				{
+					body: t.Object({
+						slug: t.String(),
+						name: t.String(),
+						type: t.String(),
+						color: t.Optional(t.String()),
+					}),
+				},
+			)
 			.get("/", async () => {
 				return services.tagService.getAll();
 			})

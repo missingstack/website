@@ -2,6 +2,7 @@ import { baseQueryOptionsSchema } from "@missingstack/api/shared";
 import type { Category } from "@missingstack/db/schema/categories";
 import { z } from "zod";
 
+// Category collection response
 export type CategoryCollection = {
 	items: Category[];
 	nextCursor: string | null;
@@ -9,7 +10,6 @@ export type CategoryCollection = {
 };
 
 // Category query options schema
-// Supports sorting by: name, slug, weight, createdAt
 export const categoryQueryOptionsSchema = baseQueryOptionsSchema
 	.extend({
 		search: z.string().optional(),
@@ -18,3 +18,17 @@ export const categoryQueryOptionsSchema = baseQueryOptionsSchema
 	.strict();
 
 export type CategoryQueryOptions = z.infer<typeof categoryQueryOptionsSchema>;
+
+// Create category request schema
+export const createCategorySchema = z
+	.object({
+		slug: z.string().min(1).max(120),
+		name: z.string().min(1).max(160),
+		description: z.string().optional(),
+		icon: z.string().min(1).max(100),
+		parentId: z.string().uuid().optional(),
+		weight: z.number().int().default(0),
+	})
+	.strict();
+
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

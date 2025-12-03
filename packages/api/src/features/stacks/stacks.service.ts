@@ -1,4 +1,5 @@
 import type { Stack } from "@missingstack/db/schema/stacks";
+import type { CreateStackInput } from "./stacks.schema";
 import type {
 	StackRepositoryInterface,
 	StackWithCount,
@@ -26,5 +27,9 @@ export class StacksService implements StacksServiceInterface {
 
 	async getTopStacks(limit?: number): Promise<StackWithCount[]> {
 		return this.repository.getTopStacks(limit);
+	}
+
+	async create(input: CreateStackInput): Promise<Stack> {
+		return this.repository.create(input);
 	}
 }

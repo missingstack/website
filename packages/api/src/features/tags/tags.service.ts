@@ -1,5 +1,6 @@
 import type { TagType } from "@missingstack/db/schema/enums";
 import type { Tag } from "@missingstack/db/schema/tags";
+import type { CreateTagInput } from "./tags.schema";
 import type {
 	TagRepositoryInterface,
 	TagWithCount,
@@ -27,5 +28,9 @@ export class TagsService implements TagsServiceInterface {
 
 	async getAllWithCounts(): Promise<TagWithCount[]> {
 		return this.repository.getAllWithCounts();
+	}
+
+	async create(input: CreateTagInput): Promise<Tag> {
+		return this.repository.create(input);
 	}
 }

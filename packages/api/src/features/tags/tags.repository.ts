@@ -3,10 +3,10 @@ import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import type { TagType } from "@missingstack/db/schema/enums";
 import { type Tag, tags } from "@missingstack/db/schema/tags";
 import { toolsTags } from "@missingstack/db/schema/tools-tags";
-
+import type { CreateTagInput } from "./tags.schema";
 import type { TagRepositoryInterface, TagWithCount } from "./tags.types";
 
-type QueryableDb = Pick<Database, "select">;
+type QueryableDb = Pick<Database, "select" | "insert">;
 
 export class DrizzleTagRepository implements TagRepositoryInterface {
 	constructor(private readonly db: QueryableDb) {}
@@ -71,5 +71,23 @@ export class DrizzleTagRepository implements TagRepositoryInterface {
 			...row,
 			toolCount: Number(row.toolCount),
 		}));
+	}
+
+	async create(input: CreateTagInput): Promise<Tag> {
+		const [tag] = await this.db
+			.insert(tags)
+			.values({
+				slug: input.slug,
+				name: input.name,
+				type: input.type,
+				color: input.color ?? "default",
+			})
+			.returning();
+
+		if (!tag) {
+			throw new Error("Failed to create tag");
+		}
+
+		return tag;
 	}
 }

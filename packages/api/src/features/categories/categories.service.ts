@@ -2,6 +2,7 @@ import type { Category } from "@missingstack/db/schema/categories";
 import type {
 	CategoryCollection,
 	CategoryQueryOptions,
+	CreateCategoryInput,
 } from "./categories.schema";
 import type {
 	CategoriesServiceInterface,
@@ -34,6 +35,10 @@ export class CategoriesService implements CategoriesServiceInterface {
 	async getTopCategories(limit?: number): Promise<CategoryWithCount[]> {
 		const clampedLimit = clampLimit(limit);
 		return this.repository.getTopCategories(clampedLimit);
+	}
+
+	async create(input: CreateCategoryInput): Promise<Category> {
+		return this.repository.create(input);
 	}
 }
 

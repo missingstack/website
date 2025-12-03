@@ -8,9 +8,33 @@ export * from "./stacks.service";
 export type { StackWithCount } from "./stacks.types";
 export * from "./stacks.types";
 
+import { createStackSchema } from "./stacks.schema";
+
 export function createStacksRouter(app: Elysia) {
 	return app.group("/stacks", (app) =>
 		app
+			.post(
+				"/",
+				async ({ body }) => {
+					const result = createStackSchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid stack data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.stackService.create(result.data);
+				},
+				{
+					body: t.Object({
+						slug: t.String(),
+						name: t.String(),
+						description: t.Optional(t.String()),
+						icon: t.Optional(t.String()),
+						parentId: t.Optional(t.String()),
+						weight: t.Optional(t.Number()),
+					}),
+				},
+			)
 			.get("/", async () => {
 				return services.stackService.getAll();
 			})

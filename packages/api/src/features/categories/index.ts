@@ -4,6 +4,7 @@ import { t } from "elysia";
 import {
 	type CategoryQueryOptions,
 	categoryQueryOptionsSchema,
+	createCategorySchema,
 } from "./categories.schema";
 
 export type { Category } from "@missingstack/db/schema/categories";
@@ -63,6 +64,28 @@ function parseQueryOptions(
 export function createCategoriesRouter(app: Elysia) {
 	return app.group("/categories", (app) =>
 		app
+			.post(
+				"/",
+				async ({ body }) => {
+					const result = createCategorySchema.safeParse(body);
+					if (!result.success) {
+						throw new Error(
+							`Invalid category data: ${result.error.issues.map((e) => e.message).join(", ")}`,
+						);
+					}
+					return services.categoryService.create(result.data);
+				},
+				{
+					body: t.Object({
+						slug: t.String(),
+						name: t.String(),
+						description: t.Optional(t.String()),
+						icon: t.String(),
+						parentId: t.Optional(t.String()),
+						weight: t.Optional(t.Number()),
+					}),
+				},
+			)
 			.get("/", async ({ request }) => {
 				const rawQueryOptions = parseRawQuery(request.url);
 				const options = parseQueryOptions(rawQueryOptions);

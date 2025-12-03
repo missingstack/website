@@ -2,6 +2,7 @@ import type { Database } from "@missingstack/db";
 import { asc, count, desc, eq, sql } from "@missingstack/db/drizzle-orm";
 import { type Stack, stacks } from "@missingstack/db/schema/stacks";
 import { toolsStacks } from "@missingstack/db/schema/tools-stacks";
+import type { CreateStackInput } from "./stacks.schema";
 import type { StackRepositoryInterface, StackWithCount } from "./stacks.types";
 
 export class DrizzleStackRepository implements StackRepositoryInterface {
@@ -91,5 +92,25 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 			...row,
 			toolCount: Number(row.toolCount),
 		}));
+	}
+
+	async create(input: CreateStackInput): Promise<Stack> {
+		const [stack] = await this.db
+			.insert(stacks)
+			.values({
+				slug: input.slug,
+				name: input.name,
+				description: input.description || null,
+				icon: input.icon || null,
+				parentId: input.parentId || null,
+				weight: input.weight ?? 0,
+			})
+			.returning();
+
+		if (!stack) {
+			throw new Error("Failed to create stack");
+		}
+
+		return stack;
 	}
 }
