@@ -5,50 +5,8 @@
 		{
 			"idx": 0,
 			"version": "7",
-			"when": 1764572005594,
-			"tag": "0000_daily_charles_xavier",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1764598616238,
-			"tag": "0001_tranquil_rhodey",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1764654988028,
-			"tag": "0002_easy_microbe",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1764657816863,
-			"tag": "0003_breezy_flatman",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1764735264003,
-			"tag": "0004_bumpy_maelstrom",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1764738983898,
-			"tag": "0005_groovy_cassandra_nova",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "7",
-			"when": 1764765478657,
-			"tag": "0006_living_liz_osborn",
+			"when": 1764774662907,
+			"tag": "0000_normal_the_hand",
 			"breakpoints": true
 		}
 	]

@@ -24,12 +24,19 @@ async function clearDatabase() {
 	try {
 		// Truncate all tables in correct order (respecting foreign keys)
 		// Using CASCADE to handle foreign key constraints
+		// Order: Junction tables first, then tables with foreign keys, then main tables
 		await db.execute(sql`TRUNCATE TABLE 
       tools_tags,
       tools_categories,
+      tools_stacks,
+      categories_stacks,
+      tools_alternatives,
+      tool_sponsorships,
+      tool_affiliate_links,
       tools,
-      tags,
-      categories
+      stacks,
+      categories,
+      tags
       CASCADE`);
 
 		console.log("✅ All tables cleared successfully!");
