@@ -17,6 +17,7 @@ export interface CategoryRepositoryInterface {
 	getBySlug(slug: string): Promise<Category | null>;
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
+	getByStack(stackId: string): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
 	update(id: string, input: UpdateCategoryInput): Promise<Category>;
 	delete(id: string): Promise<void>;
@@ -28,6 +29,7 @@ export interface CategoriesServiceInterface {
 	getBySlug(slug: string): Promise<Category | null>;
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
+	getByStack(stackId: string): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
 	update(id: string, input: UpdateCategoryInput): Promise<Category>;
 	delete(id: string): Promise<void>;

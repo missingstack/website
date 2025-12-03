@@ -57,7 +57,10 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 			.from(stacks)
 			.leftJoin(toolsStacks, eq(stacks.id, toolsStacks.stackId))
 			.groupBy(stacks.id)
-			.orderBy(desc(sql`toolCount`), asc(stacks.name));
+			.orderBy(
+				desc(sql<number>`COALESCE(${count(toolsStacks.toolId)}, 0)`),
+				asc(stacks.name),
+			);
 
 		return rows.map((row) => ({
 			...row,
@@ -85,7 +88,10 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 			.from(stacks)
 			.leftJoin(toolsStacks, eq(stacks.id, toolsStacks.stackId))
 			.groupBy(stacks.id)
-			.orderBy(desc(sql`toolCount`), asc(stacks.name))
+			.orderBy(
+				desc(sql<number>`COALESCE(${count(toolsStacks.toolId)}, 0)`),
+				asc(stacks.name),
+			)
 			.limit(limit);
 
 		return rows.map((row) => ({

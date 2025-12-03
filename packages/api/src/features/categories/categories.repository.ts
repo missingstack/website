@@ -13,6 +13,7 @@ import {
 	sql,
 } from "@missingstack/db/drizzle-orm";
 import { type Category, categories } from "@missingstack/db/schema/categories";
+import { categoriesStacks } from "@missingstack/db/schema/categories-stacks";
 import { toolsCategories } from "@missingstack/db/schema/tools-categories";
 import type {
 	CategoryCollection,
@@ -458,5 +459,41 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 
 	async delete(id: string): Promise<void> {
 		await this.db.delete(categories).where(eq(categories.id, id));
+	}
+
+	async getByStack(stackId: string): Promise<CategoryWithCount[]> {
+		const rows = await this.db
+			.select({
+				id: categories.id,
+				slug: categories.slug,
+				name: categories.name,
+				description: categories.description,
+				icon: categories.icon,
+				parentId: categories.parentId,
+				weight: categories.weight,
+				createdAt: categories.createdAt,
+				updatedAt: categories.updatedAt,
+				toolCount:
+					sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`.as(
+						"toolCount",
+					),
+			})
+			.from(categories)
+			.innerJoin(
+				categoriesStacks,
+				eq(categories.id, categoriesStacks.categoryId),
+			)
+			.leftJoin(toolsCategories, eq(categories.id, toolsCategories.categoryId))
+			.where(eq(categoriesStacks.stackId, stackId))
+			.groupBy(categories.id)
+			.orderBy(
+				desc(sql<number>`COALESCE(${count(toolsCategories.toolId)}, 0)`),
+				asc(categories.name),
+			);
+
+		return rows.map((row) => ({
+			...row,
+			toolCount: Number(row.toolCount),
+		}));
 	}
 }

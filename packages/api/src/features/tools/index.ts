@@ -152,6 +152,17 @@ export function createToolsRouter(app: Elysia) {
 				},
 			)
 			.get(
+				"/stack/:stackId",
+				async ({ params: { stackId }, request }) => {
+					const rawQueryOptions = parseRawQuery(request.url);
+					const options = parseQueryOptions(rawQueryOptions);
+					return services.toolService.getByStack(stackId, options);
+				},
+				{
+					params: t.Object({ stackId: t.String() }),
+				},
+			)
+			.get(
 				"/search",
 				async ({ query, request }) => {
 					const rawQueryOptions = parseRawQuery(request.url);

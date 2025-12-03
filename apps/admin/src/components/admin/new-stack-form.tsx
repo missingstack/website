@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -54,6 +54,7 @@ interface NewStackFormProps {
 
 export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const queryClient = useQueryClient();
 
 	// Fetch stacks for parent selection
 	const { data: stacksData } = useQuery({
@@ -95,6 +96,8 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 			}
 
 			toast.success("Stack created successfully!");
+			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
+			queryClient.invalidateQueries({ queryKey: ["stacks"] });
 			form.reset();
 			onOpenChange(false);
 		} catch (error) {

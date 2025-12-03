@@ -38,6 +38,10 @@ export class CategoriesService implements CategoriesServiceInterface {
 		return this.repository.getTopCategories(clampedLimit);
 	}
 
+	async getByStack(stackId: string): Promise<CategoryWithCount[]> {
+		return this.repository.getByStack(stackId);
+	}
+
 	async create(input: CreateCategoryInput): Promise<Category> {
 		return this.repository.create(input);
 	}
