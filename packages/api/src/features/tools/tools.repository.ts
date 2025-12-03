@@ -8,12 +8,14 @@ import {
 	eq,
 	exists,
 	gt,
+	gte,
 	ilike,
 	inArray,
 	lt,
 	or,
 	sql,
 } from "@missingstack/db/drizzle-orm";
+import { categories } from "@missingstack/db/schema/categories";
 import type { License, PricingModel } from "@missingstack/db/schema/enums";
 import { toolSponsorships } from "@missingstack/db/schema/tool-sponsorships";
 import { type Tool, tools } from "@missingstack/db/schema/tools";
@@ -1181,5 +1183,46 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 	async delete(id: string): Promise<void> {
 		await this.db.delete(tools).where(eq(tools.id, id));
+	}
+
+	async getByDateRange(
+		startDate: Date,
+		endDate: Date,
+	): Promise<Array<Tool & { categoryNames: string[] }>> {
+		// Query tools created within the date range
+		const toolRows = await this.db
+			.select()
+			.from(tools)
+			.where(and(gte(tools.createdAt, startDate), lt(tools.createdAt, endDate)))
+			.orderBy(desc(tools.createdAt), desc(tools.id));
+
+		if (toolRows.length === 0) {
+			return [];
+		}
+
+		// Get category names for all tools
+		const toolIds = toolRows.map((t) => t.id);
+		const categoryMappings = await this.db
+			.select({
+				toolId: toolsCategories.toolId,
+				categoryName: categories.name,
+			})
+			.from(toolsCategories)
+			.innerJoin(categories, eq(toolsCategories.categoryId, categories.id))
+			.where(inArray(toolsCategories.toolId, toolIds));
+
+		// Group categories by tool ID
+		const categoriesByTool = new Map<string, string[]>();
+		for (const mapping of categoryMappings) {
+			const existing = categoriesByTool.get(mapping.toolId) || [];
+			existing.push(mapping.categoryName);
+			categoriesByTool.set(mapping.toolId, existing);
+		}
+
+		// Combine tools with their category names
+		return toolRows.map((tool) => ({
+			...tool,
+			categoryNames: categoriesByTool.get(tool.id) || [],
+		}));
 	}
 }

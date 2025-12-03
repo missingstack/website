@@ -6,6 +6,7 @@ import type {
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 	ToolWithAlternativeCountCollection,
+	ToolWithCategories,
 	ToolsServiceInterface,
 } from "./tools.types";
 
@@ -172,6 +173,13 @@ export class ToolsService implements ToolsServiceInterface {
 
 	async delete(id: string): Promise<void> {
 		return this.repository.delete(id);
+	}
+
+	async getByDateRange(
+		startDate: Date,
+		endDate: Date,
+	): Promise<ToolWithCategories[]> {
+		return this.repository.getByDateRange(startDate, endDate);
 	}
 }
 

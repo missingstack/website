@@ -16,6 +16,8 @@ export type {
 	ToolWithAlternativeCountCollection,
 };
 
+export type ToolWithCategories = Tool & { categoryNames: string[] };
+
 export interface ToolRepositoryInterface {
 	getAll(options?: ToolQueryOptions): Promise<ToolCollection>;
 	getByCategory(
@@ -40,6 +42,7 @@ export interface ToolRepositoryInterface {
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
+	getByDateRange(startDate: Date, endDate: Date): Promise<ToolWithCategories[]>;
 	create(input: CreateToolInput): Promise<ToolData>;
 	update(id: string, input: UpdateToolInput): Promise<ToolData>;
 	delete(id: string): Promise<void>;
@@ -71,6 +74,7 @@ export interface ToolsServiceInterface {
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
+	getByDateRange(startDate: Date, endDate: Date): Promise<ToolWithCategories[]>;
 	create(input: CreateToolInput): Promise<ToolData>;
 	update(id: string, input: UpdateToolInput): Promise<ToolData>;
 	delete(id: string): Promise<void>;

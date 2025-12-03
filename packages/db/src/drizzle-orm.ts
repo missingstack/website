@@ -7,6 +7,7 @@ export {
 	eq,
 	exists,
 	gt,
+	gte,
 	ilike,
 	inArray,
 	lt,
