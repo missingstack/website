@@ -31,7 +31,10 @@ export const stacks = pgTable(
 		name: varchar("name", { length: 160 }).notNull(),
 		description: text("description"),
 		icon: varchar("icon", { length: 100 }),
-		parentId: uuid("parent_id").references((): AnyPgColumn => stacks.id),
+		parentId: uuid("parent_id").references((): AnyPgColumn => stacks.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		weight: integer("weight").default(0),
 		...timestampFields,
 	},

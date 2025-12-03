@@ -20,10 +20,10 @@ export const toolsTags = pgTable(
 	{
 		toolId: uuid("tool_id")
 			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
+			.references(() => tools.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		tagId: uuid("tag_id")
 			.notNull()
-			.references(() => tags.id, { onDelete: "cascade" }),
+			.references(() => tags.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
 	(table) => [
 		primaryKey({ columns: [table.toolId, table.tagId] }),

@@ -108,7 +108,7 @@ export function ToolsTable() {
 		},
 		onSuccess: () => {
 			toast.success("Tool deleted successfully");
-			queryClient.invalidateQueries({ queryKey: ["adminTools"] });
+			queryClient.resetQueries({ queryKey: ["adminTools"] });
 			setDeleteDialogOpen(false);
 			setToolToDelete(null);
 		},

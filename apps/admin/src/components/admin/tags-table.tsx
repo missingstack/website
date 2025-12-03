@@ -55,6 +55,7 @@ export function TagsTable() {
 		onSuccess: () => {
 			toast.success("Tag deleted successfully");
 			queryClient.invalidateQueries({ queryKey: ["adminTags"] });
+			queryClient.refetchQueries({ queryKey: ["adminTags"] });
 			setDeleteDialogOpen(false);
 			setTagToDelete(null);
 		},

@@ -25,7 +25,7 @@ export const toolSponsorships = pgTable(
 		...uuidPrimaryKey,
 		toolId: uuid("tool_id")
 			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
+			.references(() => tools.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		tier: sponsorshipTierEnum("tier").notNull(),
 		startDate: timestamp("start_date", { withTimezone: true }).notNull(),
 		endDate: timestamp("end_date", { withTimezone: true }).notNull(),

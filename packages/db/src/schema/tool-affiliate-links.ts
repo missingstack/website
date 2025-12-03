@@ -25,7 +25,7 @@ export const toolAffiliateLinks = pgTable(
 		...uuidPrimaryKey,
 		toolId: uuid("tool_id")
 			.notNull()
-			.references(() => tools.id, { onDelete: "cascade" }),
+			.references(() => tools.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		affiliateUrl: varchar("affiliate_url", { length: 512 }).notNull(),
 		// Commission rate as decimal (e.g., 0.20 = 20%)
 		commissionRate: decimal("commission_rate", {

@@ -105,7 +105,7 @@ export function CategoriesTable() {
 		},
 		onSuccess: () => {
 			toast.success("Category deleted successfully");
-			queryClient.invalidateQueries({ queryKey: ["adminCategories"] });
+			queryClient.resetQueries({ queryKey: ["adminCategories"] });
 			setDeleteDialogOpen(false);
 			setCategoryToDelete(null);
 		},

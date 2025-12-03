@@ -56,6 +56,7 @@ export function StacksTable() {
 		onSuccess: () => {
 			toast.success("Stack deleted successfully");
 			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
+			queryClient.refetchQueries({ queryKey: ["adminStacks"] });
 			setDeleteDialogOpen(false);
 			setStackToDelete(null);
 		},
