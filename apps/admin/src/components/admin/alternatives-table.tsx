@@ -1,32 +1,21 @@
 "use client";
 
-import type { ToolCollection, ToolQueryOptions } from "@missingstack/api/types";
-import {
-	useInfiniteQuery,
-	useMutation,
-	useQueryClient,
-} from "@tanstack/react-query";
+import type {
+	ToolQueryOptions,
+	ToolWithAlternativeCountCollection,
+} from "@missingstack/api/types";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
 	ArrowDown,
 	ArrowUp,
 	ArrowUpDown,
 	Loader2,
 	Search,
-	Trash2,
 	X,
 } from "lucide-react";
 import { useQueryState, useQueryStates } from "nuqs";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef } from "react";
 import { Button } from "~/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import {
 	Table,
@@ -42,14 +31,8 @@ import {
 	adminToolsSearchParamsParsersClient,
 } from "~/lib/search-params";
 
-export function ToolsTable() {
+export function AlternativesTable() {
 	const loadMoreRef = useRef<HTMLTableRowElement>(null);
-	const queryClient = useQueryClient();
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [toolToDelete, setToolToDelete] = useState<{
-		id: string;
-		name: string;
-	} | null>(null);
 
 	const [search, setSearch] = useQueryState("search", {
 		...adminToolsSearchParamsParsersClient.search,
@@ -83,7 +66,7 @@ export function ToolsTable() {
 		if (pageParam) query.cursor = pageParam;
 		query.limit = 20;
 
-		const { data, error } = await api.v1.tools.get({
+		const { data, error } = await api.v1.tools["with-alternative-counts"].get({
 			query: query as ToolQueryOptions,
 		});
 
@@ -94,25 +77,8 @@ export function ToolsTable() {
 			items: data.items,
 			nextCursor: data.nextCursor,
 			hasMore: data.hasMore,
-		} as ToolCollection;
+		} as ToolWithAlternativeCountCollection;
 	};
-
-	const deleteMutation = useMutation({
-		mutationFn: async (id: string) => {
-			const { error } = await api.v1.tools({ id }).delete();
-			if (error)
-				throw new Error(error.value.message ?? "Failed to delete tool");
-		},
-		onSuccess: () => {
-			toast.success("Tool deleted successfully");
-			queryClient.invalidateQueries({ queryKey: ["adminTools"] });
-			setDeleteDialogOpen(false);
-			setToolToDelete(null);
-		},
-		onError: (error: Error) => {
-			toast.error(error.message || "Failed to delete tool");
-		},
-	});
 
 	const {
 		data,
@@ -122,7 +88,7 @@ export function ToolsTable() {
 		isLoading,
 		isError,
 	} = useInfiniteQuery({
-		queryKey: ["adminTools", search, filters.sortBy, filters.sortOrder],
+		queryKey: ["adminAlternatives", search, filters.sortBy, filters.sortOrder],
 		queryFn: fetchTools,
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (lastPage, allPages) => {
@@ -222,17 +188,6 @@ export function ToolsTable() {
 		);
 	};
 
-	const handleDeleteClick = (tool: { id: string; name: string }) => {
-		setToolToDelete(tool);
-		setDeleteDialogOpen(true);
-	};
-
-	const handleDeleteConfirm = () => {
-		if (toolToDelete) {
-			deleteMutation.mutate(toolToDelete.id);
-		}
-	};
-
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -282,14 +237,18 @@ export function ToolsTable() {
 							</TableHead>
 							<TableHead className="w-[150px]">Description</TableHead>
 							<TableHead className="w-[100px]">Website</TableHead>
-							<TableHead className="w-[100px]">Featured</TableHead>
-							<TableHead className="w-[100px]">Actions</TableHead>
+							<TableHead className="w-[120px]">
+								<div className="flex items-center gap-2">
+									<span>Alternatives</span>
+									<SortButton column="popular" />
+								</div>
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{isLoading && (
 							<TableRow>
-								<TableCell colSpan={7} className="h-24 text-center">
+								<TableCell colSpan={6} className="h-24 text-center">
 									<div className="flex items-center justify-center gap-2">
 										<Loader2 className="h-4 w-4 animate-spin" />
 										<span className="text-muted-foreground">
@@ -303,7 +262,7 @@ export function ToolsTable() {
 						{isError && (
 							<TableRow>
 								<TableCell
-									colSpan={7}
+									colSpan={6}
 									className="h-24 text-center text-destructive"
 								>
 									Failed to load tools. Please try again.
@@ -314,7 +273,7 @@ export function ToolsTable() {
 						{!isLoading && !isError && allTools.length === 0 && (
 							<TableRow>
 								<TableCell
-									colSpan={7}
+									colSpan={6}
 									className="h-24 text-center text-muted-foreground"
 								>
 									No tools found.
@@ -351,26 +310,14 @@ export function ToolsTable() {
 										)}
 									</TableCell>
 									<TableCell className="text-muted-foreground text-sm">
-										{tool.featured ? "Yes" : "No"}
-									</TableCell>
-									<TableCell>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() =>
-												handleDeleteClick({ id: tool.id, name: tool.name })
-											}
-											className="text-destructive hover:text-destructive"
-										>
-											<Trash2 className="h-4 w-4" />
-										</Button>
+										<span className="font-medium">{tool.alternativeCount}</span>
 									</TableCell>
 								</TableRow>
 							))}
 
 						{!isLoading && !isError && allTools.length > 0 && (
 							<TableRow ref={hasNextPage ? loadMoreRef : undefined}>
-								<TableCell colSpan={7} className="h-16 text-center">
+								<TableCell colSpan={6} className="h-16 text-center">
 									{isFetchingNextPage && (
 										<div className="flex items-center justify-center gap-2 text-muted-foreground">
 											<Loader2 className="h-4 w-4 animate-spin" />
@@ -389,44 +336,6 @@ export function ToolsTable() {
 					</TableBody>
 				</Table>
 			</div>
-
-			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Delete Tool</DialogTitle>
-						<DialogDescription>
-							Are you sure you want to delete "{toolToDelete?.name}"? This
-							action cannot be undone.
-						</DialogDescription>
-					</DialogHeader>
-					<DialogFooter>
-						<Button
-							variant="outline"
-							onClick={() => {
-								setDeleteDialogOpen(false);
-								setToolToDelete(null);
-							}}
-							disabled={deleteMutation.isPending}
-						>
-							Cancel
-						</Button>
-						<Button
-							variant="destructive"
-							onClick={handleDeleteConfirm}
-							disabled={deleteMutation.isPending}
-						>
-							{deleteMutation.isPending ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Deleting...
-								</>
-							) : (
-								"Delete"
-							)}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
 		</div>
 	);
 }

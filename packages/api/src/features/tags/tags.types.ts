@@ -14,6 +14,7 @@ export interface TagRepositoryInterface {
 	getByType(type: TagType): Promise<Tag[]>;
 	getAllWithCounts(): Promise<TagWithCount[]>;
 	create(input: CreateTagInput): Promise<Tag>;
+	delete(id: string): Promise<void>;
 }
 
 export interface TagsServiceInterface {
@@ -23,4 +24,5 @@ export interface TagsServiceInterface {
 	getByType(type: TagType): Promise<Tag[]>;
 	getAllWithCounts(): Promise<TagWithCount[]>;
 	create(input: CreateTagInput): Promise<Tag>;
+	delete(id: string): Promise<void>;
 }

@@ -6,7 +6,7 @@ import { toolsTags } from "@missingstack/db/schema/tools-tags";
 import type { CreateTagInput } from "./tags.schema";
 import type { TagRepositoryInterface, TagWithCount } from "./tags.types";
 
-type QueryableDb = Pick<Database, "select" | "insert">;
+type QueryableDb = Pick<Database, "select" | "insert" | "delete">;
 
 export class DrizzleTagRepository implements TagRepositoryInterface {
 	constructor(private readonly db: QueryableDb) {}
@@ -89,5 +89,9 @@ export class DrizzleTagRepository implements TagRepositoryInterface {
 		}
 
 		return tag;
+	}
+
+	async delete(id: string): Promise<void> {
+		await this.db.delete(tags).where(eq(tags.id, id));
 	}
 }

@@ -1,16 +1,26 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowDown,
 	ArrowUp,
 	ArrowUpDown,
 	Loader2,
 	Search,
+	Trash2,
 	X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import {
 	Table,
@@ -27,6 +37,28 @@ export function TagsTable() {
 	const [search, setSearch] = useState("");
 	const [sortBy, setSortBy] = useState<TagSortColumn>("createdAt");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+	const queryClient = useQueryClient();
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [tagToDelete, setTagToDelete] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
+
+	const deleteMutation = useMutation({
+		mutationFn: async (id: string) => {
+			const { error } = await api.v1.tags({ id }).delete();
+			if (error) throw new Error(error.value.message ?? "Failed to delete tag");
+		},
+		onSuccess: () => {
+			toast.success("Tag deleted successfully");
+			queryClient.invalidateQueries({ queryKey: ["adminTags"] });
+			setDeleteDialogOpen(false);
+			setTagToDelete(null);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || "Failed to delete tag");
+		},
+	});
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ["adminTags"],
@@ -105,6 +137,17 @@ export function TagsTable() {
 		);
 	};
 
+	const handleDeleteClick = (tag: { id: string; name: string }) => {
+		setTagToDelete(tag);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = () => {
+		if (tagToDelete) {
+			deleteMutation.mutate(tagToDelete.id);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -155,12 +198,13 @@ export function TagsTable() {
 									<SortButton column="createdAt" />
 								</div>
 							</TableHead>
+							<TableHead className="w-[100px]">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{isLoading && (
 							<TableRow>
-								<TableCell colSpan={5} className="h-24 text-center">
+								<TableCell colSpan={6} className="h-24 text-center">
 									<div className="flex items-center justify-center gap-2">
 										<Loader2 className="h-4 w-4 animate-spin" />
 										<span className="text-muted-foreground">
@@ -174,7 +218,7 @@ export function TagsTable() {
 						{isError && (
 							<TableRow>
 								<TableCell
-									colSpan={5}
+									colSpan={6}
 									className="h-24 text-center text-destructive"
 								>
 									Failed to load tags. Please try again.
@@ -185,7 +229,7 @@ export function TagsTable() {
 						{!isLoading && !isError && filteredAndSortedTags.length === 0 && (
 							<TableRow>
 								<TableCell
-									colSpan={5}
+									colSpan={6}
 									className="h-24 text-center text-muted-foreground"
 								>
 									No tags found.
@@ -210,11 +254,61 @@ export function TagsTable() {
 									<TableCell className="text-muted-foreground text-sm">
 										{new Date(tag.createdAt).toLocaleDateString()}
 									</TableCell>
+									<TableCell>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() =>
+												handleDeleteClick({ id: tag.id, name: tag.name })
+											}
+											className="text-destructive hover:text-destructive"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</TableCell>
 								</TableRow>
 							))}
 					</TableBody>
 				</Table>
 			</div>
+
+			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete Tag</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete "{tagToDelete?.name}"? This action
+							cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setDeleteDialogOpen(false);
+								setTagToDelete(null);
+							}}
+							disabled={deleteMutation.isPending}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteConfirm}
+							disabled={deleteMutation.isPending}
+						>
+							{deleteMutation.isPending ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Deleting...
+								</>
+							) : (
+								"Delete"
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

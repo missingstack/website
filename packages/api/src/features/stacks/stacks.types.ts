@@ -13,6 +13,7 @@ export interface StackRepositoryInterface {
 	getAllWithCounts(): Promise<StackWithCount[]>;
 	getTopStacks(limit?: number): Promise<StackWithCount[]>;
 	create(input: CreateStackInput): Promise<Stack>;
+	delete(id: string): Promise<void>;
 }
 
 export interface StacksServiceInterface {
@@ -22,4 +23,5 @@ export interface StacksServiceInterface {
 	getAllWithCounts(): Promise<StackWithCount[]>;
 	getTopStacks(limit?: number): Promise<StackWithCount[]>;
 	create(input: CreateStackInput): Promise<Stack>;
+	delete(id: string): Promise<void>;
 }

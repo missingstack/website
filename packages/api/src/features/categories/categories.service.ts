@@ -40,6 +40,10 @@ export class CategoriesService implements CategoriesServiceInterface {
 	async create(input: CreateCategoryInput): Promise<Category> {
 		return this.repository.create(input);
 	}
+
+	async delete(id: string): Promise<void> {
+		return this.repository.delete(id);
+	}
 }
 
 function clampLimit(limit?: number): number {

@@ -165,6 +165,10 @@ export class ToolsService implements ToolsServiceInterface {
 	async create(input: CreateToolInput): Promise<ToolData> {
 		return this.repository.create(input);
 	}
+
+	async delete(id: string): Promise<void> {
+		return this.repository.delete(id);
+	}
 }
 
 function clampLimit(limit?: number): number {

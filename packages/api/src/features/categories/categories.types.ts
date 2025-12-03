@@ -17,6 +17,7 @@ export interface CategoryRepositoryInterface {
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
+	delete(id: string): Promise<void>;
 }
 
 export interface CategoriesServiceInterface {
@@ -26,4 +27,5 @@ export interface CategoriesServiceInterface {
 	getAllWithCounts(): Promise<CategoryWithCount[]>;
 	getTopCategories(limit?: number): Promise<CategoryWithCount[]>;
 	create(input: CreateCategoryInput): Promise<Category>;
+	delete(id: string): Promise<void>;
 }

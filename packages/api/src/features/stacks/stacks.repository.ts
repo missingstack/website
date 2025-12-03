@@ -113,4 +113,8 @@ export class DrizzleStackRepository implements StackRepositoryInterface {
 
 		return stack;
 	}
+
+	async delete(id: string): Promise<void> {
+		await this.db.delete(stacks).where(eq(stacks.id, id));
+	}
 }

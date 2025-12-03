@@ -24,7 +24,10 @@ import type {
 	CategoryWithCount,
 } from "./categories.types";
 
-type QueryableDb = Pick<Database, "select" | "transaction" | "insert">;
+type QueryableDb = Pick<
+	Database,
+	"select" | "transaction" | "insert" | "delete"
+>;
 type CursorState = {
 	id: string;
 	createdAt?: Date;
@@ -423,5 +426,9 @@ export class DrizzleCategoryRepository implements CategoryRepositoryInterface {
 		}
 
 		return category;
+	}
+
+	async delete(id: string): Promise<void> {
+		await this.db.delete(categories).where(eq(categories.id, id));
 	}
 }

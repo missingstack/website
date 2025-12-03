@@ -219,6 +219,16 @@ export function createToolsRouter(app: Elysia) {
 				{
 					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
 				},
+			)
+			.delete(
+				"/:id",
+				async ({ params: { id } }) => {
+					await services.toolService.delete(id);
+					return { success: true };
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
 			),
 	);
 }

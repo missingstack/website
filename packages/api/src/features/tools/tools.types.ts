@@ -40,6 +40,7 @@ export interface ToolRepositoryInterface {
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
 	create(input: CreateToolInput): Promise<ToolData>;
+	delete(id: string): Promise<void>;
 }
 
 export type { CreateToolInput } from "./tools.schema";
@@ -69,4 +70,5 @@ export interface ToolsServiceInterface {
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
 	create(input: CreateToolInput): Promise<ToolData>;
+	delete(id: string): Promise<void>;
 }

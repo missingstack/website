@@ -33,4 +33,8 @@ export class TagsService implements TagsServiceInterface {
 	async create(input: CreateTagInput): Promise<Tag> {
 		return this.repository.create(input);
 	}
+
+	async delete(id: string): Promise<void> {
+		return this.repository.delete(id);
+	}
 }

@@ -1,16 +1,26 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowDown,
 	ArrowUp,
 	ArrowUpDown,
 	Loader2,
 	Search,
+	Trash2,
 	X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import {
 	Table,
@@ -27,6 +37,29 @@ export function StacksTable() {
 	const [search, setSearch] = useState("");
 	const [sortBy, setSortBy] = useState<StackSortColumn>("createdAt");
 	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+	const queryClient = useQueryClient();
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [stackToDelete, setStackToDelete] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
+
+	const deleteMutation = useMutation({
+		mutationFn: async (id: string) => {
+			const { error } = await api.v1.stacks({ id }).delete();
+			if (error)
+				throw new Error(error.value.message ?? "Failed to delete stack");
+		},
+		onSuccess: () => {
+			toast.success("Stack deleted successfully");
+			queryClient.invalidateQueries({ queryKey: ["adminStacks"] });
+			setDeleteDialogOpen(false);
+			setStackToDelete(null);
+		},
+		onError: (error: Error) => {
+			toast.error(error.message || "Failed to delete stack");
+		},
+	});
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ["adminStacks"],
@@ -110,6 +143,17 @@ export function StacksTable() {
 		);
 	};
 
+	const handleDeleteClick = (stack: { id: string; name: string }) => {
+		setStackToDelete(stack);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = () => {
+		if (stackToDelete) {
+			deleteMutation.mutate(stackToDelete.id);
+		}
+	};
+
 	return (
 		<div className="flex flex-1 flex-col gap-4">
 			<div className="flex items-center gap-2">
@@ -166,12 +210,13 @@ export function StacksTable() {
 							</TableHead>
 							<TableHead className="w-[100px]">Description</TableHead>
 							<TableHead className="w-[100px]">Icon</TableHead>
+							<TableHead className="w-[100px]">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{isLoading && (
 							<TableRow>
-								<TableCell colSpan={6} className="h-24 text-center">
+								<TableCell colSpan={7} className="h-24 text-center">
 									<div className="flex items-center justify-center gap-2">
 										<Loader2 className="h-4 w-4 animate-spin" />
 										<span className="text-muted-foreground">
@@ -185,7 +230,7 @@ export function StacksTable() {
 						{isError && (
 							<TableRow>
 								<TableCell
-									colSpan={6}
+									colSpan={7}
 									className="h-24 text-center text-destructive"
 								>
 									Failed to load stacks. Please try again.
@@ -196,7 +241,7 @@ export function StacksTable() {
 						{!isLoading && !isError && filteredAndSortedStacks.length === 0 && (
 							<TableRow>
 								<TableCell
-									colSpan={6}
+									colSpan={7}
 									className="h-24 text-center text-muted-foreground"
 								>
 									No stacks found.
@@ -222,11 +267,61 @@ export function StacksTable() {
 									<TableCell className="font-mono text-muted-foreground text-xs">
 										{stack.icon || "-"}
 									</TableCell>
+									<TableCell>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() =>
+												handleDeleteClick({ id: stack.id, name: stack.name })
+											}
+											className="text-destructive hover:text-destructive"
+										>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</TableCell>
 								</TableRow>
 							))}
 					</TableBody>
 				</Table>
 			</div>
+
+			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete Stack</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete "{stackToDelete?.name}"? This
+							action cannot be undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => {
+								setDeleteDialogOpen(false);
+								setStackToDelete(null);
+							}}
+							disabled={deleteMutation.isPending}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={handleDeleteConfirm}
+							disabled={deleteMutation.isPending}
+						>
+							{deleteMutation.isPending ? (
+								<>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Deleting...
+								</>
+							) : (
+								"Delete"
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

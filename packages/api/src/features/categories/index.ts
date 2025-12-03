@@ -123,6 +123,16 @@ export function createCategoriesRouter(app: Elysia) {
 				{
 					query: t.Optional(t.Object({ limit: t.Optional(t.String()) })),
 				},
+			)
+			.delete(
+				"/:id",
+				async ({ params: { id } }) => {
+					await services.categoryService.delete(id);
+					return { success: true };
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
 			),
 	);
 }

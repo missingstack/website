@@ -79,6 +79,16 @@ export function createTagsRouter(app: Elysia) {
 			)
 			.get("/with-counts", async () => {
 				return services.tagService.getAllWithCounts();
-			}),
+			})
+			.delete(
+				"/:id",
+				async ({ params: { id } }) => {
+					await services.tagService.delete(id);
+					return { success: true };
+				},
+				{
+					params: t.Object({ id: t.String() }),
+				},
+			),
 	);
 }

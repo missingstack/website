@@ -32,4 +32,8 @@ export class StacksService implements StacksServiceInterface {
 	async create(input: CreateStackInput): Promise<Stack> {
 		return this.repository.create(input);
 	}
+
+	async delete(id: string): Promise<void> {
+		return this.repository.delete(id);
+	}
 }

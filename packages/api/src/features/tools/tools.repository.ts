@@ -30,7 +30,10 @@ import type {
 	ToolWithAlternativeCountCollection,
 } from "./tools.types";
 
-type QueryableDb = Pick<Database, "select" | "insert" | "transaction">;
+type QueryableDb = Pick<
+	Database,
+	"select" | "insert" | "delete" | "transaction"
+>;
 type CursorState = {
 	id: string;
 	createdAt?: Date;
@@ -947,12 +950,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		});
 	}
 
-	async withTransaction<T>(
-		handler: (repo: ToolRepositoryInterface) => Promise<T>,
-	): Promise<T> {
-		return this.db.transaction(async (tx) => {
-			const transactionalRepo = new DrizzleToolRepository(tx as QueryableDb);
-			return handler(transactionalRepo);
-		});
+	async delete(id: string): Promise<void> {
+		await this.db.delete(tools).where(eq(tools.id, id));
 	}
 }
