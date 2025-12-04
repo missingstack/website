@@ -17,6 +17,7 @@ import {
 	HelpCircle,
 	type LucideIcon,
 	MessagesSquare,
+	Package,
 	Palette,
 	Play,
 	ShieldCheck,
@@ -43,6 +44,7 @@ const iconMap: Record<string, LucideIcon> = {
 	BarChart3,
 	Users,
 	HatGlasses,
+	Package,
 };
 
 export function getIcon(name: string): LucideIcon {

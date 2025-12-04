@@ -306,7 +306,7 @@ export class DrizzleSponsorshipRepository
 		if (input.tier) updateData.tier = input.tier;
 		if (input.startDate) updateData.startDate = new Date(input.startDate);
 		if (input.endDate) updateData.endDate = new Date(input.endDate);
-		if (input.isActive) updateData.isActive = input.isActive;
+		if (input.isActive !== undefined) updateData.isActive = input.isActive;
 		if (input.priorityWeight) updateData.priorityWeight = input.priorityWeight;
 		if (input.paymentStatus) updateData.paymentStatus = input.paymentStatus;
 

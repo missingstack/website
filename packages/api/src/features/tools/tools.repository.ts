@@ -1225,7 +1225,7 @@ export class DrizzleToolRepository
 				...(input.license && {
 					license: input.license || null,
 				}),
-				...(input.featured && { featured: input.featured }),
+				...(input.featured !== undefined && { featured: input.featured }),
 			};
 
 			const [tool] = await tx
