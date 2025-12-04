@@ -15,8 +15,10 @@ export type {
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
+	ToolWith,
 	ToolWithAlternativeCount,
 	ToolWithAlternativeCountCollection,
+	ToolWithSponsorship,
 } from "./tools.schema";
 
 export type {

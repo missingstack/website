@@ -17,6 +17,7 @@ import {
 } from "@missingstack/db/drizzle-orm";
 import { categories } from "@missingstack/db/schema/categories";
 import type { License, PricingModel } from "@missingstack/db/schema/enums";
+import { toolAffiliateLinks } from "@missingstack/db/schema/tool-affiliate-links";
 import { toolSponsorships } from "@missingstack/db/schema/tool-sponsorships";
 import { type Tool, tools } from "@missingstack/db/schema/tools";
 import { toolsAlternatives } from "@missingstack/db/schema/tools-alternatives";
@@ -30,6 +31,7 @@ import type {
 	ToolQueryOptions,
 	ToolRepositoryInterface,
 	ToolWithAlternativeCountCollection,
+	ToolWithSponsorship,
 	UpdateToolInput,
 } from "./tools.types";
 
@@ -227,18 +229,60 @@ class FilterBuilder {
 
 // SORT BUILDERS
 class SortBuilder {
-	static buildOrderBy(context: SortContext): SQL<unknown>[] {
+	static buildOrderBy(context: SortContext, db: QueryableDb): SQL<unknown>[] {
 		const orderFn = context.sortOrder === "asc" ? asc : desc;
+		const now = new Date();
+
+		// Helper to check if tool has active sponsorship
+		const hasActiveSponsorship = exists(
+			db
+				.select()
+				.from(toolSponsorships)
+				.where(
+					and(
+						eq(toolSponsorships.toolId, tools.id),
+						eq(toolSponsorships.isActive, true),
+						sql`${toolSponsorships.startDate} <= ${now}`,
+						gt(toolSponsorships.endDate, now),
+					),
+				),
+		);
+
+		// Helper to check if tool has affiliate links
+		const hasAffiliateLink = exists(
+			db
+				.select()
+				.from(toolAffiliateLinks)
+				.where(eq(toolAffiliateLinks.toolId, tools.id)),
+		);
+
+		// Helper to get max priority weight from active sponsorships
+		const maxSponsorshipPriority = sql<number>`COALESCE((
+			SELECT MAX(${toolSponsorships.priorityWeight})
+			FROM ${toolSponsorships}
+			WHERE ${toolSponsorships.toolId} = ${tools.id}
+			AND ${toolSponsorships.isActive} = true
+			AND ${toolSponsorships.startDate} <= ${now}
+			AND ${toolSponsorships.endDate} > ${now}
+		), 0)`;
 
 		switch (context.sortBy) {
 			case "name":
 				return [orderFn(tools.name), orderFn(tools.id)];
 
 			case "newest":
-				return [orderFn(tools.createdAt), orderFn(tools.id)];
+				return [
+					desc(hasActiveSponsorship),
+					desc(hasAffiliateLink),
+					orderFn(tools.createdAt),
+					orderFn(tools.id),
+				];
 
 			case "popular":
 				return [
+					desc(hasActiveSponsorship),
+					desc(maxSponsorshipPriority),
+					desc(hasAffiliateLink),
 					orderFn(tools.featured),
 					orderFn(tools.createdAt),
 					orderFn(tools.id),
@@ -247,16 +291,32 @@ class SortBuilder {
 			case "relevance": {
 				if (!context.searchQuery) {
 					// Fallback to newest if no search query
-					return [desc(tools.createdAt), desc(tools.id)];
+					return [
+						desc(hasActiveSponsorship),
+						desc(hasAffiliateLink),
+						desc(tools.createdAt),
+						desc(tools.id),
+					];
 				}
 				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
 				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
-				return [desc(rankExpr), desc(tools.id)];
+				return [
+					desc(hasActiveSponsorship),
+					desc(maxSponsorshipPriority),
+					desc(hasAffiliateLink),
+					desc(rankExpr),
+					desc(tools.id),
+				];
 			}
 
 			default:
-				return [desc(tools.createdAt), desc(tools.id)];
+				return [
+					desc(hasActiveSponsorship),
+					desc(hasAffiliateLink),
+					desc(tools.createdAt),
+					desc(tools.id),
+				];
 		}
 	}
 
@@ -378,7 +438,17 @@ class QueryExecutor {
 		const whereClause =
 			conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
 
-		const orderByClause = SortBuilder.buildOrderBy(context);
+		const orderByClause = SortBuilder.buildOrderBy(context, this.db);
+
+		const now = new Date();
+		// Helper to check if tool has active sponsorship
+		const isSponsoredExpr = sql<boolean>`EXISTS (
+			SELECT 1 FROM ${toolSponsorships}
+			WHERE ${toolSponsorships.toolId} = ${tools.id}
+			AND ${toolSponsorships.isActive} = true
+			AND ${toolSponsorships.startDate} <= ${now}
+			AND ${toolSponsorships.endDate} > ${now}
+		)`.as("isSponsored");
 
 		// Base select fields
 		const selectFields = {
@@ -390,9 +460,12 @@ class QueryExecutor {
 			logo: tools.logo,
 			website: tools.website,
 			pricing: tools.pricing,
+			license: tools.license,
 			featured: tools.featured,
+			searchVector: tools.searchVector,
 			createdAt: tools.createdAt,
 			updatedAt: tools.updatedAt,
+			isSponsored: isSponsoredExpr,
 		};
 
 		// Handle relevance search with rank
@@ -426,9 +499,12 @@ class QueryExecutor {
 			logo: typeof tools.logo;
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
+			license: typeof tools.license;
 			featured: typeof tools.featured;
+			searchVector: typeof tools.searchVector;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
+			isSponsored: SQL.Aliased<boolean>;
 		},
 		whereClause: SQL<unknown>,
 		orderByClause: SQL<unknown>[],
@@ -451,9 +527,10 @@ class QueryExecutor {
 
 		const hasMore = rows.length > limit;
 		const limitedRows = hasMore ? rows.slice(0, limit) : rows;
-		const items: Tool[] = limitedRows.map(
-			({ rank: _, ...item }) => item as Tool,
-		);
+		const items = limitedRows.map(({ rank: _, isSponsored, ...item }) => ({
+			...item,
+			isSponsored: isSponsored ?? false,
+		}));
 
 		const lastItem =
 			hasMore && items.length > 0 ? items[items.length - 1] : null;
@@ -488,9 +565,12 @@ class QueryExecutor {
 			logo: typeof tools.logo;
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
+			license: typeof tools.license;
 			featured: typeof tools.featured;
+			searchVector: typeof tools.searchVector;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
+			isSponsored: SQL.Aliased<boolean>;
 		},
 		whereClause: SQL<unknown>,
 		orderByClause: SQL<unknown>[],
@@ -505,7 +585,12 @@ class QueryExecutor {
 			.limit(limit + 1);
 
 		const hasMore = rows.length > limit;
-		const items: Tool[] = (hasMore ? rows.slice(0, limit) : rows) as Tool[];
+		const items = (hasMore ? rows.slice(0, limit) : rows).map(
+			({ isSponsored, ...item }) => ({
+				...item,
+				isSponsored: isSponsored ?? false,
+			}),
+		);
 
 		const lastItem =
 			hasMore && items.length > 0 ? items[items.length - 1] : null;
@@ -613,25 +698,40 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 		if (!tool) return null;
 
-		// Load relations
-		const [categoryIds, tagIds, stackIds, alternativeIds] = await Promise.all([
-			this.db
-				.select({ categoryId: toolsCategories.categoryId })
-				.from(toolsCategories)
-				.where(eq(toolsCategories.toolId, tool.id)),
-			this.db
-				.select({ tagId: toolsTags.tagId })
-				.from(toolsTags)
-				.where(eq(toolsTags.toolId, tool.id)),
-			this.db
-				.select({ stackId: toolsStacks.stackId })
-				.from(toolsStacks)
-				.where(eq(toolsStacks.toolId, tool.id)),
-			this.db
-				.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
-				.from(toolsAlternatives)
-				.where(eq(toolsAlternatives.toolId, tool.id)),
-		]);
+		const now = new Date();
+
+		// Load relations and check sponsorship status
+		const [categoryIds, tagIds, stackIds, alternativeIds, activeSponsorship] =
+			await Promise.all([
+				this.db
+					.select({ categoryId: toolsCategories.categoryId })
+					.from(toolsCategories)
+					.where(eq(toolsCategories.toolId, tool.id)),
+				this.db
+					.select({ tagId: toolsTags.tagId })
+					.from(toolsTags)
+					.where(eq(toolsTags.toolId, tool.id)),
+				this.db
+					.select({ stackId: toolsStacks.stackId })
+					.from(toolsStacks)
+					.where(eq(toolsStacks.toolId, tool.id)),
+				this.db
+					.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
+					.from(toolsAlternatives)
+					.where(eq(toolsAlternatives.toolId, tool.id)),
+				this.db
+					.select({ id: toolSponsorships.id })
+					.from(toolSponsorships)
+					.where(
+						and(
+							eq(toolSponsorships.toolId, tool.id),
+							eq(toolSponsorships.isActive, true),
+							sql`${toolSponsorships.startDate} <= ${now}`,
+							gt(toolSponsorships.endDate, now),
+						),
+					)
+					.limit(1),
+			]);
 
 		return {
 			...tool,
@@ -639,6 +739,7 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			tagIds: tagIds.map((t) => t.tagId),
 			stackIds: stackIds.map((s) => s.stackId),
 			alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
+			isSponsored: activeSponsorship.length > 0,
 		};
 	}
 
@@ -651,25 +752,40 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 
 		if (!tool) return null;
 
-		// Load relations
-		const [categoryIds, tagIds, stackIds, alternativeIds] = await Promise.all([
-			this.db
-				.select({ categoryId: toolsCategories.categoryId })
-				.from(toolsCategories)
-				.where(eq(toolsCategories.toolId, tool.id)),
-			this.db
-				.select({ tagId: toolsTags.tagId })
-				.from(toolsTags)
-				.where(eq(toolsTags.toolId, tool.id)),
-			this.db
-				.select({ stackId: toolsStacks.stackId })
-				.from(toolsStacks)
-				.where(eq(toolsStacks.toolId, tool.id)),
-			this.db
-				.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
-				.from(toolsAlternatives)
-				.where(eq(toolsAlternatives.toolId, tool.id)),
-		]);
+		const now = new Date();
+
+		// Load relations and check sponsorship status
+		const [categoryIds, tagIds, stackIds, alternativeIds, activeSponsorship] =
+			await Promise.all([
+				this.db
+					.select({ categoryId: toolsCategories.categoryId })
+					.from(toolsCategories)
+					.where(eq(toolsCategories.toolId, tool.id)),
+				this.db
+					.select({ tagId: toolsTags.tagId })
+					.from(toolsTags)
+					.where(eq(toolsTags.toolId, tool.id)),
+				this.db
+					.select({ stackId: toolsStacks.stackId })
+					.from(toolsStacks)
+					.where(eq(toolsStacks.toolId, tool.id)),
+				this.db
+					.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
+					.from(toolsAlternatives)
+					.where(eq(toolsAlternatives.toolId, tool.id)),
+				this.db
+					.select({ id: toolSponsorships.id })
+					.from(toolSponsorships)
+					.where(
+						and(
+							eq(toolSponsorships.toolId, tool.id),
+							eq(toolSponsorships.isActive, true),
+							sql`${toolSponsorships.startDate} <= ${now}`,
+							gt(toolSponsorships.endDate, now),
+						),
+					)
+					.limit(1),
+			]);
 
 		return {
 			...tool,
@@ -677,16 +793,37 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			tagIds: tagIds.map((t) => t.tagId),
 			stackIds: stackIds.map((s) => s.stackId),
 			alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
+			isSponsored: activeSponsorship.length > 0,
 		};
 	}
 
-	async getFeatured(limit = 10): Promise<Tool[]> {
+	async getFeatured(limit = 10): Promise<ToolWithSponsorship[]> {
 		const now = new Date();
+		const isSponsoredExpr = sql<boolean>`EXISTS (
+			SELECT 1 FROM ${toolSponsorships}
+			WHERE ${toolSponsorships.toolId} = ${tools.id}
+			AND ${toolSponsorships.isActive} = true
+			AND ${toolSponsorships.startDate} <= ${now}
+			AND ${toolSponsorships.endDate} > ${now}
+		)`.as("isSponsored");
 
 		// Get tools with active sponsorships first (prioritized)
 		const sponsoredRows = await this.db
 			.select({
-				tools: tools,
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				license: tools.license,
+				featured: tools.featured,
+				searchVector: tools.searchVector,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+				isSponsored: isSponsoredExpr,
 			})
 			.from(tools)
 			.innerJoin(
@@ -707,7 +844,10 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			)
 			.limit(limit);
 
-		const sponsoredTools = sponsoredRows.map((r) => r.tools);
+		const sponsoredTools = sponsoredRows.map((r) => ({
+			...r,
+			isSponsored: r.isSponsored ?? true,
+		}));
 
 		// If we have enough sponsored tools, return them
 		if (sponsoredTools.length >= limit) {
@@ -721,7 +861,22 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		const regularRows =
 			sponsoredToolIds.length > 0
 				? await this.db
-						.select()
+						.select({
+							id: tools.id,
+							slug: tools.slug,
+							name: tools.name,
+							tagline: tools.tagline,
+							description: tools.description,
+							logo: tools.logo,
+							website: tools.website,
+							pricing: tools.pricing,
+							license: tools.license,
+							featured: tools.featured,
+							searchVector: tools.searchVector,
+							createdAt: tools.createdAt,
+							updatedAt: tools.updatedAt,
+							isSponsored: isSponsoredExpr,
+						})
 						.from(tools)
 						.where(
 							and(
@@ -735,23 +890,70 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 						.orderBy(desc(tools.createdAt), desc(tools.id))
 						.limit(remainingLimit)
 				: await this.db
-						.select()
+						.select({
+							id: tools.id,
+							slug: tools.slug,
+							name: tools.name,
+							tagline: tools.tagline,
+							description: tools.description,
+							logo: tools.logo,
+							website: tools.website,
+							pricing: tools.pricing,
+							license: tools.license,
+							featured: tools.featured,
+							searchVector: tools.searchVector,
+							createdAt: tools.createdAt,
+							updatedAt: tools.updatedAt,
+							isSponsored: isSponsoredExpr,
+						})
 						.from(tools)
 						.where(eq(tools.featured, true))
 						.orderBy(desc(tools.createdAt), desc(tools.id))
 						.limit(remainingLimit);
 
-		return [...sponsoredTools, ...regularRows];
+		const regularTools = regularRows.map((r) => ({
+			...r,
+			isSponsored: r.isSponsored ?? false,
+		}));
+
+		return [...sponsoredTools, ...regularTools];
 	}
 
-	async getRecent(limit = 10): Promise<Tool[]> {
+	async getRecent(limit = 10): Promise<ToolWithSponsorship[]> {
+		const now = new Date();
+		const isSponsoredExpr = sql<boolean>`EXISTS (
+			SELECT 1 FROM ${toolSponsorships}
+			WHERE ${toolSponsorships.toolId} = ${tools.id}
+			AND ${toolSponsorships.isActive} = true
+			AND ${toolSponsorships.startDate} <= ${now}
+			AND ${toolSponsorships.endDate} > ${now}
+		)`.as("isSponsored");
+
 		const rows = await this.db
-			.select()
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				license: tools.license,
+				featured: tools.featured,
+				searchVector: tools.searchVector,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+				isSponsored: isSponsoredExpr,
+			})
 			.from(tools)
 			.orderBy(desc(tools.createdAt), desc(tools.id))
 			.limit(limit);
 
-		return rows;
+		return rows.map((r) => ({
+			...r,
+			isSponsored: r.isSponsored ?? false,
+		}));
 	}
 
 	async getAllWithAlternativeCounts(
@@ -826,16 +1028,43 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		return countMap;
 	}
 
-	async getPopular(limit = 10): Promise<Tool[]> {
+	async getPopular(limit = 10): Promise<ToolWithSponsorship[]> {
+		const now = new Date();
+		const isSponsoredExpr = sql<boolean>`EXISTS (
+			SELECT 1 FROM ${toolSponsorships}
+			WHERE ${toolSponsorships.toolId} = ${tools.id}
+			AND ${toolSponsorships.isActive} = true
+			AND ${toolSponsorships.startDate} <= ${now}
+			AND ${toolSponsorships.endDate} > ${now}
+		)`.as("isSponsored");
+
 		// Popular is based on featured + creation date
 		// In a real app, this might use view counts or other metrics
 		const rows = await this.db
-			.select()
+			.select({
+				id: tools.id,
+				slug: tools.slug,
+				name: tools.name,
+				tagline: tools.tagline,
+				description: tools.description,
+				logo: tools.logo,
+				website: tools.website,
+				pricing: tools.pricing,
+				license: tools.license,
+				featured: tools.featured,
+				searchVector: tools.searchVector,
+				createdAt: tools.createdAt,
+				updatedAt: tools.updatedAt,
+				isSponsored: isSponsoredExpr,
+			})
 			.from(tools)
 			.orderBy(desc(tools.featured), desc(tools.createdAt), desc(tools.id))
 			.limit(limit);
 
-		return rows;
+		return rows.map((r) => ({
+			...r,
+			isSponsored: r.isSponsored ?? false,
+		}));
 	}
 
 	async create(input: CreateToolInput): Promise<ToolData> {

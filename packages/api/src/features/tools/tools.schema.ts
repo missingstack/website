@@ -1,4 +1,7 @@
-import { baseQueryOptionsSchema } from "@missingstack/api/shared";
+import {
+	type EntityWith,
+	baseQueryOptionsSchema,
+} from "@missingstack/api/shared";
 import { licenseEnum, pricingEnum } from "@missingstack/db/schema/enums";
 import type { Tool } from "@missingstack/db/schema/tools";
 import { z } from "zod";
@@ -6,16 +9,25 @@ import { z } from "zod";
 const pricingEnumValues = pricingEnum.enumValues;
 const licenseEnumValues = licenseEnum.enumValues;
 
+// Convenience type alias for Tool extensions
+export type ToolWith<P = Record<string, unknown>> = EntityWith<Tool, P>;
+
 // Tool with relations
-export type ToolData = Tool & {
+export type ToolData = ToolWith<{
 	categoryIds: string[];
 	tagIds: string[];
 	stackIds: string[];
 	alternativeIds: string[];
-};
+	isSponsored?: boolean; // Optional computed field for sponsorship status
+}>;
+
+// Tool with optional sponsorship status (computed field)
+export type ToolWithSponsorship = ToolWith<{
+	isSponsored?: boolean;
+}>;
 
 export type ToolCollection = {
-	items: Tool[];
+	items: ToolWithSponsorship[];
 	nextCursor: string | null;
 	hasMore: boolean;
 };
@@ -37,9 +49,9 @@ export const toolQueryOptionsSchema = baseQueryOptionsSchema
 export type ToolQueryOptions = z.infer<typeof toolQueryOptionsSchema>;
 
 // Tool with alternative count for admin
-export type ToolWithAlternativeCount = Tool & {
+export type ToolWithAlternativeCount = ToolWith<{
 	alternativeCount: number;
-};
+}>;
 
 export type ToolWithAlternativeCountCollection = {
 	items: ToolWithAlternativeCount[];

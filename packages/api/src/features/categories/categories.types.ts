@@ -1,3 +1,4 @@
+import type { EntityWith } from "@missingstack/api/shared";
 import type { Category } from "@missingstack/db/schema/categories";
 import type {
 	CategoryCollection,
@@ -5,11 +6,11 @@ import type {
 	CreateCategoryInput,
 	UpdateCategoryInput,
 } from "./categories.schema";
-
-// Category with computed tool count
-export type CategoryWithCount = Category & {
+// Convenience type alias for Category extensions
+export type CategoryWith<P = Record<string, unknown>> = EntityWith<Category, P>;
+export type CategoryWithCount = CategoryWith<{
 	toolCount: number;
-};
+}>;
 
 export interface CategoryRepositoryInterface {
 	getAll(options?: CategoryQueryOptions): Promise<CategoryCollection>;

@@ -1,3 +1,4 @@
+import type { EntityWith } from "@missingstack/api/shared";
 import type { ToolSponsorship } from "@missingstack/db/schema/tool-sponsorships";
 import type {
 	CreateSponsorshipInput,
@@ -6,14 +7,17 @@ import type {
 	UpdateSponsorshipInput,
 } from "./sponsorships.schema";
 
-// Sponsorship with tool information
-export type SponsorshipWithTool = ToolSponsorship & {
+export type ToolSponsorshipWith<P = Record<string, unknown>> = EntityWith<
+	ToolSponsorship,
+	P
+>;
+export type SponsorshipWithTool = ToolSponsorshipWith<{
 	tool?: {
 		id: string;
 		name: string;
 		slug: string;
 	};
-};
+}>;
 
 export interface SponsorshipRepositoryInterface {
 	getAll(options?: SponsorshipQueryOptions): Promise<SponsorshipCollection>;

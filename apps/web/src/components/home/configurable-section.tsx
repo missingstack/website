@@ -1,4 +1,8 @@
-import type { Section, Tool, ToolData } from "@missingstack/api/types";
+import type {
+	Section,
+	ToolData,
+	ToolWithSponsorship,
+} from "@missingstack/api/types";
 import {
 	ArrowRight,
 	BarChart3,
@@ -82,7 +86,7 @@ const colorMap: Record<IconColor, { text: string; bg: string }> = {
 
 interface ConfigurableSectionProps {
 	config: Section;
-	tools: ToolData[] | Tool[];
+	tools: ToolData[] | ToolWithSponsorship[];
 }
 
 function getViewAllLink(config: Section): Route {
@@ -177,6 +181,11 @@ export function ConfigurableSection({
 
 								<div className="mt-auto flex items-center justify-between border-border/50 border-t border-dashed pt-5">
 									<div className="flex flex-wrap gap-2">
+										{tool.isSponsored && (
+											<Badge variant="gold" className="px-2 py-0.5 text-[10px]">
+												Sponsored
+											</Badge>
+										)}
 										<Badge variant={tool.pricing === "free" ? "green" : "blue"}>
 											{formatPricingDisplay(tool.pricing)}
 										</Badge>
@@ -231,6 +240,14 @@ export function ConfigurableSection({
 
 								<div className="mt-auto flex items-center justify-between border-border/50 border-t border-dashed pt-4">
 									<div className="flex flex-wrap gap-2">
+										{tool.isSponsored && (
+											<Badge
+												variant="gold"
+												className="px-1.5 py-0.5 text-[9px]"
+											>
+												Sponsored
+											</Badge>
+										)}
 										<Badge
 											variant={tool.pricing === "free" ? "green" : "blue"}
 											className="text-xs"

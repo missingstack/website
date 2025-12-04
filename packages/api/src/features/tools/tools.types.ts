@@ -1,11 +1,11 @@
 import type { BaseQueryOptions } from "@missingstack/api/shared";
-import type { Tool } from "@missingstack/api/types";
 import type {
 	CreateToolInput,
 	ToolCollection,
 	ToolData,
 	ToolQueryOptions,
 	ToolWithAlternativeCountCollection,
+	ToolWithSponsorship,
 	UpdateToolInput,
 } from "./tools.schema";
 
@@ -14,9 +14,14 @@ export type {
 	ToolData,
 	ToolQueryOptions,
 	ToolWithAlternativeCountCollection,
+	ToolWithSponsorship,
 };
 
-export type ToolWithCategories = Tool & { categoryNames: string[] };
+import type { ToolWith } from "./tools.schema";
+
+export type ToolWithCategories = ToolWith<{
+	categoryNames: string[];
+}>;
 
 export interface ToolRepositoryInterface {
 	getAll(options?: ToolQueryOptions): Promise<ToolCollection>;
@@ -36,9 +41,9 @@ export interface ToolRepositoryInterface {
 	search(query: string, options?: BaseQueryOptions): Promise<ToolCollection>;
 	getById(id: string): Promise<ToolData | null>;
 	getBySlug(slug: string): Promise<ToolData | null>;
-	getFeatured(limit?: number): Promise<Tool[]>;
-	getRecent(limit?: number): Promise<Tool[]>;
-	getPopular(limit?: number): Promise<Tool[]>;
+	getFeatured(limit?: number): Promise<ToolWithSponsorship[]>;
+	getRecent(limit?: number): Promise<ToolWithSponsorship[]>;
+	getPopular(limit?: number): Promise<ToolWithSponsorship[]>;
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;
@@ -68,9 +73,9 @@ export interface ToolsServiceInterface {
 	search(query: string, options?: BaseQueryOptions): Promise<ToolCollection>;
 	getById(id: string): Promise<ToolData | null>;
 	getBySlug(slug: string): Promise<ToolData | null>;
-	getFeatured(limit?: number): Promise<Tool[]>;
-	getRecent(limit?: number): Promise<Tool[]>;
-	getPopular(limit?: number): Promise<Tool[]>;
+	getFeatured(limit?: number): Promise<ToolWithSponsorship[]>;
+	getRecent(limit?: number): Promise<ToolWithSponsorship[]>;
+	getPopular(limit?: number): Promise<ToolWithSponsorship[]>;
 	getAllWithAlternativeCounts(
 		options?: ToolQueryOptions,
 	): Promise<ToolWithAlternativeCountCollection>;

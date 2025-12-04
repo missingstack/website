@@ -61,8 +61,10 @@ export type {
 	ToolData,
 	ToolQueryOptions,
 	ToolRepositoryInterface,
+	ToolWith,
 	ToolWithAlternativeCount,
 	ToolWithAlternativeCountCollection,
+	ToolWithSponsorship,
 	ToolsServiceInterface,
 } from "../features/tools";
 

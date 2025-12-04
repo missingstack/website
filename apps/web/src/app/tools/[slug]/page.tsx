@@ -241,6 +241,11 @@ async function ToolPageContent({
 							</p>
 
 							<div className="mb-4 flex flex-wrap gap-1.5 sm:mb-6 sm:gap-2">
+								{tool.isSponsored && (
+									<Badge variant="gold" className="text-xs sm:text-sm">
+										Sponsored
+									</Badge>
+								)}
 								<Badge
 									variant={getBadgeVariant(tool.pricing)}
 									className="text-xs sm:text-sm"

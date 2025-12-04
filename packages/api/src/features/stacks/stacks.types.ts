@@ -1,10 +1,11 @@
+import type { EntityWith } from "@missingstack/api/shared";
 import type { Stack } from "@missingstack/db/schema/stacks";
 import type { CreateStackInput, UpdateStackInput } from "./stacks.schema";
-
-// Stack with computed tool count
-export type StackWithCount = Stack & {
+// Convenience type alias for Stack extensions
+export type StackWith<P = Record<string, unknown>> = EntityWith<Stack, P>;
+export type StackWithCount = StackWith<{
 	toolCount: number;
-};
+}>;
 
 export interface StackRepositoryInterface {
 	getAll(): Promise<Stack[]>;
