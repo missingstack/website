@@ -22,6 +22,7 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Skeleton } from "~/components/ui/skeleton";
+import { addUtmParameters } from "~/lib/affiliate-utils";
 import {
 	breadcrumb,
 	faqPage,
@@ -271,7 +272,11 @@ async function ToolPageContent({
 								>
 									<a
 										href={
-											tool.website ? `${tool.website}?ref=missingstack` : "#"
+											tool.affiliateUrl
+												? addUtmParameters(tool.affiliateUrl)
+												: tool.website
+													? `${tool.website}?ref=missingstack`
+													: "#"
 										}
 										target="_blank"
 										rel="noopener noreferrer"

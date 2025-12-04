@@ -19,6 +19,7 @@ export type ToolData = ToolWith<{
 	stackIds: string[];
 	alternativeIds: string[];
 	isSponsored?: boolean; // Optional computed field for sponsorship status
+	affiliateUrl?: string | null; // Optional primary affiliate link URL
 }>;
 
 // Tool with optional sponsorship status (computed field)

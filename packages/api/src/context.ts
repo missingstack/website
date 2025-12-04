@@ -1,4 +1,6 @@
 import { db } from "@missingstack/db";
+import { createAffiliateLinkService } from "./features/affiliate-links/affiliate-links.module";
+import type { AffiliateLinksServiceInterface } from "./features/affiliate-links/affiliate-links.types";
 import { createCategoryService } from "./features/categories/categories.module";
 import type { CategoriesServiceInterface } from "./features/categories/categories.types";
 import { createNewsletterService } from "./features/newsletter/newsletter.module";
@@ -25,6 +27,7 @@ export type ServiceInterface = {
 	statsService: StatsServiceInterface;
 	newsletterService: NewsletterServiceInterface;
 	sponsorshipService: SponsorshipsServiceInterface;
+	affiliateLinkService: AffiliateLinksServiceInterface;
 };
 
 const toolService = createToolService(db);
@@ -35,6 +38,7 @@ const sectionService = createSectionService();
 const statsService = createStatsService(db);
 const newsletterService = createNewsletterService();
 const sponsorshipService = createSponsorshipService(db);
+const affiliateLinkService = createAffiliateLinkService(db);
 
 export const services: ServiceInterface = {
 	toolService,
@@ -45,4 +49,5 @@ export const services: ServiceInterface = {
 	statsService,
 	newsletterService,
 	sponsorshipService,
+	affiliateLinkService,
 };

@@ -39,6 +39,15 @@ export const sponsorshipSortColumns = [
 ] as const;
 export type SponsorshipSortColumn = (typeof sponsorshipSortColumns)[number];
 
+// Define sortable columns for admin affiliate links
+export const affiliateLinkSortColumns = [
+	"createdAt",
+	"clickCount",
+	"revenueTracked",
+	"commissionRate",
+] as const;
+export type AffiliateLinkSortColumn = (typeof affiliateLinkSortColumns)[number];
+
 // Define the search params parsers for admin (server-side)
 // Note: parseAsString defaults to null (empty string means no search)
 export const adminSearchParamsParsers = {
@@ -90,6 +99,17 @@ export const adminTagsSearchParamsParsersClient = {
 export const adminSponsorshipsSearchParamsParsersClient = {
 	search: parseAsStringClient.withDefault(""),
 	sortBy: parseAsStringLiteralClient(sponsorshipSortColumns).withDefault(
+		"createdAt",
+	),
+	sortOrder: parseAsStringLiteralClient(["asc", "desc"] as const).withDefault(
+		"desc",
+	),
+};
+
+// Affiliate links search params parsers
+export const adminAffiliateLinksSearchParamsParsersClient = {
+	search: parseAsStringClient.withDefault(""),
+	sortBy: parseAsStringLiteralClient(affiliateLinkSortColumns).withDefault(
 		"createdAt",
 	),
 	sortOrder: parseAsStringLiteralClient(["asc", "desc"] as const).withDefault(

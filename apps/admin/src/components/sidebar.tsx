@@ -68,6 +68,11 @@ const navigation = [
 				url: "/admin/sponsorships",
 				icon: TrendingUp,
 			},
+			{
+				title: "Affiliate Links",
+				url: "/admin/affiliate-links",
+				icon: TrendingUp,
+			},
 		],
 	},
 	{

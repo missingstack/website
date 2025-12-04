@@ -755,37 +755,53 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 		const now = new Date();
 
 		// Load relations and check sponsorship status
-		const [categoryIds, tagIds, stackIds, alternativeIds, activeSponsorship] =
-			await Promise.all([
-				this.db
-					.select({ categoryId: toolsCategories.categoryId })
-					.from(toolsCategories)
-					.where(eq(toolsCategories.toolId, tool.id)),
-				this.db
-					.select({ tagId: toolsTags.tagId })
-					.from(toolsTags)
-					.where(eq(toolsTags.toolId, tool.id)),
-				this.db
-					.select({ stackId: toolsStacks.stackId })
-					.from(toolsStacks)
-					.where(eq(toolsStacks.toolId, tool.id)),
-				this.db
-					.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
-					.from(toolsAlternatives)
-					.where(eq(toolsAlternatives.toolId, tool.id)),
-				this.db
-					.select({ id: toolSponsorships.id })
-					.from(toolSponsorships)
-					.where(
-						and(
-							eq(toolSponsorships.toolId, tool.id),
-							eq(toolSponsorships.isActive, true),
-							sql`${toolSponsorships.startDate} <= ${now}`,
-							gt(toolSponsorships.endDate, now),
-						),
-					)
-					.limit(1),
-			]);
+		const [
+			categoryIds,
+			tagIds,
+			stackIds,
+			alternativeIds,
+			activeSponsorship,
+			primaryAffiliateLink,
+		] = await Promise.all([
+			this.db
+				.select({ categoryId: toolsCategories.categoryId })
+				.from(toolsCategories)
+				.where(eq(toolsCategories.toolId, tool.id)),
+			this.db
+				.select({ tagId: toolsTags.tagId })
+				.from(toolsTags)
+				.where(eq(toolsTags.toolId, tool.id)),
+			this.db
+				.select({ stackId: toolsStacks.stackId })
+				.from(toolsStacks)
+				.where(eq(toolsStacks.toolId, tool.id)),
+			this.db
+				.select({ alternativeToolId: toolsAlternatives.alternativeToolId })
+				.from(toolsAlternatives)
+				.where(eq(toolsAlternatives.toolId, tool.id)),
+			this.db
+				.select({ id: toolSponsorships.id })
+				.from(toolSponsorships)
+				.where(
+					and(
+						eq(toolSponsorships.toolId, tool.id),
+						eq(toolSponsorships.isActive, true),
+						sql`${toolSponsorships.startDate} <= ${now}`,
+						gt(toolSponsorships.endDate, now),
+					),
+				)
+				.limit(1),
+			this.db
+				.select({ affiliateUrl: toolAffiliateLinks.affiliateUrl })
+				.from(toolAffiliateLinks)
+				.where(
+					and(
+						eq(toolAffiliateLinks.toolId, tool.id),
+						eq(toolAffiliateLinks.isPrimary, true),
+					),
+				)
+				.limit(1),
+		]);
 
 		return {
 			...tool,
@@ -794,6 +810,10 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			stackIds: stackIds.map((s) => s.stackId),
 			alternativeIds: alternativeIds.map((a) => a.alternativeToolId),
 			isSponsored: activeSponsorship.length > 0,
+			affiliateUrl:
+				primaryAffiliateLink.length > 0
+					? (primaryAffiliateLink[0]?.affiliateUrl ?? null)
+					: null,
 		};
 	}
 
