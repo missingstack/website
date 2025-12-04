@@ -35,7 +35,7 @@ export default function AdminLayout({
 	return (
 		<SidebarProvider>
 			<Suspense fallback={<SidebarSkeleton />}>
-				<AdminSidebar />
+				<AdminSidebar variant="inset" />
 			</Suspense>
 			<SidebarInset>
 				<AdminHeader />
