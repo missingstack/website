@@ -18,6 +18,7 @@ export type { Category } from "@missingstack/db/schema/categories";
 export type { License, PricingModel } from "@missingstack/db/schema/enums";
 export type { Stack } from "@missingstack/db/schema/stacks";
 export type { Tag } from "@missingstack/db/schema/tags";
+export type { ToolSponsorship } from "@missingstack/db/schema/tool-sponsorships";
 export type { Tool } from "@missingstack/db/schema/tools";
 export type {
 	CategoriesServiceInterface,
@@ -33,6 +34,13 @@ export type {
 	SectionRepositoryInterface,
 	SectionsServiceInterface,
 } from "../features/sections";
+export type {
+	SponsorshipCollection,
+	SponsorshipQueryOptions,
+	SponsorshipRepositoryInterface,
+	SponsorshipWithTool,
+	SponsorshipsServiceInterface,
+} from "../features/sponsorships";
 export type {
 	StackRepositoryInterface,
 	StackWithCount,

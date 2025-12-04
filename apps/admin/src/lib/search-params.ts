@@ -30,6 +30,15 @@ export type StackSortColumn = (typeof stackSortColumns)[number];
 export const tagSortColumns = ["name", "slug", "createdAt"] as const;
 export type TagSortColumn = (typeof tagSortColumns)[number];
 
+// Define sortable columns for admin sponsorships
+export const sponsorshipSortColumns = [
+	"startDate",
+	"endDate",
+	"priorityWeight",
+	"createdAt",
+] as const;
+export type SponsorshipSortColumn = (typeof sponsorshipSortColumns)[number];
+
 // Define the search params parsers for admin (server-side)
 // Note: parseAsString defaults to null (empty string means no search)
 export const adminSearchParamsParsers = {
@@ -72,6 +81,17 @@ export const adminStacksSearchParamsParsersClient = {
 export const adminTagsSearchParamsParsersClient = {
 	search: parseAsStringClient.withDefault(""),
 	sortBy: parseAsStringLiteralClient(tagSortColumns).withDefault("createdAt"),
+	sortOrder: parseAsStringLiteralClient(["asc", "desc"] as const).withDefault(
+		"desc",
+	),
+};
+
+// Sponsorships search params parsers
+export const adminSponsorshipsSearchParamsParsersClient = {
+	search: parseAsStringClient.withDefault(""),
+	sortBy: parseAsStringLiteralClient(sponsorshipSortColumns).withDefault(
+		"createdAt",
+	),
 	sortOrder: parseAsStringLiteralClient(["asc", "desc"] as const).withDefault(
 		"desc",
 	),

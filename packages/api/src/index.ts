@@ -3,6 +3,7 @@ import { services } from "@missingstack/api/context";
 import { createCategoriesRouter } from "@missingstack/api/features/categories";
 import { createNewsletterRouter } from "@missingstack/api/features/newsletter";
 import { createSectionsRouter } from "@missingstack/api/features/sections";
+import { createSponsorshipsRouter } from "@missingstack/api/features/sponsorships";
 import { createStacksRouter } from "@missingstack/api/features/stacks";
 import { createStatsRouter } from "@missingstack/api/features/stats";
 import { createTagsRouter } from "@missingstack/api/features/tags";
@@ -28,6 +29,7 @@ export const app = createApp(services)
 	.use(createStacksRouter)
 	.use(createSectionsRouter)
 	.use(createStatsRouter)
-	.use(createNewsletterRouter);
+	.use(createNewsletterRouter)
+	.use(createSponsorshipsRouter);
 
 export type app = typeof app;

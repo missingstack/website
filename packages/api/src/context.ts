@@ -5,6 +5,8 @@ import { createNewsletterService } from "./features/newsletter/newsletter.module
 import type { NewsletterServiceInterface } from "./features/newsletter/newsletter.types";
 import { createSectionService } from "./features/sections/sections.module";
 import type { SectionsServiceInterface } from "./features/sections/sections.types";
+import { createSponsorshipService } from "./features/sponsorships/sponsorships.module";
+import type { SponsorshipsServiceInterface } from "./features/sponsorships/sponsorships.types";
 import { createStackService } from "./features/stacks/stacks.module";
 import type { StacksServiceInterface } from "./features/stacks/stacks.types";
 import { createStatsService } from "./features/stats/stats.module";
@@ -22,6 +24,7 @@ export type ServiceInterface = {
 	sectionService: SectionsServiceInterface;
 	statsService: StatsServiceInterface;
 	newsletterService: NewsletterServiceInterface;
+	sponsorshipService: SponsorshipsServiceInterface;
 };
 
 const toolService = createToolService(db);
@@ -31,6 +34,7 @@ const stackService = createStackService(db);
 const sectionService = createSectionService();
 const statsService = createStatsService(db);
 const newsletterService = createNewsletterService();
+const sponsorshipService = createSponsorshipService(db);
 
 export const services: ServiceInterface = {
 	toolService,
@@ -40,4 +44,5 @@ export const services: ServiceInterface = {
 	sectionService,
 	statsService,
 	newsletterService,
+	sponsorshipService,
 };
