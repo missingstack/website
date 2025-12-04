@@ -67,9 +67,7 @@ export function DiscoverContent({
 		// Build query options for the tools endpoint
 		const query: Partial<ToolQueryOptions> = {};
 
-		if (filters.search)
-			// Apply filters
-			query.search = filters.search;
+		if (filters.search) query.search = filters.search;
 		if (filters.sortBy) query.sortBy = filters.sortBy;
 		if (filters.categoryIds.length > 0) query.categoryIds = filters.categoryIds;
 		if (filters.pricing.length > 0)
@@ -90,7 +88,7 @@ export function DiscoverContent({
 			items: data.items,
 			nextCursor: data.nextCursor,
 			hasMore: data.hasMore,
-			total: 0, // Total not available from API
+			total: 0,
 		} as FetchResult;
 	};
 

@@ -60,31 +60,19 @@ export function ToolsTable() {
 		throttleMs: 300,
 	});
 
-	const [filters, setFilters] = useQueryStates(
-		{
-			sortBy: adminToolsSearchParamsParsersClient.sortBy,
-			sortOrder: adminToolsSearchParamsParsersClient.sortOrder,
-		},
-		{ shallow: false },
-	);
+	const [filters, setFilters] = useQueryStates({
+		search: adminToolsSearchParamsParsersClient.search,
+		sortBy: adminToolsSearchParamsParsersClient.sortBy,
+		sortOrder: adminToolsSearchParamsParsersClient.sortOrder,
+	});
 
 	const fetchTools = async ({ pageParam }: { pageParam?: string }) => {
 		const query: Partial<ToolQueryOptions> = {};
 
-		if (search) query.search = search;
-		// Map sortBy to ToolQueryOptions sortBy (name, newest, popular, relevance)
-		if (filters.sortBy) {
-			if (filters.sortBy === "newest") {
-				query.sortBy = "newest";
-			} else if (filters.sortBy === "popular") {
-				query.sortBy = "popular";
-			} else if (filters.sortBy === "name") {
-				query.sortBy = "name";
-			}
-		}
+		if (filters.search) query.search = filters.search;
+		if (filters.sortBy) query.sortBy = filters.sortBy;
 		if (filters.sortOrder) query.sortOrder = filters.sortOrder;
 		if (pageParam) query.cursor = pageParam;
-		query.limit = 20;
 
 		const { data, error } = await api.v1.tools.get({
 			query: query as ToolQueryOptions,
@@ -125,7 +113,7 @@ export function ToolsTable() {
 		isLoading,
 		isError,
 	} = useInfiniteQuery({
-		queryKey: ["adminTools", search, filters.sortBy, filters.sortOrder],
+		queryKey: ["adminTools", filters],
 		queryFn: fetchTools,
 		initialPageParam: undefined as string | undefined,
 		getNextPageParam: (lastPage, allPages) => {

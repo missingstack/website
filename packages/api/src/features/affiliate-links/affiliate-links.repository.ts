@@ -1,16 +1,17 @@
-import type { Database } from "@missingstack/db";
 import {
-	type SQL,
-	and,
-	asc,
-	desc,
-	eq,
-	gt,
-	ilike,
-	lt,
-	or,
-	sql,
-} from "@missingstack/db/drizzle-orm";
+	type BaseCursorState,
+	BasePaginatedRepository,
+	CursorManager,
+	FilterBuilder,
+	QueryExecutor,
+	type QueryStrategy,
+	SortBuilder,
+	type SortConfig,
+	type SortFieldConfig,
+} from "@missingstack/api/shared/pagination";
+import type { Database } from "@missingstack/db";
+import type { SQL } from "@missingstack/db/drizzle-orm";
+import { desc, eq, ilike } from "@missingstack/db/drizzle-orm";
 import {
 	type ToolAffiliateLink,
 	toolAffiliateLinks,
@@ -28,266 +29,105 @@ type QueryableDb = Pick<
 	Database,
 	"select" | "transaction" | "insert" | "update" | "delete"
 >;
-type CursorState = {
-	id: string;
-	createdAt?: Date;
+
+type AffiliateLinkCursor = BaseCursorState & {
 	clickCount?: number;
 	revenueTracked?: number;
 	commissionRate?: string;
 };
 
-type EncodedCursor = {
-	id: string;
-	createdAt?: string;
-	clickCount?: number;
-	revenueTracked?: number;
-	commissionRate?: string;
-	sortBy?: string;
-};
+type AffiliateLinkSortBy =
+	| "createdAt"
+	| "clickCount"
+	| "revenueTracked"
+	| "commissionRate";
 
-type SortContext = {
-	sortBy: "createdAt" | "clickCount" | "revenueTracked" | "commissionRate";
-	sortOrder: "asc" | "desc";
-	searchQuery?: string;
-};
-
-// CURSOR UTILITIES
-class CursorManager {
-	static encode(state: CursorState, sortBy: SortContext["sortBy"]): string {
-		const payload: EncodedCursor = {
-			id: state.id,
-			createdAt: state.createdAt?.toISOString(),
-			clickCount: state.clickCount,
-			revenueTracked: state.revenueTracked,
-			commissionRate: state.commissionRate,
-			sortBy,
-		};
-		return Buffer.from(JSON.stringify(payload)).toString("base64");
-	}
-
-	static decode(
-		cursor?: string | null,
-		sortBy?: SortContext["sortBy"],
-	): CursorState | null {
-		if (!cursor) return null;
-
-		try {
-			const json = Buffer.from(cursor, "base64").toString("utf8");
-			const parsed = JSON.parse(json) as EncodedCursor;
-
-			if (!parsed.id) return null;
-
-			// Invalidate cursor if sort changed
-			if (sortBy && parsed.sortBy && parsed.sortBy !== sortBy) {
-				return null;
-			}
-
-			const state: CursorState = { id: parsed.id };
-
-			if (parsed.createdAt) {
-				const createdAt = new Date(parsed.createdAt);
-				if (!Number.isNaN(createdAt.getTime())) {
-					state.createdAt = createdAt;
-				}
-			}
-
-			if (typeof parsed.clickCount === "number") {
-				state.clickCount = parsed.clickCount;
-			}
-
-			if (typeof parsed.revenueTracked === "number") {
-				state.revenueTracked = parsed.revenueTracked;
-			}
-
-			if (typeof parsed.commissionRate === "string") {
-				state.commissionRate = parsed.commissionRate;
-			}
-
-			return state;
-		} catch {
-			return null;
-		}
-	}
-}
-
-// FILTER BUILDERS
-class FilterBuilder {
-	buildSearchFilter(search?: string): SQL<unknown> | null {
-		if (!search) return null;
-		const searchQuery = search.trim();
-		if (!searchQuery) return null;
-
-		const pattern = `%${searchQuery}%`;
-
-		// Search in tool name via join
-		return ilike(tools.name, pattern);
-	}
-
-	buildAllFilters(options: AffiliateLinkQueryOptions): SQL<unknown>[] {
-		const conditions: SQL<unknown>[] = [];
-
-		// Search filter (requires join with tools)
-		const searchFilter = this.buildSearchFilter(options.search);
-		if (searchFilter) {
-			conditions.push(searchFilter);
-		}
-
-		// Tool ID filter
-		if (options.toolId) {
-			conditions.push(eq(toolAffiliateLinks.toolId, options.toolId));
-		}
-
-		// Primary filter
-		if (options.isPrimary !== undefined) {
-			conditions.push(eq(toolAffiliateLinks.isPrimary, options.isPrimary));
-		}
-
-		return conditions;
-	}
-}
-
-// SORT BUILDERS
-class SortBuilder {
-	static buildOrderBy(context: SortContext): SQL<unknown>[] {
-		const orderFn = context.sortOrder === "asc" ? asc : desc;
-
-		switch (context.sortBy) {
-			case "clickCount":
-				return [
-					orderFn(toolAffiliateLinks.clickCount),
-					orderFn(toolAffiliateLinks.id),
-				];
-
-			case "revenueTracked":
-				return [
-					orderFn(toolAffiliateLinks.revenueTracked),
-					orderFn(toolAffiliateLinks.id),
-				];
-
-			case "commissionRate":
-				return [
-					orderFn(toolAffiliateLinks.commissionRate),
-					orderFn(toolAffiliateLinks.id),
-				];
-			default:
-				return [
-					orderFn(toolAffiliateLinks.createdAt),
-					orderFn(toolAffiliateLinks.id),
-				];
-		}
-	}
-
-	static buildCursorCondition(
-		cursorState: CursorState,
-		context: SortContext,
+class AffiliateLinkFilterBuilder extends FilterBuilder<AffiliateLinkQueryOptions> {
+	protected buildSearchFilter(
+		options: AffiliateLinkQueryOptions,
 	): SQL<unknown> | null {
-		if (!cursorState.id) return null;
+		const pattern = this.buildILikePattern(options.search);
+		return pattern ? ilike(tools.name, pattern) : null;
+	}
 
-		const isAsc = context.sortOrder === "asc";
-		const compareFn = isAsc ? gt : lt;
+	protected buildEntityFilters(
+		options: AffiliateLinkQueryOptions,
+	): SQL<unknown>[] {
+		const filters: SQL<unknown>[] = [];
 
-		switch (context.sortBy) {
-			case "clickCount": {
-				if (typeof cursorState.clickCount !== "number") {
-					return compareFn(toolAffiliateLinks.id, cursorState.id);
-				}
-				return (
-					or(
-						compareFn(toolAffiliateLinks.clickCount, cursorState.clickCount),
-						and(
-							eq(toolAffiliateLinks.clickCount, cursorState.clickCount),
-							compareFn(toolAffiliateLinks.id, cursorState.id),
-						),
-					) ?? null
-				);
-			}
-
-			case "revenueTracked": {
-				if (typeof cursorState.revenueTracked !== "number") {
-					return compareFn(toolAffiliateLinks.id, cursorState.id);
-				}
-				return (
-					or(
-						compareFn(
-							toolAffiliateLinks.revenueTracked,
-							cursorState.revenueTracked,
-						),
-						and(
-							eq(toolAffiliateLinks.revenueTracked, cursorState.revenueTracked),
-							compareFn(toolAffiliateLinks.id, cursorState.id),
-						),
-					) ?? null
-				);
-			}
-
-			case "commissionRate": {
-				if (!cursorState.commissionRate) {
-					return compareFn(toolAffiliateLinks.id, cursorState.id);
-				}
-				return (
-					or(
-						compareFn(
-							toolAffiliateLinks.commissionRate,
-							cursorState.commissionRate,
-						),
-						and(
-							eq(toolAffiliateLinks.commissionRate, cursorState.commissionRate),
-							compareFn(toolAffiliateLinks.id, cursorState.id),
-						),
-					) ?? null
-				);
-			}
-
-			case "createdAt": {
-				if (!cursorState.createdAt) {
-					return compareFn(toolAffiliateLinks.id, cursorState.id);
-				}
-				return (
-					or(
-						compareFn(toolAffiliateLinks.createdAt, cursorState.createdAt),
-						and(
-							eq(toolAffiliateLinks.createdAt, cursorState.createdAt),
-							compareFn(toolAffiliateLinks.id, cursorState.id),
-						),
-					) ?? null
-				);
-			}
-
-			default:
-				return null;
+		if (options.toolId) {
+			filters.push(eq(toolAffiliateLinks.toolId, options.toolId));
 		}
+
+		if (this.isDefined(options.isPrimary)) {
+			filters.push(eq(toolAffiliateLinks.isPrimary, options.isPrimary));
+		}
+
+		return filters;
 	}
 }
 
-// QUERY EXECUTOR
-class QueryExecutor {
-	constructor(private readonly db: QueryableDb) {}
+class AffiliateLinkSortBuilder extends SortBuilder<
+	typeof toolAffiliateLinks,
+	AffiliateLinkCursor,
+	AffiliateLinkSortBy
+> {
+	protected readonly sortFields: Record<
+		AffiliateLinkSortBy,
+		SortFieldConfig<typeof toolAffiliateLinks>
+	> = {
+		clickCount: {
+			field: toolAffiliateLinks.clickCount,
+			cursorKey: "clickCount",
+		},
+		revenueTracked: {
+			field: toolAffiliateLinks.revenueTracked,
+			cursorKey: "revenueTracked",
+		},
+		commissionRate: {
+			field: toolAffiliateLinks.commissionRate,
+			cursorKey: "commissionRate",
+		},
+		createdAt: {
+			field: toolAffiliateLinks.createdAt,
+			cursorKey: "createdAt",
+		},
+	} as const;
 
-	async execute(
-		filters: SQL<unknown>[],
-		context: SortContext,
-		cursor: CursorState | null,
+	protected readonly idField = toolAffiliateLinks.id;
+
+	protected buildDefaultOrderBy(): SQL<unknown>[] {
+		return [desc(toolAffiliateLinks.createdAt), desc(toolAffiliateLinks.id)];
+	}
+}
+
+class AffiliateLinkQueryExecutor extends QueryExecutor<
+	ToolAffiliateLink,
+	typeof toolAffiliateLinks,
+	AffiliateLinkCursor,
+	AffiliateLinkSortBy
+> {
+	constructor(
+		db: QueryableDb,
+		private readonly sortBuilder: AffiliateLinkSortBuilder,
+	) {
+		super(
+			db,
+			toolAffiliateLinks,
+			new CursorManager<AffiliateLinkCursor>({
+				secretKey: process.env.CURSOR_SIGNING_SECRET,
+			}),
+		);
+	}
+
+	protected async executeQuery(
+		where: SQL<unknown>,
+		orderBy: SQL<unknown>[],
 		limit: number,
-		needsJoin: boolean,
-	): Promise<AffiliateLinkCollection> {
-		const conditions = [...filters];
-
-		// Add cursor condition
-		if (cursor) {
-			const cursorCondition = SortBuilder.buildCursorCondition(cursor, context);
-			if (cursorCondition) {
-				conditions.push(cursorCondition);
-			}
-		}
-
-		const whereClause =
-			conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
-
-		const orderByClause = SortBuilder.buildOrderBy(context);
-
-		// If we need to join (for search), use inner join, otherwise just select from affiliate links
-		if (needsJoin) {
-			const rows = await this.db
+		strategy: QueryStrategy,
+	): Promise<ToolAffiliateLink[]> {
+		if (strategy.needsJoin) {
+			return this.db
 				.select({
 					id: toolAffiliateLinks.id,
 					toolId: toolAffiliateLinks.toolId,
@@ -302,100 +142,115 @@ class QueryExecutor {
 				})
 				.from(toolAffiliateLinks)
 				.innerJoin(tools, eq(toolAffiliateLinks.toolId, tools.id))
-				.where(whereClause)
-				.orderBy(...orderByClause)
-				.limit(limit + 1);
-			const hasMore = rows.length > limit;
-			const items: ToolAffiliateLink[] = (
-				hasMore ? rows.slice(0, limit) : rows
-			) as ToolAffiliateLink[];
-
-			const lastItem =
-				hasMore && items.length > 0 ? items[items.length - 1] : null;
-
-			const nextCursor = lastItem
-				? CursorManager.encode(
-						{
-							id: lastItem.id,
-							createdAt: lastItem.createdAt,
-							clickCount: lastItem.clickCount ?? undefined,
-							revenueTracked: lastItem.revenueTracked ?? undefined,
-							commissionRate: lastItem.commissionRate ?? undefined,
-						},
-						context.sortBy,
-					)
-				: null;
-
-			return { items, nextCursor, hasMore };
+				.where(where)
+				.orderBy(...orderBy)
+				.limit(limit);
 		}
 
-		const rows = await this.db
+		return this.db
 			.select()
 			.from(toolAffiliateLinks)
-			.where(whereClause)
-			.orderBy(...orderByClause)
-			.limit(limit + 1);
+			.where(where)
+			.orderBy(...orderBy)
+			.limit(limit);
+	}
 
-		const hasMore = rows.length > limit;
-		const items: ToolAffiliateLink[] = (
-			hasMore ? rows.slice(0, limit) : rows
-		) as ToolAffiliateLink[];
+	protected buildCursorCondition(
+		cursor: AffiliateLinkCursor,
+		sortConfig: SortConfig<AffiliateLinkSortBy>,
+	): SQL<unknown> | null {
+		return this.sortBuilder.buildCursorCondition(cursor, sortConfig);
+	}
 
-		const lastItem =
-			hasMore && items.length > 0 ? items[items.length - 1] : null;
+	protected buildOrderBy(
+		sortConfig: SortConfig<AffiliateLinkSortBy>,
+	): SQL<unknown>[] {
+		return this.sortBuilder.buildOrderBy(sortConfig);
+	}
 
-		const nextCursor = lastItem
-			? CursorManager.encode(
-					{
-						id: lastItem.id,
-						createdAt: lastItem.createdAt,
-						clickCount: lastItem.clickCount ?? undefined,
-						revenueTracked: lastItem.revenueTracked ?? undefined,
-						commissionRate: lastItem.commissionRate ?? undefined,
-					},
-					context.sortBy,
-				)
-			: null;
-
-		return { items, nextCursor, hasMore };
+	protected createCursor(entity: ToolAffiliateLink, sortBy: string): string {
+		return this.cursorManager.encode(
+			{
+				id: entity.id,
+				createdAt: entity.createdAt,
+				clickCount: entity.clickCount ?? undefined,
+				revenueTracked: entity.revenueTracked ?? undefined,
+				commissionRate: entity.commissionRate ?? undefined,
+			},
+			sortBy,
+		);
 	}
 }
 
 export class DrizzleAffiliateLinkRepository
+	extends BasePaginatedRepository<
+		ToolAffiliateLink,
+		typeof toolAffiliateLinks,
+		AffiliateLinkCursor,
+		AffiliateLinkQueryOptions,
+		AffiliateLinkSortBy
+	>
 	implements AffiliateLinkRepositoryInterface
 {
-	private readonly filterBuilder: FilterBuilder;
-	private readonly queryExecutor: QueryExecutor;
+	protected readonly filterBuilder: AffiliateLinkFilterBuilder;
+	protected readonly queryExecutor: AffiliateLinkQueryExecutor;
+	private readonly sortBuilder: AffiliateLinkSortBuilder;
 
 	constructor(private readonly db: QueryableDb) {
-		this.filterBuilder = new FilterBuilder();
-		this.queryExecutor = new QueryExecutor(db);
+		super();
+		this.filterBuilder = new AffiliateLinkFilterBuilder();
+		this.sortBuilder = new AffiliateLinkSortBuilder();
+		this.queryExecutor = new AffiliateLinkQueryExecutor(db, this.sortBuilder);
 	}
 
 	async getAll(
 		options: AffiliateLinkQueryOptions = {},
 	): Promise<AffiliateLinkCollection> {
-		const limit = options.limit ?? 20;
-		const sortBy = options.sortBy ?? "createdAt";
-		const sortOrder = options.sortOrder ?? "desc";
-
-		const context: SortContext = {
-			sortBy,
-			sortOrder,
-			searchQuery: options.search?.trim() || undefined,
-		};
-
-		const cursor = CursorManager.decode(options.cursor, sortBy);
-		const filters = this.filterBuilder.buildAllFilters(options);
-		const needsJoin = !!options.search; // Need join if searching by tool name
-
-		return this.queryExecutor.execute(
-			filters,
-			context,
-			cursor,
-			limit,
-			needsJoin,
+		// Handle cursor validation failure with fallback
+		const cursorValidation = this.queryExecutor.decodeCursor(
+			options.cursor,
+			options.sortBy,
 		);
+
+		if (options.cursor && !cursorValidation) {
+			const result = await super.getAll({ ...options, cursor: null });
+			return {
+				items: result.items,
+				nextCursor: result.nextCursor,
+				hasMore: result.hasMore,
+			};
+		}
+
+		const result = await super.getAll(options);
+		return {
+			items: result.items,
+			nextCursor: result.nextCursor,
+			hasMore: result.hasMore,
+		};
+	}
+
+	protected buildSortConfig(
+		options: AffiliateLinkQueryOptions,
+	): SortConfig<AffiliateLinkSortBy> {
+		return {
+			sortBy: options.sortBy ?? "createdAt",
+			sortOrder: options.sortOrder ?? "desc",
+		};
+	}
+
+	protected decodeCursor(
+		cursor?: string | null,
+		sortBy?: AffiliateLinkSortBy,
+	): AffiliateLinkCursor | null {
+		return this.queryExecutor.decodeCursor(cursor, sortBy);
+	}
+
+	protected determineQueryStrategy(
+		options: AffiliateLinkQueryOptions,
+	): QueryStrategy {
+		return {
+			needsJoin: !!options.search?.trim(),
+		};
 	}
 
 	async getById(id: string): Promise<ToolAffiliateLink | null> {
@@ -431,17 +286,17 @@ export class DrizzleAffiliateLinkRepository
 		id: string,
 		input: UpdateAffiliateLinkInput,
 	): Promise<ToolAffiliateLink> {
-		const updateData: Partial<typeof toolAffiliateLinks.$inferInsert> = {
-			...(input.toolId && { toolId: input.toolId }),
-			...(input.affiliateUrl && { affiliateUrl: input.affiliateUrl }),
-			...(input.commissionRate !== undefined && {
-				commissionRate: input.commissionRate.toString(),
-			}),
-			...(input.trackingCode !== undefined && {
-				trackingCode: input.trackingCode ?? null,
-			}),
-			...(input.isPrimary !== undefined && { isPrimary: input.isPrimary }),
-		};
+		const updateData: Partial<typeof toolAffiliateLinks.$inferInsert> = {};
+
+		if (input.toolId) updateData.toolId = input.toolId;
+		if (input.affiliateUrl) updateData.affiliateUrl = input.affiliateUrl;
+		if (input.commissionRate !== undefined) {
+			updateData.commissionRate = input.commissionRate.toString();
+		}
+		if (input.trackingCode !== undefined) {
+			updateData.trackingCode = input.trackingCode ?? null;
+		}
+		if (input.isPrimary !== undefined) updateData.isPrimary = input.isPrimary;
 
 		const [affiliateLink] = await this.db
 			.update(toolAffiliateLinks)

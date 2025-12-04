@@ -1,3 +1,15 @@
+import {
+	type BaseCursorState,
+	BasePaginatedRepository,
+	CursorManager,
+	FilterBuilder,
+	type PaginatedCollection,
+	QueryExecutor,
+	type QueryStrategy,
+	SortBuilder,
+	type SortConfig,
+	type SortFieldConfig,
+} from "@missingstack/api/shared/pagination";
 import type { BaseQueryOptions } from "@missingstack/api/types";
 import type { Database } from "@missingstack/db";
 import {
@@ -37,85 +49,20 @@ import type {
 
 type QueryableDb = Pick<
 	Database,
-	"select" | "insert" | "delete" | "transaction"
+	"select" | "transaction" | "insert" | "update" | "delete"
 >;
-type CursorState = {
-	id: string;
-	createdAt?: Date;
+
+type ToolCursor = BaseCursorState & {
 	name?: string;
 	rank?: number;
 };
 
-type EncodedCursor = {
-	id: string;
-	createdAt?: string;
-	name?: string;
-	rank?: number;
-	sortBy?: string;
-};
+type ToolSortBy = "name" | "newest" | "popular" | "relevance";
 
-type SortContext = {
-	sortBy: "name" | "newest" | "popular" | "relevance";
-	sortOrder: "asc" | "desc";
-	searchQuery?: string;
-};
-
-// CURSOR UTILITIES
-class CursorManager {
-	static encode(state: CursorState, sortBy: SortContext["sortBy"]): string {
-		const payload: EncodedCursor = {
-			id: state.id,
-			createdAt: state.createdAt?.toISOString(),
-			name: state.name,
-			rank: state.rank,
-			sortBy,
-		};
-		return Buffer.from(JSON.stringify(payload)).toString("base64");
+class ToolFilterBuilder extends FilterBuilder<ToolQueryOptions> {
+	constructor(private readonly db: QueryableDb) {
+		super();
 	}
-
-	static decode(
-		cursor?: string | null,
-		sortBy?: SortContext["sortBy"],
-	): CursorState | null {
-		if (!cursor) return null;
-
-		try {
-			const json = Buffer.from(cursor, "base64").toString("utf8");
-			const parsed = JSON.parse(json) as EncodedCursor;
-
-			if (!parsed.id) return null;
-
-			// Invalidate cursor if sort changed
-			if (sortBy && parsed.sortBy && parsed.sortBy !== sortBy) {
-				return null;
-			}
-
-			const state: CursorState = { id: parsed.id };
-
-			if (parsed.createdAt) {
-				const createdAt = new Date(parsed.createdAt);
-				if (!Number.isNaN(createdAt.getTime())) {
-					state.createdAt = createdAt;
-				}
-			}
-
-			if (parsed.name) {
-				state.name = parsed.name;
-			}
-
-			if (typeof parsed.rank === "number") {
-				state.rank = parsed.rank;
-			}
-
-			return state;
-		} catch {
-			return null;
-		}
-	}
-}
-// FILTER BUILDERS
-class FilterBuilder {
-	constructor(private readonly db: QueryableDb) {}
 
 	buildFeaturedFilter(featured?: boolean): SQL<unknown> | null {
 		if (typeof featured !== "boolean") return null;
@@ -191,7 +138,8 @@ class FilterBuilder {
 		);
 	}
 
-	buildSearchFilter(search?: string): SQL<unknown> | null {
+	protected buildSearchFilter(options: ToolQueryOptions): SQL<unknown> | null {
+		const search = options.search;
 		if (!search) return null;
 		const searchQuery = search.trim();
 		if (!searchQuery) return null;
@@ -213,7 +161,7 @@ class FilterBuilder {
 		);
 	}
 
-	buildAllFilters(options: ToolQueryOptions): SQL<unknown>[] {
+	protected buildEntityFilters(options: ToolQueryOptions): SQL<unknown>[] {
 		return [
 			this.buildFeaturedFilter(options.featured),
 			this.buildPricingFilter(options.pricing),
@@ -222,20 +170,82 @@ class FilterBuilder {
 			this.buildTagFilter(options.tagIds),
 			this.buildStackFilter(options.stackIds),
 			this.buildAlternativeFilter(options.alternativeIds),
-			this.buildSearchFilter(options.search),
 		].filter((condition): condition is SQL<unknown> => condition !== null);
 	}
 }
 
-// SORT BUILDERS
-class SortBuilder {
-	static buildOrderBy(context: SortContext, db: QueryableDb): SQL<unknown>[] {
-		const orderFn = context.sortOrder === "asc" ? asc : desc;
+class ToolSortBuilder extends SortBuilder<
+	typeof tools,
+	ToolCursor,
+	ToolSortBy
+> {
+	constructor(private readonly db: QueryableDb) {
+		super();
+	}
+
+	protected readonly sortFields: Record<
+		ToolSortBy,
+		SortFieldConfig<typeof tools>
+	> = {
+		name: {
+			field: tools.name,
+			cursorKey: "name",
+		},
+		newest: {
+			field: tools.createdAt,
+			cursorKey: "createdAt",
+		},
+		popular: {
+			field: tools.createdAt,
+			cursorKey: "createdAt",
+		},
+		relevance: {
+			field: tools.createdAt,
+			cursorKey: "createdAt",
+		},
+	} as const;
+
+	protected readonly idField = tools.id;
+
+	protected buildDefaultOrderBy(): SQL<unknown>[] {
+		const now = new Date();
+		const hasActiveSponsorship = exists(
+			this.db
+				.select()
+				.from(toolSponsorships)
+				.where(
+					and(
+						eq(toolSponsorships.toolId, tools.id),
+						eq(toolSponsorships.isActive, true),
+						sql`${toolSponsorships.startDate} <= ${now}`,
+						gt(toolSponsorships.endDate, now),
+					),
+				),
+		);
+		const hasAffiliateLink = exists(
+			this.db
+				.select()
+				.from(toolAffiliateLinks)
+				.where(eq(toolAffiliateLinks.toolId, tools.id)),
+		);
+		return [
+			desc(hasActiveSponsorship),
+			desc(hasAffiliateLink),
+			desc(tools.createdAt),
+			desc(tools.id),
+		];
+	}
+
+	buildOrderBy(
+		config: SortConfig<ToolSortBy>,
+		searchQuery?: string,
+	): SQL<unknown>[] {
+		const orderFn = config.sortOrder === "asc" ? asc : desc;
 		const now = new Date();
 
 		// Helper to check if tool has active sponsorship
 		const hasActiveSponsorship = exists(
-			db
+			this.db
 				.select()
 				.from(toolSponsorships)
 				.where(
@@ -250,7 +260,7 @@ class SortBuilder {
 
 		// Helper to check if tool has affiliate links
 		const hasAffiliateLink = exists(
-			db
+			this.db
 				.select()
 				.from(toolAffiliateLinks)
 				.where(eq(toolAffiliateLinks.toolId, tools.id)),
@@ -266,7 +276,7 @@ class SortBuilder {
 			AND ${toolSponsorships.endDate} > ${now}
 		), 0)`;
 
-		switch (context.sortBy) {
+		switch (config.sortBy) {
 			case "name":
 				return [orderFn(tools.name), orderFn(tools.id)];
 
@@ -289,8 +299,7 @@ class SortBuilder {
 				];
 
 			case "relevance": {
-				if (!context.searchQuery) {
-					// Fallback to newest if no search query
+				if (!searchQuery) {
 					return [
 						desc(hasActiveSponsorship),
 						desc(hasAffiliateLink),
@@ -298,7 +307,7 @@ class SortBuilder {
 						desc(tools.id),
 					];
 				}
-				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
+				const tsQuery = sql`plainto_tsquery('english', ${searchQuery})`;
 				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 				return [
@@ -311,99 +320,92 @@ class SortBuilder {
 			}
 
 			default:
-				return [
-					desc(hasActiveSponsorship),
-					desc(hasAffiliateLink),
-					desc(tools.createdAt),
-					desc(tools.id),
-				];
+				return this.buildDefaultOrderBy();
 		}
 	}
 
-	static buildCursorCondition(
-		cursorState: CursorState,
-		context: SortContext,
+	buildCursorCondition(
+		cursor: ToolCursor,
+		config: SortConfig<ToolSortBy>,
+		searchQuery?: string,
 	): SQL<unknown> | null {
-		if (!cursorState.id) return null;
+		if (!cursor.id) return null;
 
-		const isAsc = context.sortOrder === "asc";
+		const isAsc = config.sortOrder === "asc";
 		const compareFn = isAsc ? gt : lt;
 
-		switch (context.sortBy) {
+		switch (config.sortBy) {
 			case "name": {
-				if (!cursorState.name) {
-					return compareFn(tools.id, cursorState.id);
+				if (!cursor.name) {
+					return compareFn(tools.id, cursor.id);
 				}
 				return (
 					or(
-						compareFn(tools.name, cursorState.name),
-						and(
-							eq(tools.name, cursorState.name),
-							compareFn(tools.id, cursorState.id),
-						),
+						compareFn(tools.name, cursor.name),
+						and(eq(tools.name, cursor.name), compareFn(tools.id, cursor.id)),
 					) ?? null
 				);
 			}
 
 			case "newest": {
-				if (!cursorState.createdAt) {
-					return compareFn(tools.id, cursorState.id);
+				if (!cursor.createdAt) {
+					return compareFn(tools.id, cursor.id);
 				}
 				return (
 					or(
-						compareFn(tools.createdAt, cursorState.createdAt),
+						compareFn(tools.createdAt, cursor.createdAt),
 						and(
-							eq(tools.createdAt, cursorState.createdAt),
-							compareFn(tools.id, cursorState.id),
+							eq(tools.createdAt, cursor.createdAt),
+							compareFn(tools.id, cursor.id),
 						),
 					) ?? null
 				);
 			}
 
 			case "popular": {
-				if (!cursorState.createdAt) {
-					return compareFn(tools.id, cursorState.id);
+				if (!cursor.createdAt) {
+					return compareFn(tools.id, cursor.id);
 				}
 				return (
 					or(
-						compareFn(tools.createdAt, cursorState.createdAt),
+						compareFn(tools.createdAt, cursor.createdAt),
 						and(
-							eq(tools.createdAt, cursorState.createdAt),
-							compareFn(tools.id, cursorState.id),
+							eq(tools.createdAt, cursor.createdAt),
+							compareFn(tools.id, cursor.id),
 						),
 					) ?? null
 				);
 			}
 
 			case "relevance": {
-				if (!context.searchQuery) {
+				if (!searchQuery) {
 					// Fallback to createdAt if no search query
-					if (!cursorState.createdAt) {
-						return compareFn(tools.id, cursorState.id);
+					if (!cursor.createdAt) {
+						return compareFn(tools.id, cursor.id);
 					}
 					return (
 						or(
-							compareFn(tools.createdAt, cursorState.createdAt),
+							compareFn(tools.createdAt, cursor.createdAt),
 							and(
-								eq(tools.createdAt, cursorState.createdAt),
-								compareFn(tools.id, cursorState.id),
+								eq(tools.createdAt, cursor.createdAt),
+								compareFn(tools.id, cursor.id),
 							),
 						) ?? null
 					);
 				}
 
-				if (typeof cursorState.rank !== "number") {
-					return compareFn(tools.id, cursorState.id);
+				if (typeof cursor.rank !== "number") {
+					return compareFn(tools.id, cursor.id);
 				}
 
-				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
+				const tsQuery = sql`plainto_tsquery('english', ${searchQuery})`;
 				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 
 				return (
 					or(
-						lt(rankExpr, cursorState.rank), // Always use lt for rank (higher rank = earlier)
-						and(eq(rankExpr, cursorState.rank), gt(tools.id, cursorState.id)),
+						lt(rankExpr, cursor.rank), // Always use lt for rank (higher rank = earlier)
+						and(eq(rankExpr, cursor.rank), gt(tools.id, cursor.id)),
 					) ?? null
 				);
 			}
@@ -414,44 +416,38 @@ class SortBuilder {
 	}
 }
 
-// QUERY EXECUTOR
+class ToolQueryExecutor extends QueryExecutor<
+	ToolWithSponsorship,
+	typeof tools,
+	ToolCursor,
+	ToolSortBy
+> {
+	constructor(
+		db: QueryableDb,
+		private readonly sortBuilder: ToolSortBuilder,
+	) {
+		super(
+			db,
+			tools,
+			new CursorManager<ToolCursor>({
+				secretKey: process.env.CURSOR_SIGNING_SECRET,
+			}),
+		);
+	}
 
-class QueryExecutor {
-	constructor(private readonly db: QueryableDb) {}
-
-	async execute(
-		filters: SQL<unknown>[],
-		context: SortContext,
-		cursor: CursorState | null,
-		limit: number,
-	): Promise<ToolCollection> {
-		const conditions = [...filters];
-
-		// Add cursor condition
-		if (cursor) {
-			const cursorCondition = SortBuilder.buildCursorCondition(cursor, context);
-			if (cursorCondition) {
-				conditions.push(cursorCondition);
-			}
-		}
-
-		const whereClause =
-			conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
-
-		const orderByClause = SortBuilder.buildOrderBy(context, this.db);
-
+	private getIsSponsoredExpr(): SQL.Aliased<boolean> {
 		const now = new Date();
-		// Helper to check if tool has active sponsorship
-		const isSponsoredExpr = sql<boolean>`EXISTS (
+		return sql<boolean>`EXISTS (
 			SELECT 1 FROM ${toolSponsorships}
 			WHERE ${toolSponsorships.toolId} = ${tools.id}
 			AND ${toolSponsorships.isActive} = true
 			AND ${toolSponsorships.startDate} <= ${now}
 			AND ${toolSponsorships.endDate} > ${now}
 		)`.as("isSponsored");
+	}
 
-		// Base select fields
-		const selectFields = {
+	private getSelectFields() {
+		return {
 			id: tools.id,
 			slug: tools.slug,
 			name: tools.name,
@@ -465,56 +461,131 @@ class QueryExecutor {
 			searchVector: tools.searchVector,
 			createdAt: tools.createdAt,
 			updatedAt: tools.updatedAt,
-			isSponsored: isSponsoredExpr,
+			isSponsored: this.getIsSponsoredExpr(),
 		};
+	}
+
+	protected async executeQuery(
+		where: SQL<unknown>,
+		orderBy: SQL<unknown>[],
+		limit: number,
+	): Promise<ToolWithSponsorship[]> {
+		const selectFields = this.getSelectFields();
+		const rows = await this.db
+			.select(selectFields)
+			.from(tools)
+			.where(where)
+			.orderBy(...orderBy)
+			.limit(limit);
+
+		return rows.map(({ isSponsored, ...item }) => ({
+			...item,
+			isSponsored: isSponsored ?? false,
+		}));
+	}
+
+	protected buildCursorCondition(
+		cursor: ToolCursor,
+		sortConfig: SortConfig<ToolSortBy>,
+	): SQL<unknown> | null {
+		// Get search query from sortConfig if available (passed via metadata)
+		const searchQuery = (
+			sortConfig as SortConfig<ToolSortBy> & {
+				searchQuery?: string;
+			}
+		).searchQuery;
+		return this.sortBuilder.buildCursorCondition(
+			cursor,
+			sortConfig,
+			searchQuery,
+		);
+	}
+
+	protected buildOrderBy(sortConfig: SortConfig<ToolSortBy>): SQL<unknown>[] {
+		// Get search query from sortConfig if available (passed via metadata)
+		const searchQuery = (
+			sortConfig as SortConfig<ToolSortBy> & {
+				searchQuery?: string;
+			}
+		).searchQuery;
+		return this.sortBuilder.buildOrderBy(sortConfig, searchQuery);
+	}
+
+	protected createCursor(entity: ToolWithSponsorship, sortBy: string): string {
+		// For relevance searches, we need rank, but it's not in the entity
+		// This will be handled in the execute method override
+		return this.cursorManager.encode(
+			{
+				id: entity.id,
+				createdAt: entity.createdAt,
+				name: entity.name,
+			},
+			sortBy,
+		);
+	}
+
+	// Override execute to handle relevance search with rank
+	async execute(
+		filters: SQL<unknown>[],
+		sortConfig: SortConfig<ToolSortBy>,
+		cursor: ToolCursor | null,
+		limit: number,
+		strategy: QueryStrategy,
+	): Promise<PaginatedCollection<ToolWithSponsorship>> {
+		const searchQuery = (
+			sortConfig as SortConfig<ToolSortBy> & {
+				searchQuery?: string;
+			}
+		).searchQuery;
 
 		// Handle relevance search with rank
-		if (context.sortBy === "relevance" && context.searchQuery) {
+		if (sortConfig.sortBy === "relevance" && searchQuery) {
 			return this.executeRelevanceQuery(
-				selectFields,
-				whereClause,
-				orderByClause,
-				context,
+				filters,
+				sortConfig,
+				cursor,
 				limit,
+				searchQuery,
 			);
 		}
 
 		// Standard query
-		return this.executeStandardQuery(
-			selectFields,
-			whereClause,
-			orderByClause,
-			context,
-			limit,
-		);
+		return super.execute(filters, sortConfig, cursor, limit, strategy);
 	}
 
 	private async executeRelevanceQuery(
-		selectFields: {
-			id: typeof tools.id;
-			slug: typeof tools.slug;
-			name: typeof tools.name;
-			tagline: typeof tools.tagline;
-			description: typeof tools.description;
-			logo: typeof tools.logo;
-			website: typeof tools.website;
-			pricing: typeof tools.pricing;
-			license: typeof tools.license;
-			featured: typeof tools.featured;
-			searchVector: typeof tools.searchVector;
-			createdAt: typeof tools.createdAt;
-			updatedAt: typeof tools.updatedAt;
-			isSponsored: SQL.Aliased<boolean>;
-		},
-		whereClause: SQL<unknown>,
-		orderByClause: SQL<unknown>[],
-		context: SortContext,
+		filters: SQL<unknown>[],
+		sortConfig: SortConfig<ToolSortBy>,
+		cursor: ToolCursor | null,
 		limit: number,
-	): Promise<ToolCollection> {
-		const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
+		searchQuery: string,
+	): Promise<PaginatedCollection<ToolWithSponsorship>> {
+		const conditions = [...filters];
+
+		if (cursor) {
+			const cursorCondition = this.sortBuilder.buildCursorCondition(
+				cursor,
+				sortConfig,
+				searchQuery,
+			);
+			if (cursorCondition) {
+				conditions.push(cursorCondition);
+			}
+		}
+
+		const whereClause =
+			conditions.length > 0 ? (and(...conditions) ?? sql`true`) : sql`true`;
+
+		const orderByClause = this.sortBuilder.buildOrderBy(
+			sortConfig,
+			searchQuery,
+		);
+
+		const tsQuery = sql`plainto_tsquery('english', ${searchQuery})`;
 		const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 		const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
 
+		const selectFields = this.getSelectFields();
 		const rows = await this.db
 			.select({
 				...selectFields,
@@ -532,110 +603,98 @@ class QueryExecutor {
 			isSponsored: isSponsored ?? false,
 		}));
 
-		const lastItem =
-			hasMore && items.length > 0 ? items[items.length - 1] : null;
+		const lastItem = items.length > 0 ? items[items.length - 1] : null;
 		const lastRow =
-			hasMore && limitedRows.length > 0
-				? limitedRows[limitedRows.length - 1]
-				: null;
+			limitedRows.length > 0 ? limitedRows[limitedRows.length - 1] : null;
 
 		const nextCursor =
-			lastItem && lastRow
-				? CursorManager.encode(
+			lastItem && lastRow && typeof lastRow.rank === "number"
+				? this.cursorManager.encode(
 						{
 							id: lastItem.id,
 							createdAt: lastItem.createdAt,
 							name: lastItem.name,
 							rank: lastRow.rank,
 						},
-						context.sortBy,
+						sortConfig.sortBy,
 					)
 				: null;
 
-		return { items, nextCursor, hasMore };
-	}
-
-	private async executeStandardQuery(
-		selectFields: {
-			id: typeof tools.id;
-			slug: typeof tools.slug;
-			name: typeof tools.name;
-			tagline: typeof tools.tagline;
-			description: typeof tools.description;
-			logo: typeof tools.logo;
-			website: typeof tools.website;
-			pricing: typeof tools.pricing;
-			license: typeof tools.license;
-			featured: typeof tools.featured;
-			searchVector: typeof tools.searchVector;
-			createdAt: typeof tools.createdAt;
-			updatedAt: typeof tools.updatedAt;
-			isSponsored: SQL.Aliased<boolean>;
-		},
-		whereClause: SQL<unknown>,
-		orderByClause: SQL<unknown>[],
-		context: SortContext,
-		limit: number,
-	): Promise<ToolCollection> {
-		const rows = await this.db
-			.select(selectFields)
-			.from(tools)
-			.where(whereClause)
-			.orderBy(...orderByClause)
-			.limit(limit + 1);
-
-		const hasMore = rows.length > limit;
-		const items = (hasMore ? rows.slice(0, limit) : rows).map(
-			({ isSponsored, ...item }) => ({
-				...item,
-				isSponsored: isSponsored ?? false,
-			}),
-		);
-
-		const lastItem =
-			hasMore && items.length > 0 ? items[items.length - 1] : null;
-
-		const nextCursor = lastItem
-			? CursorManager.encode(
-					{
-						id: lastItem.id,
-						createdAt: lastItem.createdAt,
-						name: lastItem.name,
-					},
-					context.sortBy,
-				)
-			: null;
-
-		return { items, nextCursor, hasMore };
+		return {
+			items,
+			nextCursor,
+			hasMore,
+			metadata: { count: items.length },
+		};
 	}
 }
 
-// REPOSITORY
-
-export class DrizzleToolRepository implements ToolRepositoryInterface {
-	private readonly filterBuilder: FilterBuilder;
-	private readonly queryExecutor: QueryExecutor;
+export class DrizzleToolRepository
+	extends BasePaginatedRepository<
+		ToolWithSponsorship,
+		typeof tools,
+		ToolCursor,
+		ToolQueryOptions,
+		ToolSortBy
+	>
+	implements ToolRepositoryInterface
+{
+	protected readonly filterBuilder: ToolFilterBuilder;
+	protected readonly queryExecutor: ToolQueryExecutor;
+	private readonly sortBuilder: ToolSortBuilder;
 
 	constructor(private readonly db: QueryableDb) {
-		this.filterBuilder = new FilterBuilder(db);
-		this.queryExecutor = new QueryExecutor(db);
+		super();
+		this.filterBuilder = new ToolFilterBuilder(db);
+		this.sortBuilder = new ToolSortBuilder(db);
+		this.queryExecutor = new ToolQueryExecutor(db, this.sortBuilder);
 	}
 
 	async getAll(options: ToolQueryOptions = {}): Promise<ToolCollection> {
-		const limit = options.limit ?? 8;
-		const sortBy = options.sortBy ?? "newest";
-		const sortOrder = options.sortOrder ?? "desc";
+		// Handle cursor validation failure with fallback
+		const cursorValidation = this.queryExecutor.decodeCursor(
+			options.cursor,
+			options.sortBy,
+		);
 
-		const context: SortContext = {
-			sortBy,
-			sortOrder,
+		if (options.cursor && !cursorValidation) {
+			const result = await super.getAll({ ...options, cursor: null });
+			return {
+				items: result.items,
+				nextCursor: result.nextCursor,
+				hasMore: result.hasMore,
+			};
+		}
+
+		const result = await super.getAll(options);
+		return {
+			items: result.items,
+			nextCursor: result.nextCursor,
+			hasMore: result.hasMore,
+		};
+	}
+
+	protected buildSortConfig(
+		options: ToolQueryOptions,
+	): SortConfig<ToolSortBy> & { searchQuery?: string } {
+		return {
+			sortBy: options.sortBy ?? "newest",
+			sortOrder: options.sortOrder ?? "desc",
 			searchQuery: options.search?.trim() || undefined,
 		};
+	}
 
-		const cursor = CursorManager.decode(options.cursor, sortBy);
-		const filters = this.filterBuilder.buildAllFilters(options);
+	protected decodeCursor(
+		cursor?: string | null,
+		sortBy?: ToolSortBy,
+	): ToolCursor | null {
+		return this.queryExecutor.decodeCursor(cursor, sortBy);
+	}
 
-		return this.queryExecutor.execute(filters, context, cursor, limit);
+	protected determineQueryStrategy(_options: ToolQueryOptions): QueryStrategy {
+		return {
+			needsJoin: false, // Tools don't need joins for search
+		};
 	}
 
 	async getByCategory(
@@ -979,26 +1038,8 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 	async getAllWithAlternativeCounts(
 		options: ToolQueryOptions = {},
 	): Promise<ToolWithAlternativeCountCollection> {
-		const limit = options.limit ?? 20;
-		const sortBy = options.sortBy ?? "newest";
-		const sortOrder = options.sortOrder ?? "desc";
-
-		const context: SortContext = {
-			sortBy,
-			sortOrder,
-			searchQuery: options.search?.trim() || undefined,
-		};
-
-		const cursor = CursorManager.decode(options.cursor, sortBy);
-		const filters = this.filterBuilder.buildAllFilters(options);
-
-		// Get tools using the standard query executor
-		const collection = await this.queryExecutor.execute(
-			filters,
-			context,
-			cursor,
-			limit,
-		);
+		// Use the standard getAll method
+		const collection = await this.getAll(options);
 
 		// Get alternative counts for all tools
 		const toolIds = collection.items.map((tool) => tool.id);
