@@ -8,6 +8,13 @@
 			"when": 1764774662907,
 			"tag": "0000_normal_the_hand",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1764828909667,
+			"tag": "0001_shocking_red_ghost",
+			"breakpoints": true
 		}
 	]
 }

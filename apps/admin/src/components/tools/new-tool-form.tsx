@@ -74,15 +74,6 @@ const toolFormSchema = z.object({
 	pricing: z.enum(pricingOptions as [string, ...string[]]),
 	license: z.enum(licenseOptions as [string, ...string[]]).optional(),
 	featured: z.boolean(),
-	affiliateUrl: z
-		.string()
-		.url("Must be a valid URL")
-		.max(512, "Affiliate URL must be 512 characters or less")
-		.optional()
-		.or(z.literal("")),
-	sponsorshipPriority: z.number().int(),
-	isSponsored: z.boolean(),
-	monetizationEnabled: z.boolean(),
 	categoryIds: z.array(z.string()),
 	stackIds: z.array(z.string()),
 	tagIds: z.array(z.string()),
@@ -157,10 +148,6 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 			pricing: "free",
 			license: undefined,
 			featured: false,
-			affiliateUrl: "",
-			sponsorshipPriority: 0,
-			isSponsored: false,
-			monetizationEnabled: false,
 			categoryIds: [],
 			stackIds: [],
 			tagIds: [],
@@ -181,10 +168,6 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 				pricing: data.pricing,
 				license: data.license || undefined,
 				featured: data.featured,
-				affiliateUrl: data.affiliateUrl || undefined,
-				sponsorshipPriority: data.sponsorshipPriority,
-				isSponsored: data.isSponsored,
-				monetizationEnabled: data.monetizationEnabled,
 				categoryIds: data.categoryIds,
 				stackIds: data.stackIds,
 				tagIds: data.tagIds,
@@ -450,72 +433,6 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 										<FieldLabel htmlFor="featured" className="font-normal">
 											Featured
 										</FieldLabel>
-									</Field>
-
-									<Field orientation="horizontal">
-										<Switch
-											id="isSponsored"
-											checked={form.watch("isSponsored")}
-											onCheckedChange={(checked) =>
-												form.setValue("isSponsored", checked)
-											}
-										/>
-										<FieldLabel htmlFor="isSponsored" className="font-normal">
-											Sponsored
-										</FieldLabel>
-									</Field>
-
-									<Field orientation="horizontal">
-										<Switch
-											id="monetizationEnabled"
-											checked={form.watch("monetizationEnabled")}
-											onCheckedChange={(checked) =>
-												form.setValue("monetizationEnabled", checked)
-											}
-										/>
-										<FieldLabel
-											htmlFor="monetizationEnabled"
-											className="font-normal"
-										>
-											Monetization Enabled
-										</FieldLabel>
-									</Field>
-								</FieldGroup>
-							</FieldSet>
-
-							<FieldSet>
-								<FieldGroup>
-									<Field>
-										<FieldLabel htmlFor="affiliateUrl">
-											Affiliate URL
-										</FieldLabel>
-										<Input
-											id="affiliateUrl"
-											type="url"
-											{...form.register("affiliateUrl")}
-											placeholder="https://example.com/affiliate"
-										/>
-										<FieldError errors={[form.formState.errors.affiliateUrl]} />
-									</Field>
-
-									<Field>
-										<FieldLabel htmlFor="sponsorshipPriority">
-											Sponsorship Priority
-										</FieldLabel>
-										<Input
-											id="sponsorshipPriority"
-											type="number"
-											{...form.register("sponsorshipPriority", {
-												valueAsNumber: true,
-											})}
-											placeholder="0"
-										/>
-										<FieldDescription>
-											Higher numbers appear first in sponsored listings
-										</FieldDescription>
-										<FieldError
-											errors={[form.formState.errors.sponsorshipPriority]}
-										/>
 									</Field>
 								</FieldGroup>
 							</FieldSet>

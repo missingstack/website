@@ -177,9 +177,6 @@ export function ConfigurableSection({
 
 								<div className="mt-auto flex items-center justify-between border-border/50 border-t border-dashed pt-5">
 									<div className="flex flex-wrap gap-2">
-										{"isSponsored" in tool && tool.isSponsored && (
-											<Badge variant="gold">Sponsored</Badge>
-										)}
 										<Badge variant={tool.pricing === "free" ? "green" : "blue"}>
 											{formatPricingDisplay(tool.pricing)}
 										</Badge>
@@ -234,11 +231,6 @@ export function ConfigurableSection({
 
 								<div className="mt-auto flex items-center justify-between border-border/50 border-t border-dashed pt-4">
 									<div className="flex flex-wrap gap-2">
-										{"isSponsored" in tool && tool.isSponsored && (
-											<Badge variant="gold" className="text-xs">
-												Sponsored
-											</Badge>
-										)}
 										<Badge
 											variant={tool.pricing === "free" ? "green" : "blue"}
 											className="text-xs"

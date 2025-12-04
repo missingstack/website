@@ -235,16 +235,10 @@ class SortBuilder {
 				return [orderFn(tools.name), orderFn(tools.id)];
 
 			case "newest":
-				return [
-					desc(tools.sponsorshipPriority), // Prioritize sponsored tools
-					desc(tools.isSponsored), // Sponsored tools first
-					orderFn(tools.createdAt),
-					orderFn(tools.id),
-				];
+				return [orderFn(tools.createdAt), orderFn(tools.id)];
 
 			case "popular":
 				return [
-					desc(tools.sponsorshipPriority),
 					orderFn(tools.featured),
 					orderFn(tools.createdAt),
 					orderFn(tools.id),
@@ -253,31 +247,16 @@ class SortBuilder {
 			case "relevance": {
 				if (!context.searchQuery) {
 					// Fallback to newest if no search query
-					return [
-						desc(tools.sponsorshipPriority),
-						desc(tools.isSponsored),
-						desc(tools.createdAt),
-						desc(tools.id),
-					];
+					return [desc(tools.createdAt), desc(tools.id)];
 				}
 				const tsQuery = sql`plainto_tsquery('english', ${context.searchQuery})`;
 				const generatedVector = sql`to_tsvector('english', ${tools.name} || ' ' || ${tools.tagline} || ' ' || ${tools.description})`;
 				const rankExpr = sql<number>`ts_rank(${generatedVector}, ${tsQuery})`;
-				return [
-					desc(tools.sponsorshipPriority),
-					desc(tools.isSponsored),
-					desc(rankExpr),
-					desc(tools.id),
-				];
+				return [desc(rankExpr), desc(tools.id)];
 			}
 
 			default:
-				return [
-					desc(tools.sponsorshipPriority),
-					desc(tools.isSponsored),
-					desc(tools.createdAt),
-					desc(tools.id),
-				];
+				return [desc(tools.createdAt), desc(tools.id)];
 		}
 	}
 
@@ -412,10 +391,6 @@ class QueryExecutor {
 			website: tools.website,
 			pricing: tools.pricing,
 			featured: tools.featured,
-			affiliateUrl: tools.affiliateUrl,
-			sponsorshipPriority: tools.sponsorshipPriority,
-			isSponsored: tools.isSponsored,
-			monetizationEnabled: tools.monetizationEnabled,
 			createdAt: tools.createdAt,
 			updatedAt: tools.updatedAt,
 		};
@@ -452,10 +427,6 @@ class QueryExecutor {
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
 			featured: typeof tools.featured;
-			affiliateUrl: typeof tools.affiliateUrl;
-			sponsorshipPriority: typeof tools.sponsorshipPriority;
-			isSponsored: typeof tools.isSponsored;
-			monetizationEnabled: typeof tools.monetizationEnabled;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
 		},
@@ -518,10 +489,6 @@ class QueryExecutor {
 			website: typeof tools.website;
 			pricing: typeof tools.pricing;
 			featured: typeof tools.featured;
-			affiliateUrl: typeof tools.affiliateUrl;
-			sponsorshipPriority: typeof tools.sponsorshipPriority;
-			isSponsored: typeof tools.isSponsored;
-			monetizationEnabled: typeof tools.monetizationEnabled;
 			createdAt: typeof tools.createdAt;
 			updatedAt: typeof tools.updatedAt;
 		},
@@ -735,7 +702,6 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 			.orderBy(
 				desc(toolSponsorships.priorityWeight),
 				desc(toolSponsorships.tier),
-				desc(tools.sponsorshipPriority),
 				desc(tools.createdAt),
 				desc(tools.id),
 			)
@@ -887,10 +853,6 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 					pricing: input.pricing,
 					license: input.license || null,
 					featured: input.featured ?? false,
-					affiliateUrl: input.affiliateUrl || null,
-					sponsorshipPriority: input.sponsorshipPriority ?? 0,
-					isSponsored: input.isSponsored ?? false,
-					monetizationEnabled: input.monetizationEnabled ?? false,
 				})
 				.returning();
 
@@ -974,18 +936,6 @@ export class DrizzleToolRepository implements ToolRepositoryInterface {
 					license: input.license || null,
 				}),
 				...(input.featured && { featured: input.featured }),
-				...(input.affiliateUrl && {
-					affiliateUrl: input.affiliateUrl || null,
-				}),
-				...(input.sponsorshipPriority && {
-					sponsorshipPriority: input.sponsorshipPriority,
-				}),
-				...(input.isSponsored && {
-					isSponsored: input.isSponsored,
-				}),
-				...(input.monetizationEnabled && {
-					monetizationEnabled: input.monetizationEnabled,
-				}),
 			};
 
 			const [tool] = await tx

@@ -15,7 +15,6 @@ import {
 	boolean,
 	customType,
 	index,
-	integer,
 	pgTable,
 	text,
 	varchar,
@@ -50,14 +49,6 @@ export const tools = pgTable(
 		pricing: pricingEnum("pricing").notNull(),
 		license: licenseEnum("license"),
 		featured: boolean("featured").default(false),
-
-		// Monetization fields
-		affiliateUrl: varchar("affiliate_url", { length: 512 }),
-		sponsorshipPriority: integer("sponsorship_priority").default(0).notNull(),
-		isSponsored: boolean("is_sponsored").default(false).notNull(),
-		monetizationEnabled: boolean("monetization_enabled")
-			.default(false)
-			.notNull(),
 		// Full-text search vector - auto-generated from name, tagline, description
 		searchVector: tsvector("search_vector"),
 		...timestampFields,
@@ -72,12 +63,6 @@ export const tools = pgTable(
 		index("tools_featured_pricing_idx").on(table.featured, table.pricing),
 		index("tools_license_idx").on(table.license),
 		index("tools_pricing_license_idx").on(table.pricing, table.license),
-		index("tools_sponsorship_priority_idx").on(table.sponsorshipPriority),
-		index("tools_is_sponsored_idx").on(table.isSponsored),
-		// Composite index for featured + sponsored queries
-		index("tools_featured_sponsored_idx").on(table.featured, table.isSponsored),
-		// Index for monetization queries
-		index("tools_monetization_enabled_idx").on(table.monetizationEnabled),
 		// GIN index for full-text search
 		index("tools_search_idx").using("gin", table.searchVector),
 	],
