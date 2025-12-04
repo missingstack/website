@@ -91,44 +91,46 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Fetch categories
+	// Fetch default categories (top 10)
 	const { data: categoriesData } = useQuery({
-		queryKey: ["categories"],
+		queryKey: ["categories", "default"],
 		queryFn: async () => {
-			const { data, error } = await api.v1.categories.get({});
+			const { data, error } = await api.v1.categories.get({
+				query: { limit: 10 },
+			});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch categories");
 			return data;
 		},
 	});
 
-	// Fetch stacks
+	// Fetch default stacks (top 10)
 	const { data: stacksData } = useQuery({
-		queryKey: ["stacks"],
+		queryKey: ["stacks", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.stacks.get({});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch stacks");
-			return data;
+			return Array.isArray(data) ? data.slice(0, 10) : [];
 		},
 	});
 
-	// Fetch tags
+	// Fetch default tags (top 10)
 	const { data: tagsData } = useQuery({
-		queryKey: ["tags"],
+		queryKey: ["tags", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.tags.get({});
 			if (error) throw new Error(error.value.message ?? "Failed to fetch tags");
-			return data;
+			return Array.isArray(data) ? data.slice(0, 10) : [];
 		},
 	});
 
-	// Fetch tools for alternatives
+	// Fetch default tools (top 10)
 	const { data: toolsData } = useQuery({
-		queryKey: ["tools", "for-alternatives"],
+		queryKey: ["tools", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.tools.get({
-				query: { limit: 1000 },
+				query: { limit: 10 },
 			});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch tools");
@@ -216,6 +218,65 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 			value: tool.id,
 			label: tool.name,
 		})) ?? [];
+
+	// Search functions for API-based searching
+	const searchCategories = async (search: string) => {
+		const { data, error } = await api.v1.categories.get({
+			query: { search, limit: 10 },
+		});
+		if (error)
+			throw new Error(error.value.message ?? "Failed to search categories");
+		return (
+			data?.items.map((cat) => ({
+				value: cat.id,
+				label: cat.name,
+			})) ?? []
+		);
+	};
+
+	const searchStacks = async (search: string) => {
+		const { data, error } = await api.v1.stacks.get({});
+		if (error)
+			throw new Error(error.value.message ?? "Failed to search stacks");
+		const allStacks = Array.isArray(data) ? data : [];
+		const filtered = allStacks
+			.filter((stack: { name: string }) =>
+				stack.name.toLowerCase().includes(search.toLowerCase()),
+			)
+			.slice(0, 10);
+		return filtered.map((stack: { id: string; name: string }) => ({
+			value: stack.id,
+			label: stack.name,
+		}));
+	};
+
+	const searchTags = async (search: string) => {
+		const { data, error } = await api.v1.tags.get({});
+		if (error) throw new Error(error.value.message ?? "Failed to search tags");
+		const allTags = Array.isArray(data) ? data : [];
+		const filtered = allTags
+			.filter((tag: { name: string }) =>
+				tag.name.toLowerCase().includes(search.toLowerCase()),
+			)
+			.slice(0, 10);
+		return filtered.map((tag: { id: string; name: string }) => ({
+			value: tag.id,
+			label: tag.name,
+		}));
+	};
+
+	const searchTools = async (search: string) => {
+		const { data, error } = await api.v1.tools.get({
+			query: { search, limit: 10 },
+		});
+		if (error) throw new Error(error.value.message ?? "Failed to search tools");
+		return (
+			data?.items.map((tool) => ({
+				value: tool.id,
+				label: tool.name,
+			})) ?? []
+		);
+	};
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -370,6 +431,8 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 											}
 											placeholder="Select categories"
 											searchPlaceholder="Search categories..."
+											searchFn={searchCategories}
+											defaultLimit={10}
 										/>
 									</Field>
 
@@ -384,6 +447,8 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 											}
 											placeholder="Select stacks"
 											searchPlaceholder="Search stacks..."
+											searchFn={searchStacks}
+											defaultLimit={10}
 										/>
 									</Field>
 
@@ -398,6 +463,8 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 											}
 											placeholder="Select tags"
 											searchPlaceholder="Search tags..."
+											searchFn={searchTags}
+											defaultLimit={10}
 										/>
 									</Field>
 
@@ -412,6 +479,8 @@ export function NewToolForm({ open, onOpenChange }: NewToolFormProps) {
 											}
 											placeholder="Select alternative tools"
 											searchPlaceholder="Search tools..."
+											searchFn={searchTools}
+											defaultLimit={10}
 										/>
 										<FieldDescription>
 											Select tools that are alternatives to this tool

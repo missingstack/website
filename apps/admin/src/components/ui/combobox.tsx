@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import * as React from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -24,7 +24,7 @@ export interface ComboboxOption {
 }
 
 interface ComboboxProps {
-	options: ComboboxOption[];
+	options?: ComboboxOption[];
 	value?: string;
 	onValueChange?: (value: string) => void;
 	placeholder?: string;
@@ -33,10 +33,12 @@ interface ComboboxProps {
 	multiple?: boolean;
 	selectedValues?: string[];
 	onSelectedValuesChange?: (values: string[]) => void;
+	searchFn?: (search: string) => Promise<ComboboxOption[]>;
+	defaultLimit?: number;
 }
 
 export function Combobox({
-	options,
+	options: staticOptions = [],
 	value,
 	onValueChange,
 	placeholder = "Select option...",
@@ -45,8 +47,71 @@ export function Combobox({
 	multiple = false,
 	selectedValues = [],
 	onSelectedValuesChange,
+	searchFn,
+	defaultLimit = 10,
 }: ComboboxProps) {
 	const [open, setOpen] = React.useState(false);
+	const [search, setSearch] = React.useState("");
+	const [searchResults, setSearchResults] = React.useState<ComboboxOption[]>(
+		[],
+	);
+	const [isSearching, setIsSearching] = React.useState(false);
+	const debounceTimerRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+
+	// Use search results if searchFn is provided and search is active, otherwise use static options
+	const options =
+		searchFn && search
+			? searchResults
+			: searchFn && !search
+				? staticOptions.slice(0, defaultLimit)
+				: staticOptions;
+
+	// Debounced search function
+	React.useEffect(() => {
+		if (!searchFn) return;
+
+		// Clear previous timer
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
+		}
+
+		// If search is empty, reset to default options
+		if (!search.trim()) {
+			setSearchResults([]);
+			setIsSearching(false);
+			return;
+		}
+
+		// Set loading state
+		setIsSearching(true);
+
+		// Debounce the search
+		debounceTimerRef.current = setTimeout(async () => {
+			try {
+				const results = await searchFn(search);
+				setSearchResults(results);
+			} catch (error) {
+				console.error("Search error:", error);
+				setSearchResults([]);
+			} finally {
+				setIsSearching(false);
+			}
+		}, 300);
+
+		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
+		};
+	}, [search, searchFn]);
+
+	// Reset search when popover closes
+	React.useEffect(() => {
+		if (!open) {
+			setSearch("");
+			setSearchResults([]);
+		}
+	}, [open]);
 
 	if (multiple) {
 		return (
@@ -65,35 +130,47 @@ export function Combobox({
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="w-full p-0" align="start">
-					<Command>
-						<CommandInput placeholder={searchPlaceholder} />
+					<Command shouldFilter={!searchFn}>
+						<CommandInput
+							placeholder={searchPlaceholder}
+							value={search}
+							onValueChange={setSearch}
+						/>
 						<CommandList>
-							<CommandEmpty>{emptyText}</CommandEmpty>
-							<CommandGroup>
-								{options.map((option) => {
-									const isSelected = selectedValues.includes(option.value);
-									return (
-										<CommandItem
-											key={option.value}
-											value={option.value}
-											onSelect={() => {
-												const newValues = isSelected
-													? selectedValues.filter((v) => v !== option.value)
-													: [...selectedValues, option.value];
-												onSelectedValuesChange?.(newValues);
-											}}
-										>
-											<Check
-												className={cn(
-													"mr-2 h-4 w-4",
-													isSelected ? "opacity-100" : "opacity-0",
-												)}
-											/>
-											{option.label}
-										</CommandItem>
-									);
-								})}
-							</CommandGroup>
+							{isSearching ? (
+								<div className="flex items-center justify-center py-6">
+									<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+								</div>
+							) : (
+								<>
+									<CommandEmpty>{emptyText}</CommandEmpty>
+									<CommandGroup>
+										{options.map((option) => {
+											const isSelected = selectedValues.includes(option.value);
+											return (
+												<CommandItem
+													key={option.value}
+													value={option.value}
+													onSelect={() => {
+														const newValues = isSelected
+															? selectedValues.filter((v) => v !== option.value)
+															: [...selectedValues, option.value];
+														onSelectedValuesChange?.(newValues);
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															isSelected ? "opacity-100" : "opacity-0",
+														)}
+													/>
+													{option.label}
+												</CommandItem>
+											);
+										})}
+									</CommandGroup>
+								</>
+							)}
 						</CommandList>
 					</Command>
 				</PopoverContent>
@@ -117,30 +194,44 @@ export function Combobox({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-full p-0" align="start">
-				<Command>
-					<CommandInput placeholder={searchPlaceholder} />
+				<Command shouldFilter={!searchFn}>
+					<CommandInput
+						placeholder={searchPlaceholder}
+						value={search}
+						onValueChange={setSearch}
+					/>
 					<CommandList>
-						<CommandEmpty>{emptyText}</CommandEmpty>
-						<CommandGroup>
-							{options.map((option) => (
-								<CommandItem
-									key={option.value}
-									value={option.value}
-									onSelect={(currentValue) => {
-										onValueChange?.(currentValue === value ? "" : currentValue);
-										setOpen(false);
-									}}
-								>
-									<Check
-										className={cn(
-											"mr-2 h-4 w-4",
-											value === option.value ? "opacity-100" : "opacity-0",
-										)}
-									/>
-									{option.label}
-								</CommandItem>
-							))}
-						</CommandGroup>
+						{isSearching ? (
+							<div className="flex items-center justify-center py-6">
+								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+							</div>
+						) : (
+							<>
+								<CommandEmpty>{emptyText}</CommandEmpty>
+								<CommandGroup>
+									{options.map((option) => (
+										<CommandItem
+											key={option.value}
+											value={option.value}
+											onSelect={(currentValue) => {
+												onValueChange?.(
+													currentValue === value ? "" : currentValue,
+												);
+												setOpen(false);
+											}}
+										>
+											<Check
+												className={cn(
+													"mr-2 h-4 w-4",
+													value === option.value ? "opacity-100" : "opacity-0",
+												)}
+											/>
+											{option.label}
+										</CommandItem>
+									))}
+								</CommandGroup>
+							</>
+						)}
 					</CommandList>
 				</Command>
 			</PopoverContent>

@@ -75,14 +75,14 @@ export function EditStackForm({
 		enabled: open && !!stackId,
 	});
 
-	// Fetch stacks for parent selection
+	// Fetch default stacks (top 10)
 	const { data: stacksData } = useQuery({
-		queryKey: ["stacks"],
+		queryKey: ["stacks", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.stacks.get({});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch stacks");
-			return data;
+			return Array.isArray(data) ? data.slice(0, 10) : [];
 		},
 	});
 
@@ -150,6 +150,25 @@ export function EditStackForm({
 			value: stack.id,
 			label: stack.name,
 		}));
+
+	// Search function for API-based searching
+	const searchStacks = async (search: string) => {
+		const { data, error } = await api.v1.stacks.get({});
+		if (error)
+			throw new Error(error.value.message ?? "Failed to search stacks");
+		const allStacks = Array.isArray(data) ? data : [];
+		const filtered = allStacks
+			.filter(
+				(stack: Stack) =>
+					stack.id !== stackId &&
+					stack.name.toLowerCase().includes(search.toLowerCase()),
+			)
+			.slice(0, 10);
+		return filtered.map((stack: Stack) => ({
+			value: stack.id,
+			label: stack.name,
+		}));
+	};
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -236,6 +255,8 @@ export function EditStackForm({
 												}
 												placeholder="Select parent stack (optional)"
 												searchPlaceholder="Search stacks..."
+												searchFn={searchStacks}
+												defaultLimit={10}
 											/>
 										</Field>
 

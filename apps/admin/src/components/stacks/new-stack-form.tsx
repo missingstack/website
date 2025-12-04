@@ -56,14 +56,14 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const queryClient = useQueryClient();
 
-	// Fetch stacks for parent selection
+	// Fetch default stacks (top 10)
 	const { data: stacksData } = useQuery({
-		queryKey: ["stacks"],
+		queryKey: ["stacks", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.stacks.get({});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch stacks");
-			return data;
+			return Array.isArray(data) ? data.slice(0, 10) : [];
 		},
 	});
 
@@ -115,6 +115,23 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 			label: stack.name,
 		}),
 	);
+
+	// Search function for API-based searching
+	const searchStacks = async (search: string) => {
+		const { data, error } = await api.v1.stacks.get({});
+		if (error)
+			throw new Error(error.value.message ?? "Failed to search stacks");
+		const allStacks = Array.isArray(data) ? data : [];
+		const filtered = allStacks
+			.filter((stack: { name: string }) =>
+				stack.name.toLowerCase().includes(search.toLowerCase()),
+			)
+			.slice(0, 10);
+		return filtered.map((stack: { id: string; name: string }) => ({
+			value: stack.id,
+			label: stack.name,
+		}));
+	};
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -189,6 +206,8 @@ export function NewStackForm({ open, onOpenChange }: NewStackFormProps) {
 											}
 											placeholder="Select parent stack (optional)"
 											searchPlaceholder="Search stacks..."
+											searchFn={searchStacks}
+											defaultLimit={10}
 										/>
 									</Field>
 

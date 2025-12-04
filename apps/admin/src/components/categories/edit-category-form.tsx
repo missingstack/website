@@ -78,11 +78,13 @@ export function EditCategoryForm({
 		enabled: open && !!categoryId,
 	});
 
-	// Fetch categories for parent selection
+	// Fetch default categories (top 10)
 	const { data: categoriesData } = useQuery({
-		queryKey: ["categories"],
+		queryKey: ["categories", "default"],
 		queryFn: async () => {
-			const { data, error } = await api.v1.categories.get({});
+			const { data, error } = await api.v1.categories.get({
+				query: { limit: 10 },
+			});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch categories");
 			return data;
@@ -154,6 +156,24 @@ export function EditCategoryForm({
 				value: cat.id,
 				label: cat.name,
 			})) ?? [];
+
+	// Search function for API-based searching
+	const searchCategories = async (search: string) => {
+		const { data, error } = await api.v1.categories.get({
+			query: { search, limit: 10 },
+		});
+		if (error)
+			throw new Error(error.value.message ?? "Failed to search categories");
+
+		return (
+			data?.items
+				.filter((cat) => cat.id !== categoryId) // Exclude current category from parent options
+				.map((cat) => ({
+					value: cat.id,
+					label: cat.name,
+				})) ?? []
+		);
+	};
 
 	return (
 		<Drawer open={open} onOpenChange={onOpenChange} direction="right">
@@ -240,6 +260,8 @@ export function EditCategoryForm({
 												}
 												placeholder="Select parent category (optional)"
 												searchPlaceholder="Search categories..."
+												searchFn={searchCategories}
+												defaultLimit={10}
 											/>
 										</Field>
 

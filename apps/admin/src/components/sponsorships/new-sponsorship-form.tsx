@@ -76,12 +76,12 @@ export function NewSponsorshipForm({
 	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Fetch tools
+	// Fetch default tools (top 10)
 	const { data: toolsData } = useQuery({
-		queryKey: ["tools", "for-sponsorships"],
+		queryKey: ["tools", "default"],
 		queryFn: async () => {
 			const { data, error } = await api.v1.tools.get({
-				query: { limit: 1000 },
+				query: { limit: 10 },
 			});
 			if (error)
 				throw new Error(error.value.message ?? "Failed to fetch tools");
@@ -142,6 +142,20 @@ export function NewSponsorshipForm({
 			label: tool.name,
 		})) ?? [];
 
+	// Search function for API-based searching
+	const searchTools = async (search: string) => {
+		const { data, error } = await api.v1.tools.get({
+			query: { search, limit: 10 },
+		});
+		if (error) throw new Error(error.value.message ?? "Failed to search tools");
+		return (
+			data?.items.map((tool) => ({
+				value: tool.id,
+				label: tool.name,
+			})) ?? []
+		);
+	};
+
 	// Get today's date for min date constraint
 	const today = new Date();
 	today.setHours(0, 0, 0, 0);
@@ -172,6 +186,8 @@ export function NewSponsorshipForm({
 											onValueChange={(value) => form.setValue("toolId", value)}
 											placeholder="Select a tool"
 											searchPlaceholder="Search tools..."
+											searchFn={searchTools}
+											defaultLimit={10}
 										/>
 										<FieldDescription>
 											Select the tool to sponsor
