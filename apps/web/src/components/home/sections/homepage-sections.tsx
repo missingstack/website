@@ -49,7 +49,6 @@ async function getToolsByCategory(categorySlug: string, limit: number) {
 	cacheTag(`category-${categorySlug}`);
 	cacheTag("homepage-tools");
 
-	// Resolve category slug to category ID
 	const category = await services.categoryService.getBySlug(categorySlug);
 	if (!category) {
 		return [];
@@ -63,9 +62,6 @@ async function getToolsByCategory(categorySlug: string, limit: number) {
 	return result.items;
 }
 
-/**
- * Prefetch tools for a single section (cached)
- */
 async function getToolsForSection(
 	config: Section,
 ): Promise<ToolData[] | Tool[]> {
@@ -90,13 +86,10 @@ export async function HomepageSections() {
 	const sections = await getSections();
 	if (sections.length === 0) return null;
 
-	// 🚀 OPTIMIZATION: Fetch ALL section data in PARALLEL instead of sequential
-	// This turns N sequential queries into 1 parallel batch
 	const toolsPerSection = await Promise.all(
 		sections.map((section) => getToolsForSection(section)),
 	);
 
-	// Combine sections with their pre-fetched tools
 	const sectionsWithTools = sections.map((section, index) => ({
 		section,
 		tools: toolsPerSection[index],

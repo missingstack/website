@@ -21,7 +21,6 @@ export async function Header() {
 	const categories = await getCategoriesWithCounts();
 	const stats = await getStats();
 
-	// Show top 6 categories with tools
 	const topCategories = categories.filter((c) => c.toolCount > 0).slice(0, 6);
 	return (
 		<HeaderContent

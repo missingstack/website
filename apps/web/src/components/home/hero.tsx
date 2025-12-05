@@ -6,17 +6,50 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Container } from "~/components/ui/container";
 
-async function getStats() {
-	"use cache";
-	cacheLife("days");
-	cacheTag("stats");
-
-	return services.statsService.getStats();
+// HeroStats Component
+interface HeroStatsProps {
+	totalTools: number;
+	totalCategories: number;
 }
 
-export async function HeroSection() {
-	const stats = await getStats();
+function HeroStats({ totalTools, totalCategories }: HeroStatsProps) {
+	return (
+		<div className="flex flex-wrap justify-center gap-6 px-4 sm:gap-8 md:gap-12 lg:gap-16">
+			<div className="text-center transition-transform duration-200 hover:scale-105">
+				<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
+					{totalTools}+
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
+					Curated Tools
+				</div>
+			</div>
+			<div className="text-center transition-transform duration-200 hover:scale-105">
+				<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
+					{totalCategories}
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
+					Categories
+				</div>
+			</div>
+			<div className="text-center transition-transform duration-200 hover:scale-105">
+				<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
+					Daily
+				</div>
+				<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
+					Updates
+				</div>
+			</div>
+		</div>
+	);
+}
 
+// HeroContent Component
+interface HeroContentProps {
+	totalTools: number;
+	totalCategories: number;
+}
+
+function HeroContent({ totalTools, totalCategories }: HeroContentProps) {
 	return (
 		<section className="relative w-full pt-12 pb-16 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-24">
 			<Container>
@@ -34,7 +67,7 @@ export async function HeroSection() {
 						>
 							<Sparkles className="h-3 w-3 text-yellow-500 sm:h-3.5 sm:w-3.5" />
 							<span className="text-xs sm:text-sm">
-								{stats.totalTools} tools curated
+								{totalTools} tools curated
 							</span>
 						</Badge>
 					</div>
@@ -76,34 +109,35 @@ export async function HeroSection() {
 						</Button>
 					</div>
 
-					<div className="flex flex-wrap justify-center gap-6 px-4 sm:gap-8 md:gap-12 lg:gap-16">
-						<div className="text-center transition-transform duration-200 hover:scale-105">
-							<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
-								{stats.totalTools}+
-							</div>
-							<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
-								Curated Tools
-							</div>
-						</div>
-						<div className="text-center transition-transform duration-200 hover:scale-105">
-							<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
-								{stats.totalCategories}
-							</div>
-							<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
-								Categories
-							</div>
-						</div>
-						<div className="text-center transition-transform duration-200 hover:scale-105">
-							<div className="font-bold text-2xl text-primary sm:text-3xl md:text-4xl">
-								Daily
-							</div>
-							<div className="mt-1 text-muted-foreground text-xs sm:text-sm">
-								Updates
-							</div>
-						</div>
-					</div>
+					<HeroStats
+						totalTools={totalTools}
+						totalCategories={totalCategories}
+					/>
 				</div>
 			</Container>
 		</section>
 	);
 }
+
+// Main HeroSection Component (Server Component)
+async function getStats() {
+	"use cache";
+	cacheLife("days");
+	cacheTag("stats");
+
+	return services.statsService.getStats();
+}
+
+export async function HeroSection() {
+	const stats = await getStats();
+
+	return (
+		<HeroContent
+			totalTools={stats.totalTools}
+			totalCategories={stats.totalCategories}
+		/>
+	);
+}
+
+// Export sub-components for reuse
+export { HeroContent, HeroStats };
