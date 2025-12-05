@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { NewStackForm } from "~/components/stacks/new-stack-form";
+import { NewStackForm } from "~/components/stacks/stack-form/new-stack-form";
 import { StacksTable } from "~/components/stacks/stacks-table";
 import { TableSkeleton } from "~/components/table-skeleton";
 import { Button } from "~/components/ui/button";
