@@ -39,9 +39,7 @@ export default function AdminLayout({
 			</Suspense>
 			<SidebarInset>
 				<AdminHeader />
-				<div className="-p-4 flex flex-1 flex-col gap-4 p-4 pt-2">
-					{children}
-				</div>
+				<div className="-p-4 flex flex-1 flex-col gap-4 p-4">{children}</div>
 			</SidebarInset>
 		</SidebarProvider>
 	);

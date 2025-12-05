@@ -3,7 +3,8 @@
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
 import { TableSkeleton } from "~/components/table-skeleton";
-import { NewToolForm } from "~/components/tools/new-tool-form";
+import { NewToolForm } from "~/components/tools/tool-form/new-tool-form";
+
 import { ToolsTable } from "~/components/tools/tools-table";
 import { Button } from "~/components/ui/button";
 
