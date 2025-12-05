@@ -9,17 +9,20 @@ import type {
 } from "@missingstack/api/types";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Grid3X3, List, Loader2 } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { useEffect, useRef } from "react";
 import {
 	ActiveFilters,
 	FilterSidebar,
+	LoadMore,
 	MobileFilterSheet,
 	SearchInput,
 	SortSelect,
+	ToolCount,
+	ToolListStates,
+	ViewToggle,
 } from "~/components/discover";
-import { ToolCard, ToolCardSkeleton } from "~/components/home/tool-card";
+import { ToolCard } from "~/components/home/tool-card";
 import { Container } from "~/components/ui/container";
 import { api } from "~/lib/eden";
 import {
@@ -164,11 +167,7 @@ export function DiscoverContent({
 				<div className="min-w-0 flex-1">
 					<div className="mb-4 flex flex-col items-start justify-between gap-3 sm:mb-6 sm:flex-row sm:items-center sm:gap-4">
 						<div className="flex flex-wrap items-center gap-2">
-							<span className="text-muted-foreground text-xs sm:text-sm">
-								{isLoading
-									? "Loading..."
-									: `Showing ${allTools.length} tool${allTools.length !== 1 ? "s" : ""}`}
-							</span>
+							<ToolCount count={allTools.length} isLoading={isLoading} />
 							<ActiveFilters
 								categoryNames={categoryNames}
 								tagNames={tagNames}
@@ -186,56 +185,16 @@ export function DiscoverContent({
 
 							<div className="flex items-center gap-3">
 								<SortSelect />
-
-								<div className="hidden items-center overflow-hidden rounded-lg border border-border sm:flex">
-									<button
-										type="button"
-										className="bg-primary p-2 text-white"
-										aria-label="Grid view"
-									>
-										<Grid3X3 className="h-4 w-4" />
-									</button>
-									<button
-										type="button"
-										className="p-2 text-muted-foreground hover:bg-secondary/50"
-										aria-label="List view"
-									>
-										<List className="h-4 w-4" />
-									</button>
-								</div>
+								<ViewToggle />
 							</div>
 						</div>
 					</div>
 
-					{isLoading && (
-						<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-							{Array.from({ length: 6 }).map((_, i) => (
-								<ToolCardSkeleton key={`skeleton-${i.toString()}`} />
-							))}
-						</div>
-					)}
-
-					{isError && (
-						<div className="rounded-xl bg-destructive/10 py-12 text-center sm:rounded-2xl sm:py-16">
-							<p className="mb-2 text-destructive text-sm sm:text-base">
-								Failed to load tools
-							</p>
-							<p className="text-muted-foreground text-xs sm:text-sm">
-								Please try refreshing the page
-							</p>
-						</div>
-					)}
-
-					{!isLoading && !isError && allTools.length === 0 && (
-						<div className="rounded-xl bg-secondary/20 py-12 text-center sm:rounded-2xl sm:py-16">
-							<p className="mb-2 text-muted-foreground text-sm sm:text-base">
-								No tools found
-							</p>
-							<p className="text-muted-foreground text-xs sm:text-sm">
-								Try adjusting your filters or search query
-							</p>
-						</div>
-					)}
+					<ToolListStates
+						isLoading={isLoading}
+						isError={isError}
+						toolCount={allTools.length}
+					/>
 
 					{!isLoading && !isError && allTools.length > 0 && (
 						<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -245,24 +204,12 @@ export function DiscoverContent({
 						</div>
 					)}
 
-					<div ref={loadMoreRef} className="mt-6 flex justify-center sm:mt-8">
-						{isFetchingNextPage && (
-							<div className="flex items-center gap-2 text-muted-foreground">
-								<Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" />
-								<span className="text-xs sm:text-sm">
-									Loading more tools...
-								</span>
-							</div>
-						)}
-						{!hasNextPage &&
-							allTools.length > 0 &&
-							!isLoading &&
-							!isFetchingNextPage && (
-								<p className="text-muted-foreground text-xs sm:text-sm">
-									You've reached the end
-								</p>
-							)}
-					</div>
+					<LoadMore
+						isFetching={isFetchingNextPage}
+						hasMore={hasNextPage ?? false}
+						isLoading={isLoading}
+						loadMoreRef={loadMoreRef as React.RefObject<HTMLDivElement>}
+					/>
 				</div>
 			</div>
 		</Container>

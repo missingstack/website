@@ -10,6 +10,7 @@ import { Toggle } from "~/components/ui/toggle";
 import { getIcon } from "~/lib/icons";
 import { searchParamsParsers } from "~/lib/search-params";
 import { cn, formatPlatformDisplay, formatPricingDisplay } from "~/lib/utils";
+import { FilterSection } from "./filter-section";
 
 interface FilterSidebarProps {
 	categories: CategoryWithCount[];
@@ -183,21 +184,6 @@ export function FilterSidebar({
 					})}
 				</div>
 			</FilterSection>
-		</div>
-	);
-}
-
-function FilterSection({
-	title,
-	children,
-}: {
-	title: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<div className="overflow-hidden rounded-xl border border-border/50 bg-white p-5">
-			<h3 className="mb-4 font-semibold text-sm">{title}</h3>
-			{children}
 		</div>
 	);
 }

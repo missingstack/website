@@ -1,17 +1,17 @@
 import { services } from "@missingstack/api/context";
 import type { Metadata } from "next";
 import { cacheLife, cacheTag } from "next/cache";
-import Link from "next/link";
 import { Suspense } from "react";
-import { DiscoverContent } from "~/components/discover/discover-content";
+import {
+	DiscoverContent,
+	DiscoverPageHeader,
+	DiscoverPageSkeleton,
+	DiscoverStructuredData,
+} from "~/components/discover";
 import { Footer } from "~/components/home/footer";
 import { Header } from "~/components/home/header";
-import { ToolCardSkeleton } from "~/components/home/tool-card";
-import { StructuredData } from "~/components/structured-data";
-import { Container } from "~/components/ui/container";
-import { Skeleton } from "~/components/ui/skeleton";
 import { PLATFORM_OPTIONS, PRICING_OPTIONS } from "~/lib/search-params";
-import { breadcrumb, generateSEOMetadata, itemList } from "~/lib/seo";
+import { generateSEOMetadata } from "~/lib/seo";
 
 async function getCategoriesWithCounts() {
 	"use cache";
@@ -77,68 +77,19 @@ export default async function DiscoverPage() {
 
 	return (
 		<div className="flex min-h-screen flex-col bg-background">
-			<StructuredData
-				data={breadcrumb([
-					{ name: "Home", url: "/" },
-					{ name: "Discover", url: "/discover" },
-				])}
-			/>
-			<StructuredData
-				data={itemList({
-					name: "Discoverable Tools",
-					description: `Explore ${stats.totalTools}+ curated tools. Search and filter by category, pricing, platform, and tags.`,
-					items: featuredTools.slice(0, 12).map((tool) => ({
-						name: tool.name,
-						url: `/tools/${tool.slug}`,
-					})),
-				})}
+			<DiscoverStructuredData
+				featuredTools={featuredTools}
+				totalTools={stats.totalTools}
 			/>
 			<Header />
 
 			<main className="flex-1 py-8 sm:py-12">
-				<Container className="mb-8 sm:mb-12">
-					<div className="flex flex-col justify-between gap-4 sm:gap-6 lg:flex-row lg:items-end">
-						<div>
-							<h1 className="mb-2 text-3xl text-primary leading-tight sm:mb-3 sm:text-4xl md:text-5xl">
-								Discover & Search Tools
-							</h1>
-							<p className="max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
-								Browse our{" "}
-								<Link
-									href="/"
-									className="font-medium text-primary underline transition-colors hover:text-primary/80"
-								>
-									curated directory
-								</Link>{" "}
-								to discover {stats.totalTools}+ tools across{" "}
-								{stats.totalCategories} categories. Filter by category, pricing,
-								platform, and more.
-							</p>
-						</div>
-					</div>
-				</Container>
+				<DiscoverPageHeader
+					totalTools={stats.totalTools}
+					totalCategories={stats.totalCategories}
+				/>
 
-				<Suspense
-					fallback={
-						<Container>
-							<div className="flex flex-col gap-6 sm:gap-8 lg:flex-row">
-								<aside className="hidden w-72 shrink-0 lg:block">
-									<div className="space-y-4">
-										<Skeleton className="h-48 rounded-xl sm:h-64" />
-										<Skeleton className="h-40 rounded-xl sm:h-48" />
-									</div>
-								</aside>
-								<div className="flex-1">
-									<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-										{Array.from({ length: 6 }).map((_, i) => (
-											<ToolCardSkeleton key={`skeleton-${i.toString()}`} />
-										))}
-									</div>
-								</div>
-							</div>
-						</Container>
-					}
-				>
+				<Suspense fallback={<DiscoverPageSkeleton />}>
 					<DiscoverContent
 						categories={categories}
 						tags={tags}

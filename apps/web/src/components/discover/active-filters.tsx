@@ -1,10 +1,9 @@
 "use client";
 
-import { X } from "lucide-react";
 import { useQueryStates } from "nuqs";
-import { Badge } from "~/components/ui/badge";
 import { searchParamsParsers } from "~/lib/search-params";
 import { formatPlatformDisplay, formatPricingDisplay } from "~/lib/utils";
+import { FilterBadge } from "./filter-badge";
 
 interface ActiveFiltersProps {
 	categoryNames: Record<string, string>;
@@ -48,71 +47,43 @@ export function ActiveFilters({ categoryNames, tagNames }: ActiveFiltersProps) {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			{filters.search && (
-				<Badge variant="secondary" className="gap-1 pr-1">
-					"{filters.search}"
-					<button
-						type="button"
-						onClick={clearSearch}
-						className="ml-1 rounded-full p-0.5 hover:bg-muted"
-					>
-						<X className="h-3 w-3" />
-						<span className="sr-only">Remove search filter</span>
-					</button>
-				</Badge>
+				<FilterBadge
+					label={`"${filters.search}"`}
+					onRemove={clearSearch}
+					ariaLabel="Remove search filter"
+				/>
 			)}
 			{filters.categoryIds.map((id) => (
-				<Badge key={id} variant="secondary" className="gap-1 pr-1">
-					{categoryNames[id] ?? id}
-					<button
-						type="button"
-						onClick={() => removeFilter("categoryIds", id)}
-						className="ml-1 rounded-full p-0.5 hover:bg-muted"
-					>
-						<X className="h-3 w-3" />
-						<span className="sr-only">Remove category filter</span>
-					</button>
-				</Badge>
+				<FilterBadge
+					key={id}
+					label={categoryNames[id] ?? id}
+					onRemove={() => removeFilter("categoryIds", id)}
+					ariaLabel="Remove category filter"
+				/>
 			))}
 			{filters.pricing.map((p) => (
-				<Badge key={p} variant="secondary" className="gap-1 pr-1">
-					{formatPricingDisplay(p)}
-					<button
-						type="button"
-						onClick={() => removeFilter("pricing", p)}
-						className="ml-1 rounded-full p-0.5 hover:bg-muted"
-					>
-						<X className="h-3 w-3" />
-						<span className="sr-only">
-							Remove {formatPricingDisplay(p)} filter
-						</span>
-					</button>
-				</Badge>
+				<FilterBadge
+					key={p}
+					label={formatPricingDisplay(p)}
+					onRemove={() => removeFilter("pricing", p)}
+					ariaLabel={`Remove ${formatPricingDisplay(p)} filter`}
+				/>
 			))}
 			{filters.platforms.map((p) => (
-				<Badge key={p} variant="secondary" className="gap-1 pr-1">
-					{formatPlatformDisplay(p)}
-					<button
-						type="button"
-						onClick={() => removeFilter("platforms", p)}
-						className="ml-1 rounded-full p-0.5 hover:bg-muted"
-					>
-						<X className="h-3 w-3" />
-						<span className="sr-only">Remove {p} filter</span>
-					</button>
-				</Badge>
+				<FilterBadge
+					key={p}
+					label={formatPlatformDisplay(p)}
+					onRemove={() => removeFilter("platforms", p)}
+					ariaLabel={`Remove ${p} filter`}
+				/>
 			))}
 			{filters.tagIds.map((id) => (
-				<Badge key={id} variant="secondary" className="gap-1 pr-1">
-					{tagNames[id] ?? id}
-					<button
-						type="button"
-						onClick={() => removeFilter("tagIds", id)}
-						className="ml-1 rounded-full p-0.5 hover:bg-muted"
-					>
-						<X className="h-3 w-3" />
-						<span className="sr-only">Remove tag filter</span>
-					</button>
-				</Badge>
+				<FilterBadge
+					key={id}
+					label={tagNames[id] ?? id}
+					onRemove={() => removeFilter("tagIds", id)}
+					ariaLabel="Remove tag filter"
+				/>
 			))}
 		</div>
 	);
