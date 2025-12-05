@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
-import { NewSponsorshipForm } from "~/components/sponsorships/new-sponsorship-form";
+import { NewSponsorshipForm } from "~/components/sponsorships/sponsorship-form/new-sponsorship-form";
 import { SponsorshipsTable } from "~/components/sponsorships/sponsorships-table";
 import { TableSkeleton } from "~/components/table-skeleton";
 import { Button } from "~/components/ui/button";
