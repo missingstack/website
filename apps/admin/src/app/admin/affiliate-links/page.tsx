@@ -2,8 +2,8 @@
 
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
+import { NewAffiliateLinkForm } from "~/components/affiliate-links/affiliate-link-form/new-affiliate-link-form";
 import { AffiliateLinksTable } from "~/components/affiliate-links/affiliate-links-table";
-import { NewAffiliateLinkForm } from "~/components/affiliate-links/new-affiliate-link-form";
 import { TableSkeleton } from "~/components/table-skeleton";
 import { Button } from "~/components/ui/button";
 
