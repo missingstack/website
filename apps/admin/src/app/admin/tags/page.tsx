@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
 import { TableSkeleton } from "~/components/table-skeleton";
-import { NewTagForm } from "~/components/tags/new-tag-form";
+import { NewTagForm } from "~/components/tags/tag-form/new-tag-form";
 import { TagsTable } from "~/components/tags/tags-table";
 import { Button } from "~/components/ui/button";
 
