@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { Suspense, useState } from "react";
 import { CategoriesTable } from "~/components/categories/categories-table";
-import { NewCategoryForm } from "~/components/categories/category-form";
+import { NewCategoryForm } from "~/components/categories/category-form/new-category-form";
 import { TableSkeleton } from "~/components/table-skeleton";
 import { Button } from "~/components/ui/button";
 

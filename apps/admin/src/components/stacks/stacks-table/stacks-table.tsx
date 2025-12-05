@@ -8,7 +8,7 @@ import {
 	useStackFilters,
 	useStacks,
 } from "~/hooks/stacks";
-import { EditStackForm } from "../stack-form";
+import { EditStackForm } from "../stack-form/edit-stack-form";
 import { StackDeleteDialog } from "./stack-delete-dialog";
 import { StacksTableEmpty } from "./stacks-table-empty";
 import { StacksTableError } from "./stacks-table-error";

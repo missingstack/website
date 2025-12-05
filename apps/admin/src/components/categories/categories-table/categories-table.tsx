@@ -8,7 +8,7 @@ import {
 	useDeleteCategory,
 	useInfiniteScroll,
 } from "~/hooks/categories";
-import { EditCategoryForm } from "../category-form";
+import { EditCategoryForm } from "../category-form/edit-category-form";
 import { CategoriesTableEmpty } from "./categories-table-empty";
 import { CategoriesTableError } from "./categories-table-error";
 import { CategoriesTableFooter } from "./categories-table-footer";
